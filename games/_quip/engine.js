@@ -69,6 +69,11 @@ export class QuipGame {
 
   resume() {
     const s = this.s;
+    this.countdown = [];
+    // Timers get a grace period on restore; show the real (new) deadline.
+    const d = this.ctx.timerDeadline?.(s.phase);
+    if (d) s.deadline = d;
+    if (TIMED.includes(s.phase)) this.#scheduleCountdown();
     if (s.phase === 'intro') this.prefetch(1);
     if (s.phase === 'loading') this.beginRound(s.round);
     if (s.phase === 'answer' && s.answersClosed) this.#startVote();
@@ -126,12 +131,59 @@ export class QuipGame {
 
   #phase(name, ms = 0, timerName = name) {
     this.epoch += 1;
+    for (const cancel of this.countdown || []) cancel();
+    this.countdown = [];
     this.s.phase = name;
     this.s.deadline = ms ? this.ctx.setTimer(timerName, ms) : null;
     this.s.timerMs = ms || null;
     this.ctx.update();
     this.ctx.checkpoint?.();
+    if (TIMED.includes(name)) this.#scheduleCountdown();
     return this.epoch;
+  }
+
+  // Who's holding everyone up in the current timed phase.
+  #pending() {
+    const s = this.s;
+    if (s.phase === 'answer') return s.roster.filter((id) => !this.#answeredAll(id));
+    if (s.phase === 'finalAnswer') return s.roster.filter((id) => !s.final?.answers[id]);
+    if (s.phase === 'vote') {
+      const m = s.matchups[s.matchIdx];
+      return m ? this.#eligibleVoters(m).filter((id) => !m.votes[id]) : [];
+    }
+    if (s.phase === 'finalVote') return this.#finalVoters().filter((id) => !s.final?.done?.[id] && this.#canFinalVote(id));
+    return [];
+  }
+
+  // "Thirty seconds", "ten seconds" (with a roast for whoever's slow), then
+  // "5, 4, 3, 2, 1". Per-player roasts are voiced ahead so they land on time.
+  #scheduleCountdown() {
+    const s = this.s;
+    if (!s.deadline) return;
+    const voting = s.phase === 'vote' || s.phase === 'finalVote';
+    const humans = this.#pending().filter((id) => !this.ctx.isBot(id));
+    const roasts = {};
+    for (const id of humans) roasts[id] = this.ctx.line(voting ? 'slowRoastVote' : 'slowRoast', { name: this.ctx.playerName(id) });
+    this.ctx.prewarm?.(Object.values(roasts));
+    const epoch = this.epoch;
+    const at = (secsLeft, fn) => {
+      const ms = s.deadline - secsLeft * 1000 - Date.now();
+      if (ms > 0) this.countdown.push(this.ctx.later(ms, () => { if (epoch === this.epoch) fn(); }));
+    };
+    const slow = (n) => this.#pending().filter((id) => roasts[id]).sort(() => Math.random() - 0.5).slice(0, n);
+    at(30, () => {
+      if (!this.#pending().length) return;
+      this.ctx.sayLine('thirtySeconds', {});
+      for (const id of slow(1)) this.ctx.say(roasts[id]);
+    });
+    at(10, () => {
+      if (!this.#pending().length) return;
+      this.ctx.sayLine('tenSeconds', {});
+      for (const id of slow(2)) this.ctx.say(roasts[id]);
+    });
+    for (const n of [5, 4, 3, 2, 1]) {
+      at(n, () => { if (this.#pending().length) this.ctx.sayNow?.(this.ctx.line(`count${n}`, {})); });
+    }
   }
 
   // ---------------------------------------------------------------- prompts

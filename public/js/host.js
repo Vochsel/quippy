@@ -71,7 +71,8 @@ function onMessage(msg) {
 }
 
 function handleFx(fx) {
-  if (fx.say) voice?.say(fx.say, fx.ts);
+  if (fx.say && fx.now) voice?.sayNow(fx.say);
+  else if (fx.say) voice?.say(fx.say, fx.ts);
   if (fx.sfx) audio.sfx(fx.sfx);
   if (fx.sfx === 'fanfare') confetti();
 }

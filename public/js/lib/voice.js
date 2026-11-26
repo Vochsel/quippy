@@ -70,6 +70,25 @@ export class Voice {
     this.#next();
   }
 
+  // Cut everything off and say this right now (countdown numbers).
+  sayNow(text) {
+    if (!text) return;
+    this.onCaption(text);
+    if (!this.enabled) return;
+    this.queue = [];
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    this.el?.pause();
+    this.endCurrent?.();
+    const audio = this.usesServer() ? this.#fetchAudio(text) : null;
+    this.audio.duck(true);
+    (async () => {
+      const url = audio ? await audio : null;
+      if (url) await this.#playUrl(url);
+      else await this.#speakBrowser(text);
+      if (!this.busy) this.audio.duck(false);
+    })().catch(() => {});
+  }
+
   stop() {
     this.queue = [];
     if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -119,11 +138,13 @@ export class Voice {
     const el = new Audio(url);
     this.el = el;
     await new Promise((resolve) => {
+      this.endCurrent = resolve;
       el.onended = resolve;
       el.onerror = resolve;
       el.play().catch(resolve);
       setTimeout(resolve, 25000);
     });
+    this.endCurrent = null;
     URL.revokeObjectURL(url);
   }
 

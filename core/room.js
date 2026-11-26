@@ -350,6 +350,8 @@ export class Room {
         : Promise.resolve()),
       line: (key, vars) => room.content().line(key, vars),
       sayLine: (key, vars) => room.say(room.content().line(key, vars)),
+      // Say this right now, cutting off anything else (countdown numbers).
+      sayNow: (text) => text && room.fx({ say: text, ts: Date.now(), now: true }),
       sfx: (name) => room.fx({ sfx: name }),
       music: (track) => { room.music = track; room.dirty(); },
       buzz: (ids, pattern) => room.buzz(ids, pattern),

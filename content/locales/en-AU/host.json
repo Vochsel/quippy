@@ -288,6 +288,55 @@
       "Try to keep a straight face.",
       "I've read worse. Not much worse.",
       "Coming up."
+    ],
+    "thirtySeconds": [
+      "Thirty seconds.",
+      "Half a minute left.",
+      "Thirty seconds, people.",
+      "Thirty seconds on the clock."
+    ],
+    "tenSeconds": [
+      "Ten seconds!",
+      "Ten seconds left!",
+      "Ten. Seconds.",
+      "Final ten seconds!"
+    ],
+    "count5": [
+      "Five."
+    ],
+    "count4": [
+      "Four."
+    ],
+    "count3": [
+      "Three."
+    ],
+    "count2": [
+      "Two."
+    ],
+    "count1": [
+      "One."
+    ],
+    "slowRoast": [
+      "{name}, today would be nice.",
+      "{name}'s still typing. Bless.",
+      "Come on {name}, it's not a novel.",
+      "{name}, the rest of us are ageing.",
+      "{name}, the joke won't write itself. Apparently.",
+      "Still waiting on {name}. As usual.",
+      "{name}, any time before Christmas.",
+      "{name}, just hit the panic button, mate.",
+      "{name} is crafting a masterpiece. Or napping.",
+      "Eyes on you, {name}.",
+      "{name}, the pie's getting cold.",
+      "{name}'s gone to the servo, apparently."
+    ],
+    "slowRoastVote": [
+      "{name}, it's A or B. Not rocket science.",
+      "{name}, pick one. Either one.",
+      "{name}, just tap something.",
+      "Waiting on {name}'s vote. Riveting.",
+      "{name}, it's a vote, not a referendum.",
+      "{name}, close your eyes and tap."
     ]
   }
 }
