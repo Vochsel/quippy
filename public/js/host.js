@@ -72,7 +72,14 @@ function onMessage(msg) {
 
 function handleFx(fx) {
   if (fx.say && fx.now) voice?.sayNow(fx.say);
-  else if (fx.say) voice?.say(fx.say, fx.ts);
+  else if (fx.say) {
+    voice?.say(fx.say, fx.ts, {
+      scene: fx.scene,
+      onStart: fx.cue ? () => emitCue(fx.cue, fx.cueId) : null,
+      // When the last answer has been read, tell the server voting can open.
+      onEnd: fx.cue === 'B' ? () => live?.game({ type: 'readDone', matchupId: fx.cueId }) : null,
+    });
+  }
   if (fx.sfx) audio.sfx(fx.sfx);
   if (fx.sfx === 'fanfare') confetti();
 }
@@ -266,13 +273,20 @@ function fameCard(room) {
 function destroyGame() {
   if (game) {
     game.inst?.destroy?.();
+    cueListeners.clear();
     game = null;
     clear(stage);
   }
 }
 
+const cueListeners = new Set();
+function emitCue(cue, id) {
+  for (const fn of cueListeners) { try { fn(cue, id); } catch { /* ignore */ } }
+}
+
 function hostApi() {
   return {
+    onCue: (fn) => { cueListeners.add(fn); return () => cueListeners.delete(fn); },
     h, avatar, fmt, confetti, audio,
     send: (payload) => live.game(payload),
     action: (a, extra) => live.action(a, extra),

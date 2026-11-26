@@ -25,7 +25,8 @@ export class Voice {
     this.busy = false;
     this.enabled = localStorage.getItem('quippy.voiceOn') !== '0';
     this.voiceName = localStorage.getItem('quippy.voiceName') || '';
-    this.rate = Number(localStorage.getItem('quippy.voiceRate') || 1.02);
+    this.rate = Number(localStorage.getItem('quippy.voiceRate') || 1.1);
+    this.playbackRate = Number(localStorage.getItem('quippy.voicePlayback') || 1.12);
     this.pitch = Number(localStorage.getItem('quippy.voicePitch') || 0.85);
     this.voices = [];
     if ('speechSynthesis' in window) {
@@ -60,13 +61,28 @@ export class Voice {
   usesServer() { return this.provider !== 'browser'; }
   setEnabled(on) { this.enabled = on; localStorage.setItem('quippy.voiceOn', on ? '1' : '0'); if (!on) this.stop(); }
 
-  // ts = when the server said it. Lines that can't start within a few seconds
-  // are dropped so Monty never talks over the wrong screen.
-  say(text, ts = this.now()) {
+  // ts = when the server said it; scene = which screen it belongs to.
+  // Lines from an older screen are dropped as soon as a newer screen speaks,
+  // and lines that can't start within a few seconds are skipped, so the
+  // voice-over never spills into the next round.
+  // opts.onStart / opts.onEnd fire even if the line is skipped or muted.
+  say(text, ts = this.now(), opts = {}) {
     if (!text) return;
-    if (!this.enabled) { this.onCaption(text); return; }
-    if (this.queue.length >= 4) this.queue.shift();
-    this.queue.push({ text, ts, audio: this.usesServer() ? this.#fetchAudio(text) : null });
+    const item = { text, ts, scene: opts.scene, onStart: opts.onStart, onEnd: opts.onEnd };
+    if (opts.scene && opts.scene !== this.scene) {
+      this.scene = opts.scene;
+      for (const old of this.queue) { old.onStart?.(); old.onEnd?.(); }
+      this.queue = [];
+    }
+    if (!this.enabled) {
+      this.onCaption(text);
+      item.onStart?.();
+      setTimeout(() => item.onEnd?.(), 1200);
+      return;
+    }
+    if (this.queue.length >= 5) { const dropped = this.queue.shift(); dropped.onStart?.(); dropped.onEnd?.(); }
+    item.audio = this.usesServer() ? this.#fetchAudio(text) : null;
+    this.queue.push(item);
     this.#next();
   }
 
@@ -101,20 +117,22 @@ export class Voice {
     const item = this.queue.shift();
     try {
       const url = item.audio ? await item.audio : null;
-      // Too late? Skip it (but keep the newest line even if a little late).
-      const late = this.now() - item.ts;
-      const newer = this.queue.length > 0;
-      if (late > (newer ? 4500 : 9000)) {
+      const stale = item.scene && this.scene && item.scene !== this.scene;
+      const late = this.now() - item.ts > (this.queue.length ? 4500 : 9000);
+      if (stale || late) {
         if (url) URL.revokeObjectURL(url);
+        item.onStart?.();
         return;
       }
       this.onCaption(item.text); // caption appears as the voice starts
+      item.onStart?.();
       this.audio.duck(true);
       if (url) await this.#playUrl(url);
       else await this.#speakBrowser(item.text);
     } catch {
       /* keep the show going */
     } finally {
+      item.onEnd?.();
       this.audio.duck(false);
       this.busy = false;
       this.#next();
@@ -136,6 +154,7 @@ export class Voice {
 
   async #playUrl(url) {
     const el = new Audio(url);
+    el.playbackRate = this.playbackRate; // a touch quicker; pitch is preserved
     this.el = el;
     await new Promise((resolve) => {
       this.endCurrent = resolve;

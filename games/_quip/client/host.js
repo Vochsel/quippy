@@ -39,7 +39,10 @@ export function mount(root, api) {
   const { h, avatar, fmt } = api;
   let key = null;
 
-  const keyOf = (g) => [g.phase, g.round, g.matchNo || 0].join('|');
+  const keyOf = (g) => [g.phase, g.round, g.matchNo || 0, g.closed ? 'closed' : ''].join('|');
+
+  const flip = (key) => root.querySelector(`.q-ans[data-ans="${key}"]`)?.classList.remove('face-down');
+  const offCue = api.onCue?.((cue) => { if (cue === 'A' || cue === 'B') flip(cue); });
 
   function promptCard(g, animate = true) {
     return h(`div.card.q-prompt${animate ? '.pop-in' : ''}`,
@@ -77,6 +80,11 @@ export function mount(root, api) {
     },
 
     answer(g) {
+      if (g.closed) {
+        return h('div.q-loading',
+          h('div.q-round-card.slam', 'Answers locked!'),
+          h('p.q-loading-text', h('span.spinner'), ' Get your thumbs ready to vote…'));
+      }
       return h('div.q-answer',
         h('h2.q-heading.slide-up', g.roundTitle || `Round ${g.round}`),
         h('p.q-big.pop-in', 'Answer the prompts on your phone!'),
@@ -91,16 +99,19 @@ export function mount(root, api) {
         playersDone(g.players));
     },
 
+    // While Monty reads them out, answers stay face-down and flip up as he
+    // says each one (cues from the voice queue). Then voting opens.
     vote(g) {
-      return h('div.q-vote',
+      const hidden = g.reading ? '.face-down' : '';
+      return h(`div.q-vote${g.reading ? '.reading' : ''}`,
         h('div.q-meta', `${g.roundTitle || `Round ${g.round}`} · matchup ${g.matchNo} of ${g.matchTotal}`),
         promptCard(g),
         h('div.q-versus',
-          g.answers.map((a, i) => h(`div.card.q-ans.pop-in${i ? '.tilt-r' : '.tilt-l'}`, { style: { animationDelay: `${0.6 + i * 0.5}s` } },
-            h('span.q-letter', a.key), h('div.q-ans-text', fitText(a.text)))),
-          h('div.q-vs.pop-in', { style: { animationDelay: '0.9s' } }, 'VS')),
+          g.answers.map((a, i) => h(`div.card.q-ans${hidden}${i ? '.tilt-r' : '.tilt-l'}`, { 'data-ans': a.key },
+            h('span.q-letter', a.key), h('div.q-ans-text', fitText(a.text)), h('div.q-ans-back', '?'))),
+          h('div.q-vs', 'VS')),
         voterRow(g.voters),
-        h('div.q-progress', 'Vote on your phone'));
+        h('div.q-progress', { 'data-live': 'vote-hint' }, g.reading ? 'Listen up…' : 'Vote on your phone!'));
     },
 
     reveal(g) {
@@ -192,6 +203,12 @@ export function mount(root, api) {
     if (g.phase === 'answer' || g.phase === 'finalAnswer') {
       for (const p of g.players) root.querySelector(`.q-done[data-id="${p.id}"]`)?.classList.toggle('yes', !!p.done);
     }
+    if (g.phase === 'vote' && !g.reading) {
+      flip('A'); flip('B');
+      root.querySelector('.q-vote')?.classList.remove('reading');
+      const hint = live('vote-hint');
+      if (hint) hint.textContent = 'Vote on your phone!';
+    }
     if (g.phase === 'vote' || g.phase === 'finalVote') {
       for (const v of g.voters || []) root.querySelector(`.q-vwait[data-id="${v.id}"]`)?.classList.toggle('done', !!v.done);
     }
@@ -214,6 +231,6 @@ export function mount(root, api) {
         patch(g);
       }
     },
-    destroy() {},
+    destroy() { offCue?.(); },
   };
 }

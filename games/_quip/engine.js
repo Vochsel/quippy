@@ -18,6 +18,7 @@ const REVEAL_MS = 9500;
 const SCORES_MS = 9000;
 const GAME_OVER_MS = 40000;
 const TIMED = ['answer', 'vote', 'finalAnswer', 'finalVote'];
+const READ_CAP_MS = 15000;
 
 export function defineQuipGame(meta, makeProvider) {
   return {
@@ -55,6 +56,9 @@ export class QuipGame {
 
   serialize() { return this.s; }
 
+  // Identifies the current screen; voice lines from an older scene are dropped.
+  sceneKey() { return `${this.s.phase}|${this.s.round}|${this.s.matchIdx}`; }
+
   // ------------------------------------------------------------- lifecycle
   async start() {
     this.ctx.music('intro');
@@ -78,7 +82,7 @@ export class QuipGame {
     if (s.phase === 'loading') this.beginRound(s.round);
     if (s.phase === 'answer' && s.answersClosed) this.#startVote();
     else if (s.phase === 'answer') this.#botsAnswer();
-    if (s.phase === 'vote') this.#botsVote();
+    if (s.phase === 'vote' && s.reading) { s.reading = true; this.#openVoting(); } else if (s.phase === 'vote') this.#botsVote();
     if (s.phase === 'finalAnswer') this.#botsFinalAnswer();
     if (s.phase === 'finalVote') this.#botsFinalVote();
   }
@@ -88,6 +92,7 @@ export class QuipGame {
       case 'intro': return this.beginRound(1);
       case 'answer': return this.endAnswering();
       case 'vote': return this.reveal();
+      case 'readCap': return this.#openVoting();
       case 'reveal': return this.#afterReveal();
       case 'scores': return this.beginRound(this.s.round + 1);
       case 'finalAnswer': return this.endFinalAnswering();
@@ -105,6 +110,7 @@ export class QuipGame {
 
   onHostAction(p) {
     if (p.type === 'skip') this.onContinue();
+    if (p.type === 'readDone') this.#openVoting(p.matchupId);
   }
 
   onAction(pid, p) {
@@ -138,7 +144,7 @@ export class QuipGame {
     this.s.timerMs = ms || null;
     this.ctx.update();
     this.ctx.checkpoint?.();
-    if (TIMED.includes(name)) this.#scheduleCountdown();
+    if (TIMED.includes(name) && ms) this.#scheduleCountdown();
     return this.epoch;
   }
 
@@ -292,15 +298,16 @@ export class QuipGame {
       if (m.authors.filter((a) => m.answers[a]).length < 2) continue;
       m.order = shuffle([...m.authors]);
       const [a, b] = m.order.map((id) => m.answers[id].text);
-      m.readLine = this.ctx.line('readAnswers', { a, b }) || `${a}. Or. ${b}.`;
-      warm.push(m.prompt.text, m.readLine);
+      m.readA = this.ctx.line('readAnswerA', { a }) || `"${a}".`;
+      m.readB = this.ctx.line('readAnswerB', { b }) || `Or. "${b}".`;
+      warm.push(m.prompt.text, m.readA, m.readB);
     }
     this.ctx.prewarm?.(warm);
     s.matchIdx = 0;
-    const first = s.matchups.find((m) => m.readLine);
+    const first = s.matchups.find((m) => m.readA);
     const epoch = this.epoch;
     const go = () => { if (epoch === this.epoch && s.phase === 'answer') this.#startVote(); };
-    if (first && this.ctx.voiceReady) this.ctx.voiceReady([first.prompt.text, first.readLine], 6000).then(go);
+    if (first && this.ctx.voiceReady) this.ctx.voiceReady([first.prompt.text, first.readA, first.readB], 6000).then(go);
     else go();
   }
 
@@ -330,26 +337,43 @@ export class QuipGame {
     if (!m) return this.#roundScores();
     if (m.authors.filter((a) => m.answers[a]).length < 2) return this.reveal();
     if (!m.order?.length) m.order = shuffle([...m.authors]);
-    this.#phase('vote', this.ctx.timing.vote * 1000);
+    // Read-out first: answers appear on the TV as Monty reads them (cues), and
+    // voting opens when he's done (the TV reports back) or after a cap.
+    s.reading = true;
+    this.#phase('vote');
+    this.ctx.setTimer('readCap', READ_CAP_MS);
     this.ctx.music('voting');
     this.ctx.sfx('whoosh');
     // A little segue now and then, so it doesn't sound like a loop.
     if (s.matchIdx > 0 && Math.random() < 0.6) this.ctx.sayLine('votePreamble', {});
-    this.ctx.say(m.prompt.text);
     const [a, b] = m.order.map((id) => m.answers[id].text);
-    this.ctx.say(m.readLine || this.ctx.line('readAnswers', { a, b }) || `${a}. Or. ${b}.`);
-    this.ctx.buzz(this.#eligibleVoters(m), [40]);
+    this.ctx.sayCue(m.prompt.text, 'prompt', m.id);
+    this.ctx.sayCue(m.readA || `"${a}".`, 'A', m.id);
+    this.ctx.sayCue(m.readB || `Or. "${b}".`, 'B', m.id);
     this.#prepareResultLines(m);
     if (this.p.quip) {
       this.quips[m.id] = withTimeout(Promise.resolve(this.p.quip(this, m)), 20000).catch(() => null)
         .then((line) => { if (typeof line === 'string' && line.trim()) this.ctx.prewarm?.([cleanText(line, 200)]); return line; });
     }
     if (s.matchIdx === s.matchups.length - 1) this.prefetch(s.round + 1);
-    this.#botsVote();
+    // No TV to read it out: open voting straight away.
+    if (this.ctx.hostCount && this.ctx.hostCount() === 0) this.#openVoting(m.id);
     return undefined;
   }
 
+  #openVoting(matchupId) {
+    const s = this.s;
+    const m = s.matchups[s.matchIdx];
+    if (s.phase !== 'vote' || !s.reading || !m || (matchupId && matchupId !== m.id)) return;
+    s.reading = false;
+    this.ctx.clearTimer('readCap');
+    this.#phase('vote', this.ctx.timing.vote * 1000);
+    this.ctx.buzz(this.#eligibleVoters(m), [40]);
+    this.#botsVote();
+  }
+
   #vote(pid, matchupId, choice) {
+    if (this.s.reading) return;
     const m = this.s.matchups[this.s.matchIdx];
     if (!m || m.id !== matchupId || m.authors.includes(pid) || m.votes[pid]) return;
     const target = choice === 'A' ? m.order[0] : choice === 'B' ? m.order[1] : null;
@@ -782,6 +806,7 @@ export class QuipGame {
         return {
           ...base,
           prompt: s.phase === 'finalAnswer' ? s.final.prompt.text : null,
+          closed: s.phase === 'answer' && !!s.answersClosed,
           players: s.roster.map((id) => ({ ...this.#pub(id), done: this.#answeredAll(id) })),
         };
       case 'vote': {
@@ -790,6 +815,7 @@ export class QuipGame {
         return {
           ...base, prompt: m.prompt.text, callback: m.prompt.callback || null,
           answers: m.order.map((id, i) => ({ key: i ? 'B' : 'A', text: m.answers[id].text })),
+          reading: !!s.reading,
           votersDone: voters.filter((v) => m.votes[v]).length, votersTotal: voters.length,
           voters: voters.map((v) => ({ ...this.#pub(v), done: !!m.votes[v] })),
           matchNo: s.matchIdx + 1, matchTotal: s.matchups.length,
@@ -855,6 +881,7 @@ export class QuipGame {
         return watch('phoneLoading');
       case 'answer': {
         if (!inGame) return watch('phoneAudienceWriting');
+        if (s.answersClosed) return watch('phoneAnswered');
         const mine = this.#myMatchups(pid);
         const next = mine.find((m) => !m.answers[pid]);
         if (!next) return watch('phoneAnswered');
@@ -871,6 +898,7 @@ export class QuipGame {
       case 'vote': {
         const m = s.matchups[s.matchIdx];
         if (m.authors.includes(pid)) return watch('phoneYourMatchup');
+        if (s.reading) return watch('phoneListen');
         if (m.votes[pid]) return watch('phoneVoted');
         return {
           ...base, screen: 'vote', matchupId: m.id, prompt: m.prompt.text,

@@ -337,6 +337,32 @@
       "Waiting on {name}'s vote. Riveting.",
       "{name}, it's a vote, not a referendum.",
       "{name}, close your eyes and tap."
+    ],
+    "readAnswerA": [
+      "\"{a}\".",
+      "First up: \"{a}\".",
+      "On one hand, \"{a}\".",
+      "In this corner: \"{a}\".",
+      "Option one: \"{a}\".",
+      "\"{a}\". Hmm."
+    ],
+    "readAnswerB": [
+      "Or... \"{b}\".",
+      "Versus: \"{b}\".",
+      "And the challenger: \"{b}\".",
+      "Or, if you prefer, \"{b}\".",
+      "Option two: \"{b}\".",
+      "Or. \"{b}\". Vote now."
+    ],
+    "phoneListen": [
+      "Listen up…",
+      "Monty's reading them out. Voting opens in a sec.",
+      "Ears on. Voting opens soon."
+    ],
+    "answersLocked": [
+      "Answers locked in!",
+      "Pens down!",
+      "That's time. Let's see what you've done."
     ]
   }
 }

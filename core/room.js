@@ -186,6 +186,8 @@ export class Room {
       if (!this.game) return;
       if (conn.role === 'player') this.game.onAction?.(conn.playerId, msg.payload || {});
       else if (isOwnerHost) this.game.onHostAction?.(msg.payload || {});
+      // Any TV may report it finished reading out a matchup.
+      else if (conn.role === 'host' && msg.payload?.type === 'readDone') this.game.onHostAction?.(msg.payload);
       this.dirty();
       return;
     }
@@ -324,6 +326,7 @@ export class Room {
         return p ? { id: p.id, name: p.name, color: p.color, face: p.face, isBot: !!p.isBot } : { id, name: 'Someone', color: '#ccc', face: 0 };
       },
       isConnected: (id) => !!room.players.get(id)?.connected,
+      hostCount: () => [...room.conns].filter((c) => c.role === 'host').length,
       isBot: (id) => !!room.players.get(id)?.isBot,
       // Everyone who can vote but isn't in the game: audience + latecomers.
       audienceIds: () => [...room.players.values()]
@@ -351,7 +354,9 @@ export class Room {
       line: (key, vars) => room.content().line(key, vars),
       sayLine: (key, vars) => room.say(room.content().line(key, vars)),
       // Say this right now, cutting off anything else (countdown numbers).
-      sayNow: (text) => text && room.fx({ say: text, ts: Date.now(), now: true }),
+      sayNow: (text) => text && room.fx({ say: text, ts: Date.now(), now: true, scene: room.game?.sceneKey?.() }),
+      // A line the TV should react to when it starts/finishes speaking it.
+      sayCue: (text, cue, id) => text && room.fx({ say: text, ts: Date.now(), cue, cueId: id, scene: room.game?.sceneKey?.() }),
       sfx: (name) => room.fx({ sfx: name }),
       music: (track) => { room.music = track; room.dirty(); },
       buzz: (ids, pattern) => room.buzz(ids, pattern),
@@ -472,7 +477,7 @@ export class Room {
 
   // --------------------------------------------------------- views & effects
   // `ts` lets the TV drop lines that arrive too late to still make sense.
-  say(text) { if (text) this.fx({ say: text, ts: Date.now() }); }
+  say(text) { if (text) this.fx({ say: text, ts: Date.now(), scene: this.game?.sceneKey?.() || 'lobby' }); }
 
   // Host lines with no {placeholders} are the same for everyone: generate
   // them once per server process (then they live in the cache for good).

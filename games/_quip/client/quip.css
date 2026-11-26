@@ -165,3 +165,12 @@
 .q-final-mid { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
 .q-final-mid .q-chip { font-size: .95rem; }
 .q-vcount { color: var(--muted); font-size: 1.1rem; }
+
+/* Face-down answer cards while Monty reads them out */
+.q-ans { transition: transform .45s cubic-bezier(.2, 1.5, .4, 1); }
+.q-ans .q-ans-back { display: none; }
+.q-ans.face-down { background: var(--pink); transform: rotate(-1deg) scale(.96); }
+.q-ans.face-down .q-ans-text, .q-ans.face-down .q-letter { visibility: hidden; }
+.q-ans.face-down .q-ans-back { display: grid; place-items: center; position: absolute; inset: 0; font-family: var(--head); font-size: 6rem; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
+.q-ans:not(.face-down) .q-ans-text { animation: popIn .45s cubic-bezier(.2, 1.6, .4, 1) both; }
+.q-vote.reading .q-voter-row { opacity: .35; }

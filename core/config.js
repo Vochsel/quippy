@@ -49,7 +49,7 @@ export function buildConfig(env = {}) {
       localUrl: trimSlash(env.TTS_LOCAL_URL || 'http://localhost:8880/v1'),
       localVoice: env.TTS_LOCAL_VOICE || 'bm_george',
       localModel: env.TTS_LOCAL_MODEL || '',
-      localSpeed: num(env.TTS_LOCAL_SPEED, 0.95),
+      localSpeed: num(env.TTS_LOCAL_SPEED, 1.05),
       localKey: env.TTS_LOCAL_API_KEY || '',
       gatewayKey: env.AI_GATEWAY_API_KEY || '',
       gatewayModel: env.TTS_GATEWAY_MODEL || 'google/gemini-3.8-flash-tts',
