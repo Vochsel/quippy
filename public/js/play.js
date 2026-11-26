@@ -282,7 +282,9 @@ function renderLobby(me, room) {
           style: { marginTop: '1rem' }, disabled: players.length < room.minPlayers, onClick: () => live.action('start'),
         }, players.length < room.minPlayers ? `Need ${room.minPlayers - players.length} more` : `Start ${sel?.name || ''} ▶`))
       : h('div.card.waiting', `${sel?.name || 'Game'} is up next. Waiting for ${vip ? vip.name : 'the VIP'} 👑 to start…`),
-    h('button.btn.white.block', { onClick: () => live.action('toggleAudience') }, me.audience ? '🎮 Play instead' : '🍿 Just watch & vote'),
+    me.audience
+      ? h('button.btn.lime.block', { onClick: () => live.action('toggleAudience') }, '🎮 I want to play')
+      : h('button.linkish', { onClick: () => { if (confirm('Sit this game out and just watch & vote?')) live.action('toggleAudience'); } }, 'Sit this one out (just watch & vote)'),
     h('div.tabs-ph',
       h(`button${lobbyTab === 'me' ? '.on' : ''}`, { onClick: () => { lobbyTab = 'me'; lastKey = ''; renderView(); } }, 'My stats'),
       h(`button${lobbyTab === 'tonight' ? '.on' : ''}`, { onClick: () => { lobbyTab = 'tonight'; lastKey = ''; renderView(); } }, 'Tonight')),

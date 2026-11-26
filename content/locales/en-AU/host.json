@@ -43,31 +43,33 @@
       "Round two. Points are doubled, so are the stakes. Mostly the points.",
       "Round two. Double points. Your chance to make up for round one.",
       "Round two. Everything's worth double. Even your mistakes.",
-      "Round two, double points. Time to get serious. Ish."
+      "Round two, double points. Time to get serious. Ish.",
+      "Round two. Double points. The leaderboard is not safe."
     ],
     "finalRoundIntro": [
       "Final round. Everyone gets the same prompt. Everyone votes. Leave nothing in the tank.",
       "The Final Showdown. One prompt, all of you. Make it count.",
-      "Last round. One prompt, everyone answers. Big points.",
-      "The final showdown. Leave it all on the screen."
+      "Last round. One prompt, everyone answers. Triple points.",
+      "The final showdown. Leave it all on the screen.",
+      "Final round. Everything's worth triple now. No pressure."
     ],
     "roundTitle1": [
-      "Round 1"
+      "Round 1 · ×1"
     ],
     "roundTitle2": [
-      "Round 2 · Double Points"
+      "Round 2 · ×2 points"
     ],
     "roundTitle3": [
-      "The Final Showdown"
+      "The Final Showdown · ×3 points"
     ],
     "cbRoundTitle1": [
-      "Round 1 · Tailor-made"
+      "Round 1 · Tailor-made · ×1"
     ],
     "cbRoundTitle2": [
-      "Round 2 · Callbacks"
+      "Round 2 · Callbacks · ×2 points"
     ],
     "cbRoundTitle3": [
-      "The Grand Callback"
+      "The Grand Callback · ×3 points"
     ],
     "answerStart": [
       "Pens down. Phones up. Go.",

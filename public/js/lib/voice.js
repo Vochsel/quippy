@@ -68,7 +68,7 @@ export class Voice {
   // opts.onStart / opts.onEnd fire even if the line is skipped or muted.
   say(text, ts = this.now(), opts = {}) {
     if (!text) return;
-    const item = { text, ts, scene: opts.scene, onStart: opts.onStart, onEnd: opts.onEnd };
+    const item = { text, ts, scene: opts.scene, cue: opts.cue, onStart: opts.onStart, onEnd: opts.onEnd };
     if (opts.scene && opts.scene !== this.scene) {
       this.scene = opts.scene;
       for (const old of this.queue) { old.onStart?.(); old.onEnd?.(); }
@@ -86,7 +86,42 @@ export class Voice {
     this.#next();
   }
 
-  // Cut everything off and say this right now (countdown numbers).
+  // Countdown numbers are preloaded and played instantly by the TV itself,
+  // locked to its timer ring, so they're never late.
+  async preloadCountdown(texts) {
+    this.countClips = {};
+    if (!this.usesServer()) return;
+    await Promise.all(Object.entries(texts || {}).map(async ([n, text]) => {
+      const url = await this.#fetchAudio(text);
+      if (url) this.countClips[n] = url;
+    }));
+    this.countTexts = texts;
+  }
+
+  countdown(n) {
+    if (!this.enabled) return;
+    const url = this.countClips?.[n];
+    if (url) {
+      // Interrupt any chatter: the count matters more.
+      this.queue = [];
+      this.el?.pause();
+      this.endCurrent?.();
+      const el = new Audio(url);
+      el.playbackRate = 1.1;
+      el.play().catch(() => {});
+      return;
+    }
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(this.countTexts?.[n] || String(n));
+      const v = this.pickVoice();
+      if (v) u.voice = v;
+      u.rate = 1.2;
+      speechSynthesis.speak(u);
+    }
+  }
+
+  // Cut everything off and say this right now.
   sayNow(text) {
     if (!text) return;
     this.onCaption(text);
@@ -118,7 +153,9 @@ export class Voice {
     try {
       const url = item.audio ? await item.audio : null;
       const stale = item.scene && this.scene && item.scene !== this.scene;
-      const late = this.now() - item.ts > (this.queue.length ? 4500 : 9000);
+      // Read-out lines (cues) are never skipped for being late: they're the
+      // answers. Other chatter is skipped if it's badly behind.
+      const late = !item.cue && this.now() - item.ts > (this.queue.length ? 8000 : 12000);
       if (stale || late) {
         if (url) URL.revokeObjectURL(url);
         item.onStart?.();

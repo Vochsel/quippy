@@ -174,3 +174,31 @@
 .q-ans.face-down .q-ans-back { display: grid; place-items: center; position: absolute; inset: 0; font-family: var(--head); font-size: 6rem; color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
 .q-ans:not(.face-down) .q-ans-text { animation: popIn .45s cubic-bezier(.2, 1.6, .4, 1) both; }
 .q-vote.reading .q-voter-row { opacity: .35; }
+
+/* Animated scoreboard: rows are absolutely placed and slide to new ranks */
+.q-board.anim { position: relative; display: block; }
+.q-board.anim .q-row { position: absolute; left: 0; right: 0; height: 4.6rem; transition: top .9s cubic-bezier(.2, 1.3, .4, 1); animation: fadeIn .4s both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.q-board.anim .q-fill { animation: none; transition: width 1.1s cubic-bezier(.2, 1, .3, 1); }
+.q-board.anim .q-delta { opacity: 0; transform: scale(.4); transition: all .4s cubic-bezier(.2, 1.8, .4, 1); }
+.q-board.anim .q-row.gaining .q-delta { opacity: 1; transform: none; }
+.q-board.anim .q-row.up { z-index: 2; }
+.q-board.anim .q-row.up .q-name { color: var(--lime); }
+.q-board.anim .q-row.up::after { content: '▲'; position: absolute; left: -2.4rem; top: 1.1rem; color: var(--lime); font-size: 1.6rem; animation: popIn .4s both; }
+
+/* Final round grid (fits a 1080p TV with up to 8 answers) */
+.q-final .q-prompt { margin-bottom: 1.2rem; }
+.q-final .q-prompt-text { font-size: 2.8rem; }
+.q-final-grid { display: grid; gap: 1.4rem 1.6rem; max-width: 100rem; margin: 0 auto; align-items: stretch; }
+.q-final-ans { font-size: 1.7rem; padding: 1.4rem 1.1rem 1.1rem; display: flex; align-items: center; justify-content: center; min-height: 8rem; }
+.q-final-ans .fit { --fit-h: 8rem; }
+.q-final-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: .5rem; padding: 1.3rem 1rem 1rem;
+  border-top: 1rem solid var(--c, var(--pink)); opacity: 0; animation: popIn .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.q-final-card .q-final-text { font-size: 1.6rem; width: 100%; justify-content: center; }
+.q-final-card .q-final-text .fit { --fit-h: 6.2rem; }
+.q-final-card .q-byline { font-size: 1.2rem; margin-top: 0; padding: .2rem .8rem .2rem .2rem; }
+.q-final-card .q-voter-chips { margin-top: 0; min-height: 0; }
+.q-final-card .q-chip { font-size: .9rem; }
+.q-final-foot { display: flex; gap: .8rem; align-items: baseline; justify-content: center; }
+.q-final-foot .q-pts { font-size: 2rem; }
+.q-final-card.win { background: #fff6c2; box-shadow: 8px 8px 0 var(--ink), 0 0 0 7px var(--yellow); }

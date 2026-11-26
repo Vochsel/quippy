@@ -106,6 +106,7 @@ export class Room {
       const stillHere = [...this.conns].some((c) => c.playerId === conn.playerId);
       if (p && !stillHere) {
         p.connected = false;
+        p.lastSeen = Date.now();
         if (this.vipId === p.id) this.#electVip();
       }
     }
@@ -150,7 +151,8 @@ export class Room {
       const activePlayers = [...this.players.values()].filter((x) => !x.audience && !x.kicked);
       const def = gameById(this.selectedGame);
       const full = activePlayers.length >= Math.min(def.maxPlayers, MAX_PLAYERS_HARD);
-      p = { id, name, color, face, isBot: false, audience: !!this.game || full, joinedAt: Date.now() };
+      // Joining mid-game: watch and vote now, play from the next game.
+      p = { id, name, color, face, isBot: false, audience: !!this.game || full, autoAudience: !!this.game && !full, joinedAt: Date.now() };
       this.players.set(id, p);
       this.fx({ sfx: 'join' });
       if (Date.now() - this.lastJoinLineAt > 2500) {
@@ -206,7 +208,7 @@ export class Room {
     }
     if (a === 'toggleAudience' && conn.role === 'player' && !this.game) {
       const p = this.players.get(conn.playerId);
-      if (p) p.audience = !p.audience;
+      if (p) { p.audience = !p.audience; p.autoAudience = false; }
       this.dirty();
       return;
     }
@@ -284,8 +286,10 @@ export class Room {
   async startGame(type) {
     const def = gameById(type);
     if (!def) return;
+    // A phone that just went to sleep (or blipped) still gets dealt in.
+    const recently = (p) => p.connected || (p.lastSeen && Date.now() - p.lastSeen < 90000);
     const eligible = [...this.players.values()]
-      .filter((p) => p.connected && !p.audience && !p.kicked)
+      .filter((p) => recently(p) && !p.audience && !p.kicked)
       .sort((a, b) => a.joinedAt - b.joinedAt);
     if (eligible.length < def.minPlayers) {
       this.say(this.content().line('needMorePlayers', { min: def.minPlayers }));
@@ -406,6 +410,10 @@ export class Room {
     this.game = null;
     this.gameMeta = null;
     this.music = 'lobby';
+    // People who joined mid-game were parked in the audience: deal them in now.
+    for (const p of this.players.values()) {
+      if (p.autoAudience) { p.audience = false; p.autoAudience = false; }
+    }
     if (results && meta) {
       this.lastResults = {
         gameType: meta.type,

@@ -25,7 +25,11 @@ export function mount(root, api) {
     },
 
     answer(g) {
-      const ta = h('textarea', { maxLength: g.maxLength || 200, placeholder: 'Be funny. No pressure.', rows: 3, autocomplete: 'off', enterKeyHint: 'send' });
+      const ta = h('textarea', {
+        maxLength: g.maxLength || 200, placeholder: 'Be funny. No pressure.', rows: 3, enterKeyHint: 'send',
+        // Keep it exactly as typed: no autocorrect / spellcheck rewriting the joke.
+        autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false', 'data-gramm': 'false',
+      });
       const chars = h('div.ph-chars', `0 / ${g.maxLength || 200}`);
       const submit = h('button.btn.pink', { disabled: true }, 'Send it ✓');
       const send = () => {

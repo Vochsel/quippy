@@ -30,6 +30,7 @@ export async function handleApi(req, deps) {
       locales: content.locales(),
       defaultLocale: config.defaultLocale,
       speechLang: content.pack(config.defaultLocale).meta.speechLang || 'en-AU',
+      countdown: Object.fromEntries([5, 4, 3, 2, 1].map((n) => [n, content.pack(config.defaultLocale).host[`count${n}`]?.[0] || String(n)])),
       games: GAMES.map((g) => ({ id: g.id, name: g.name, tagline: g.tagline, usesAi: !!g.usesAi })),
       publicUrl: config.publicUrl || null,
       dev: config.dev,

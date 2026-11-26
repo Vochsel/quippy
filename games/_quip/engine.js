@@ -11,7 +11,8 @@
 // can be snapshotted and resumed after a restart.
 import { cleanText, fill, pick, shuffle, sleep, withTimeout } from '../../core/util.js';
 
-const FINAL_VOTE_POINTS = 400;
+// Every round is worth more: round 1 x1, round 2 x2, the final x3.
+const FINAL_VOTE_POINTS = 200; // x3 in the final = 600 per vote
 const WIN_BONUS = 100;
 const SHUTOUT_BONUS = 250;
 const REVEAL_MS = 9500;
@@ -187,9 +188,7 @@ export class QuipGame {
       this.ctx.sayLine('tenSeconds', {});
       for (const id of slow(2)) this.ctx.say(roasts[id]);
     });
-    for (const n of [5, 4, 3, 2, 1]) {
-      at(n, () => { if (this.#pending().length) this.ctx.sayNow?.(this.ctx.line(`count${n}`, {})); });
-    }
+    // "5, 4, 3, 2, 1" is played by the TV itself, locked to its timer ring.
   }
 
   // ---------------------------------------------------------------- prompts
@@ -596,11 +595,17 @@ export class QuipGame {
     const totalVotes = Object.values(votes).reduce((x, y) => x + y, 0);
     const points = {};
     for (const id of f.order) {
-      points[id] = votes[id] * FINAL_VOTE_POINTS;
+      points[id] = votes[id] * FINAL_VOTE_POINTS * 3;
       s.scores[id] = (s.scores[id] || 0) + points[id];
       if (s.tallies[id]) s.tallies[id].votesReceived += votes[id];
     }
     const top = Math.max(0, ...Object.values(votes));
+    const topVotes = Math.max(0, ...Object.values(votes));
+    if (topVotes > 0) {
+      for (const id of f.order) {
+        if (votes[id] === topVotes) { points[id] += WIN_BONUS * 3; s.scores[id] += WIN_BONUS * 3; }
+      }
+    }
     f.result = {
       votes, points, totalVotes,
       ascending: [...f.order].sort((x, y) => votes[x] - votes[y]),
@@ -793,7 +798,7 @@ export class QuipGame {
   hostView() {
     const s = this.s;
     const base = {
-      phase: s.phase, round: s.round, deadline: s.deadline, timer: TIMED.includes(s.phase), timerTotal: s.timerMs,
+      phase: s.phase, round: s.round, mult: Math.max(1, s.round), deadline: s.deadline, timer: TIMED.includes(s.phase), timerTotal: s.timerMs,
       mode: this.meta.id, title: this.meta.name, roundTitle: this.p.roundTitle?.(s.round) || null,
     };
     switch (s.phase) {

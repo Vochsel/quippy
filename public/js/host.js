@@ -41,6 +41,8 @@ async function boot() {
     serverVoices: cfg.voice?.voices || [], serverVoice: cfg.voice?.voice,
     now: () => (live ? live.serverNow() : Date.now()),
   });
+  voice.countTexts = cfg.countdown || { 5: 'Five.', 4: 'Four.', 3: 'Three.', 2: 'Two.', 1: 'One.' };
+  voice.preloadCountdown(voice.countTexts);
   const params = new URLSearchParams(location.search);
   let room;
   try {
@@ -75,6 +77,7 @@ function handleFx(fx) {
   else if (fx.say) {
     voice?.say(fx.say, fx.ts, {
       scene: fx.scene,
+      cue: fx.cue,
       onStart: fx.cue ? () => emitCue(fx.cue, fx.cueId) : null,
       // When the last answer has been read, tell the server voting can open.
       onEnd: fx.cue === 'B' ? () => live?.game({ type: 'readDone', matchupId: fx.cueId }) : null,
@@ -328,7 +331,14 @@ function tickTimer() {
   $('#timer-num').textContent = secs;
   $('#timer-arc').style.strokeDashoffset = String(276.5 * (1 - Math.min(1, left / total)));
   el.classList.toggle('low', secs <= 5);
-  if (secs <= 5 && secs > 0 && secs !== lastTick) audio.sfx('tick');
+  if (secs <= 5 && secs > 0 && secs !== lastTick) {
+    audio.sfx('tick');
+    // Only count down if someone is still holding things up.
+    const waiting = g.phase === 'answer' || g.phase === 'finalAnswer'
+      ? (g.players || []).some((p) => !p.done)
+      : !g.reading && (g.voters || []).some((v) => !v.done);
+    if (waiting && lastTick !== null) voice?.countdown(secs);
+  }
   lastTick = secs;
 }
 

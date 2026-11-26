@@ -87,3 +87,5 @@ html.phone, html.phone body { height: 100%; overflow: hidden; overscroll-behavio
 .edit-me { font-size: .95rem; padding: .35rem .9rem; margin-top: .2rem; }
 .ph-top { width: 100%; max-width: 520px; align-self: center; padding-top: calc(.9rem + env(safe-area-inset-top)); }
 .ph-timer { max-width: 520px; align-self: center; }
+
+.linkish { display: block; margin: .4rem auto; background: none; border: none; color: #fff; opacity: .7; text-decoration: underline; font-weight: 800; font-size: .9rem; }

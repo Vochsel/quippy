@@ -22,6 +22,17 @@ function fitText(text) {
   return box;
 }
 
+function countUp(el, from, to, ms) {
+  const start = performance.now();
+  const fmtN = (n) => Number(n).toLocaleString('en-AU');
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms);
+    el.textContent = fmtN(Math.round(from + (to - from) * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 function autoScroll(root) {
   for (const box of root.querySelectorAll('.fit')) {
     const inner = box.firstElementChild;
@@ -139,38 +150,70 @@ export function mount(root, api) {
         banner ? h('div.q-banner.slam', { style: { animationDelay: `${T.result}s` } }, banner) : null);
     },
 
+    // Rows start in the previous order with old scores, then points count up
+    // and everyone slides to their new place.
     scores(g) {
-      const max = Math.max(1, ...g.scoreboard.map((p) => p.score));
-      return h('div.q-scores',
-        h('h2.q-heading.slide-up', 'Scores'),
-        h('div.q-board', g.scoreboard.map((p, i) => h('div.q-row.slide-up', { style: { animationDelay: `${0.15 * (g.scoreboard.length - i)}s` } },
-          h('span.q-rank', `${p.rank}`), avatar(p, '3.6rem', { crown: p.rank === 1 }), h('span.q-name', p.name),
-          h('div.q-bar', h('div.q-fill', { style: { width: `${(p.score / max) * 100}%`, background: p.color } })),
-          h('span.q-score', fmt(p.score)),
-          p.delta ? h('span.q-delta.pop-in', { style: { animationDelay: '1s' } }, `+${fmt(p.delta)}`) : h('span.q-delta'),
-        ))));
+      const ROW = 5.2; // rem
+      const rows = g.scoreboard.map((p) => ({ ...p, prev: p.score - (p.delta || 0) }));
+      const before = [...rows].sort((a, b) => b.prev - a.prev);
+      const max = Math.max(1, ...rows.map((p) => p.score));
+      const board = h('div.q-board.anim', { style: { height: `${rows.length * ROW}rem` } });
+      const els = new Map();
+      before.forEach((p, i) => {
+        const score = h('span.q-score', fmt(p.prev));
+        const fill = h('div.q-fill', { style: { width: `${(p.prev / max) * 100}%`, background: p.color } });
+        const rank = h('span.q-rank', `${i + 1}`);
+        const el = h('div.q-row', { style: { top: `${i * ROW}rem`, animationDelay: `${0.08 * i}s` } },
+          rank, avatar(p, '3.6rem'), h('span.q-name', p.name),
+          h('div.q-bar', fill), score,
+          p.delta ? h('span.q-delta', `+${fmt(p.delta)}`) : h('span.q-delta'));
+        els.set(p.id, { el, score, fill, rank, p });
+        board.append(el);
+      });
+      setTimeout(() => {
+        for (const { el, score, fill, p } of els.values()) {
+          if (p.delta) el.classList.add('gaining');
+          fill.style.width = `${(p.score / max) * 100}%`;
+          countUp(score, p.prev, p.score, 1100);
+        }
+      }, 1000);
+      setTimeout(() => {
+        g.scoreboard.forEach((p, i) => {
+          const r = els.get(p.id);
+          const moved = before.findIndex((x) => x.id === p.id) - i;
+          r.el.style.top = `${i * ROW}rem`;
+          r.rank.textContent = `${p.rank}`;
+          if (moved > 0) r.el.classList.add('up');
+          if (p.rank === 1) r.el.querySelector('.avatar')?.append(h('span.crown.pop-in', '👑'));
+        });
+      }, 2300);
+      return h('div.q-scores', h('h2.q-heading.slide-up', g.roundTitle ? `Scores after ${g.roundTitle.split(' ·')[0]}` : 'Scores'), board);
     },
 
     finalVote(g) {
+      const cols = Math.min(4, Math.max(2, Math.ceil(g.answers.length / 2)));
       return h('div.q-final',
         promptCard(g),
-        h('div.q-final-grid', g.answers.map((a, i) => h('div.card.q-final-ans.pop-in', { style: { animationDelay: `${0.4 + i * 0.2}s` } },
-          h('span.q-letter', `${i + 1}`), fitText(a.text)))),
+        h('div.q-final-grid', { style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } },
+          g.answers.map((a, i) => h('div.card.q-final-ans.pop-in', { style: { animationDelay: `${0.4 + i * 0.2}s` } },
+            h('span.q-letter', `${i + 1}`), fitText(a.text)))),
         voterRow(g.voters),
-        h('div.q-progress', `Pick ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
+        h('div.q-progress', `Tap ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
     },
 
+    // Same grid as the vote, revealed from fewest votes to most.
     finalReveal(g) {
       const step = 2.6;
+      const cols = Math.min(4, Math.max(2, Math.ceil(g.answers.length / 2)));
       return h('div.q-final',
         promptCard(g, false),
-        h('div.q-final-list', g.answers.map((a, i) => h(`div.card.q-final-row${a.winner ? '.win' : ''}`, { style: { animationDelay: `${i * step + 0.5}s`, '--c': a.author.color } },
-          a.winner ? h('div.q-ribbon.small', 'WINNER') : null,
-          h('div.q-final-text', fitText(a.text), a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
-          h('div.q-final-mid',
-            h('div.q-author', avatar(a.author, '2.6rem'), h('b', a.author.name)),
-            h('div.q-voter-chips.left', a.voters.map((v) => voterChip(v, 0)))),
-          h('div.q-final-votes', h('span.q-vcount', `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))));
+        h('div.q-final-grid.reveal', { style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } },
+          g.answers.map((a, i) => h(`div.card.q-final-card${a.winner ? '.win' : ''}`, { style: { animationDelay: `${i * step + 0.5}s`, '--c': a.author.color } },
+            a.winner ? h('div.q-ribbon.small', 'WINNER') : null,
+            h('div.q-final-text', fitText(a.text), a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
+            h('div.q-byline', h('span.q-by', 'by'), avatar(a.author, '2.2rem', { crown: a.winner }), h('b', a.author.name)),
+            h('div.q-voter-chips', a.voters.map((v) => voterChip(v, 0))),
+            h('div.q-final-foot', h('span.q-vcount', `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))));
     },
 
     gameOver(g) {

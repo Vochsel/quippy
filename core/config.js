@@ -55,7 +55,7 @@ export function buildConfig(env = {}) {
       gatewayModel: env.TTS_GATEWAY_MODEL || 'google/gemini-3.8-flash-tts',
       gatewayVoice: env.TTS_GATEWAY_VOICE || 'Charon',
       gatewayInstructions: env.TTS_GATEWAY_INSTRUCTIONS
-        || 'You are Monty, a game-show host: dry, deadpan, faintly world-weary, quietly amused. Australian accent. Brisk pace, crisp comic timing, a slight pause before punchlines. Never shouty.',
+        || 'You are Monty, a game-show host: dry, deadpan, faintly world-weary, quietly amused. Australian accent. Brisk pace, crisp comic timing, a slight pause before punchlines. Never shouty. Read the text exactly as written, word for word: keep misspellings, slang, typos and made-up words as they are, never correct, expand or rephrase anything.',
       elevenLabsKey: env.ELEVENLABS_API_KEY || '',
       elevenLabsVoiceId: env.ELEVENLABS_VOICE_ID || '',
       elevenLabsModel: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
