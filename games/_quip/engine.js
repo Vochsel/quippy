@@ -201,9 +201,27 @@ export class QuipGame {
     });
   }
 
+  // Anyone who missed the deal (phone was asleep, joined late) gets added at
+  // the start of the next round, with a fresh score.
+  #syncRoster() {
+    const s = this.s;
+    const add = this.ctx.newcomers?.(this.meta.maxPlayers || 8) || [];
+    for (const id of add) {
+      if (s.roster.includes(id)) continue;
+      s.roster.push(id);
+      s.scores[id] = 0;
+      s.tallies[id] = { matchupsPlayed: 0, matchupsWon: 0, shutouts: 0, votesReceived: 0, votesCast: 0, panics: 0, noAnswers: 0, answersWritten: 0 };
+    }
+    if (add.length) {
+      this.ctx.addToRoster?.(add);
+      this.ctx.sayLine('lateJoin', { name: add.map((id) => this.ctx.playerName(id)).join(' and ') });
+    }
+  }
+
   async beginRound(r) {
     const s = this.s;
     if (r > 3) return this.gameOver();
+    if (r > 1) this.#syncRoster();
     s.round = r;
     s.roundStartScores = { ...s.scores };
     s.loadingText = this.p.loadingText?.(r) || '';

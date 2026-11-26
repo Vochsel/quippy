@@ -347,6 +347,7 @@ function setupSettings() {
   const dlg = $('#settings');
   $('#settings-btn').addEventListener('click', () => {
     $('#set-voice-on').checked = voice.enabled;
+    $('#to-lobby').classList.toggle('hidden', view?.room?.phase !== 'game' || !isOwner);
     const local = voice.provider === 'local';
     const current = local ? voice.serverVoice : voice.pickVoice()?.name;
     const options = local
@@ -377,5 +378,11 @@ function setupSettings() {
   $('#test-voice').addEventListener('click', () => voice.say('Righto. This is how I sound. Try not to be too impressed.'));
   $('#fullscreen').addEventListener('click', () => document.documentElement.requestFullscreen?.());
   $('#new-room').addEventListener('click', () => location.replace('/host?new'));
+  $('#to-lobby').addEventListener('click', () => {
+    if (view?.room?.phase !== 'game') { dlg.close(); return; }
+    if (!confirm('End this game and go back to the lobby? Scores from this game won\'t count.')) return;
+    live.action('abort');
+    dlg.close();
+  });
   $('#close-settings').addEventListener('click', () => dlg.close());
 }

@@ -146,3 +146,23 @@ test('a game snapshot resumes mid-round in a fresh Room (restart survival)', asy
   const done = await advance(revived, (r) => !r.game && r.lastResults);
   assert.ok(done, 'revived game finished');
 });
+
+test('someone who missed the deal is added at the next round', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const saved = {};
+  const room = new Room({ code: 'LATE', crewId: 'h_testcrew03', deps: makeDeps(store, saved) });
+  await room.init();
+  for (let i = 0; i < 3; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  assert.ok(await advance(room, (r) => r.game?.s.round === 1 && r.game?.s.phase === 'answer'));
+  room.addBot(); // arrives during round 1
+  const late = [...room.players.keys()].at(-1);
+  assert.ok(!room.game.s.roster.includes(late));
+  assert.ok(await advance(room, (r) => r.game?.s.round === 2 && r.game?.s.phase === 'answer'), 'reached round 2');
+  assert.ok(room.game.s.roster.includes(late), 'late player dealt in at round 2');
+  assert.ok(room.game.s.matchups.some((m) => m.authors.includes(late)), 'late player has prompts');
+  assert.ok(await advance(room, (r) => !r.game && r.lastResults), 'game still finishes');
+  assert.equal(room.lastResults.players.length, 4);
+});

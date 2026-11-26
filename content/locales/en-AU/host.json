@@ -365,6 +365,11 @@
       "Answers locked in!",
       "Pens down!",
       "That's time. Let's see what you've done."
+    ],
+    "lateJoin": [
+      "{name} is joining us this round. Better late than never.",
+      "Welcome aboard, {name}. You're starting from zero. Good luck.",
+      "{name} has finally shown up. Deal them in."
     ]
   }
 }

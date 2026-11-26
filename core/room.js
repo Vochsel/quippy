@@ -165,6 +165,7 @@ export class Room {
     p.photo = profile.photo || null;
     p.kicked = false;
     p.connected = true;
+    p.lastSeen = Date.now();
     conn.role = 'player';
     conn.playerId = id;
     if (!this.vipId || !this.players.get(this.vipId)?.connected) this.#electVip();
@@ -288,10 +289,7 @@ export class Room {
   async startGame(type) {
     const def = gameById(type);
     if (!def) return;
-    // A phone that just went to sleep (or blipped) still gets dealt in.
-    const recently = (p) => p.connected || (p.lastSeen && Date.now() - p.lastSeen < 90000);
-    const eligible = [...this.players.values()]
-      .filter((p) => recently(p) && !p.audience && !p.kicked)
+    const eligible = this.#members()
       .sort((a, b) => a.joinedAt - b.joinedAt);
     if (eligible.length < def.minPlayers) {
       this.say(this.content().line('needMorePlayers', { min: def.minPlayers }));
@@ -307,6 +305,18 @@ export class Room {
     this.game = def.create(this.makeCtx(def));
     this.game.start();
     this.dirty();
+  }
+
+  // Who's "in the room" for dealing purposes. Phones get locked, apps get
+  // backgrounded and sockets drop constantly at a party, so membership is not
+  // the same as being connected right now: anyone seen in the last 30 minutes
+  // who isn't watching from the audience counts.
+  #members() {
+    const now = Date.now();
+    return [...this.players.values()]
+      .filter((p) => !p.audience && !p.kicked)
+      .filter((p) => p.isBot || p.connected || now - (p.lastSeen || p.joinedAt || 0) < 30 * 60 * 1000)
+      .sort((a, b) => a.joinedAt - b.joinedAt);
   }
 
   makeCtx(def) {
@@ -332,6 +342,13 @@ export class Room {
         return p ? { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, isBot: !!p.isBot } : { id, name: 'Someone', color: '#ccc', face: 0 };
       },
       isConnected: (id) => !!room.players.get(id)?.connected,
+      // Members not yet in this game (joined late / missed the deal), up to a cap.
+      newcomers: (max) => {
+        const roster = new Set(room.gameMeta?.roster || []);
+        const out = room.#members().filter((p) => !roster.has(p.id)).map((p) => p.id);
+        return out.slice(0, Math.max(0, max - roster.size));
+      },
+      addToRoster: (ids) => { if (room.gameMeta) room.gameMeta.roster = [...new Set([...room.gameMeta.roster, ...ids])]; },
       hostCount: () => [...room.conns].filter((c) => c.role === 'host').length,
       isBot: (id) => !!room.players.get(id)?.isBot,
       // Everyone who can vote but isn't in the game: audience + latecomers.
