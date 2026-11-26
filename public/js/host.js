@@ -29,8 +29,30 @@ const stage = $('#stage');
 $('#start-btn').addEventListener('click', boot);
 document.addEventListener('keydown', (e) => { if (!live && (e.key === 'Enter' || e.key === ' ')) boot(); });
 
+// After the first time, a reload goes straight back to whatever stage the
+// room is at (no splash). Browsers only allow sound after someone interacts,
+// so show a small chip until then.
+const soundChip = document.createElement('button');
+soundChip.className = 'sound-chip hidden';
+soundChip.textContent = '🔊 Tap for sound';
+document.body.append(soundChip);
+const enableSound = () => {
+  audio.unlock();
+  if (audio.ctx?.state === 'running') {
+    soundChip.classList.add('hidden');
+    for (const ev of ['pointerdown', 'keydown']) removeEventListener(ev, enableSound, true);
+  }
+};
+if (load('quippy.autostart') === '1' && !new URLSearchParams(location.search).has('new')) {
+  boot().then(() => {
+    if (audio.ctx?.state !== 'running') soundChip.classList.remove('hidden');
+    for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, enableSound, true);
+  });
+}
+
 async function boot() {
   if (live) return;
+  save('quippy.autostart', '1');
   audio.unlock();
   $('#splash').classList.add('hidden');
   $('#app').classList.remove('hidden');

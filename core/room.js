@@ -118,6 +118,7 @@ export class Room {
   async onMessage(conn, msg) {
     try {
       if (!msg || typeof msg !== 'object') return;
+      if (conn.playerId) { const p = this.players.get(conn.playerId); if (p) p.lastSeen = Date.now(); }
       if (msg.t === 'ping') return conn.send({ t: 'pong', now: Date.now(), id: msg.id });
       if (msg.t === 'hello') return await this.#hello(conn, msg);
       if (msg.t === 'action') return await this.#action(conn, msg);

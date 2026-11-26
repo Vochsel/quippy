@@ -77,3 +77,14 @@ export async function fingerprint() {
   ];
   return sha(parts.join('||'));
 }
+
+// The room this phone was last in: localStorage + a cookie (belt and braces;
+// some browsers clear one but not the other).
+export function setLastRoom(code) {
+  store('quippy.lastRoom', code || '');
+  document.cookie = `qroom=${code || ''}; max-age=${code ? 60 * 60 * 12 : 0}; path=/; samesite=lax`;
+}
+export function lastRoom() {
+  const c = load('quippy.lastRoom') || readCookie('qroom') || '';
+  return /^[A-Z]{4}$/.test(c) ? c : '';
+}

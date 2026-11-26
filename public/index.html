@@ -32,6 +32,7 @@
   <main class="ph-main hero">
     <h1 class="logo"><span>Q</span><span>U</span><span>I</span><span>P</span><span>P</span><span>Y</span></h1>
     <p>Party games for the lounge room. The TV is the stage, your phones are the controllers. No apps, no accounts.</p>
+    <div id="rejoin" class="choices" style="display:none; margin-bottom: 1.2rem"></div>
     <div class="choices">
       <form class="card tilt-l" action="/play" onsubmit="event.preventDefault(); const c=this.code.value.trim().toUpperCase(); if (/^[A-Z]{4}$/.test(c)) location.href='/'+c;">
         <h2>📱 Join a game</h2>
@@ -48,7 +49,29 @@
       </div>
     </div>
     <footer>Zinger Duel · Callback Club · more games coming<br><span id="version" class="version"></span></footer>
-    <script>document.getElementById('version').textContent = (window.QUIPPY && window.QUIPPY.version) || '';</script>
+    <script>
+      document.getElementById('version').textContent = (window.QUIPPY && window.QUIPPY.version) || '';
+      // Back from the lock screen / a closed tab: offer the room you were in.
+      (async () => {
+        let code = '';
+        try { code = localStorage.getItem('quippy.lastRoom') || ''; } catch (e) {}
+        if (!code) { const m = document.cookie.match(/(?:^|; )qroom=([A-Z]{4})/); if (m) code = m[1]; }
+        if (!/^[A-Z]{4}$/.test(code)) return;
+        const live = ((window.QUIPPY && window.QUIPPY.live) || '').replace(/\/+$/, '');
+        try {
+          const res = await fetch(live + '/api/rooms/' + code);
+          if (!res.ok) return;
+          const box = document.getElementById('rejoin');
+          const a = document.createElement('a');
+          a.className = 'btn pink block big pulse';
+          a.href = '/' + code;
+          a.style.cssText = 'text-decoration:none; text-align:center';
+          a.textContent = 'Rejoin ' + code + ' ▶';
+          box.appendChild(a);
+          box.style.display = 'grid';
+        } catch (e) {}
+      })();
+    </script>
   </main>
 </body>
 </html>

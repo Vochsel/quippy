@@ -36,7 +36,7 @@ export function mount(root, api) {
         const text = ta.value.trim();
         if (!text) return;
         submit.disabled = true;
-        api.send({ type: 'answer', matchupId: g.matchupId, text });
+        api.send({ type: 'answer', matchupId: g.matchupId, text, panic: text === g.panicText });
         api.vibrate(30);
       };
       // Grow with the answer, then scroll inside the box once it hits the cap.
@@ -56,7 +56,15 @@ export function mount(root, api) {
           h('p.ph-prompt', g.prompt),
           ta, chars,
           h('div.ph-actions',
-            h('button.btn.white', { onClick: () => { api.send({ type: 'panic', matchupId: g.matchupId }); api.vibrate([20, 40, 20]); } }, '🆘 Panic'),
+            h('button.btn.white', {
+              onClick: () => {
+                // Drop the safety answer into the box so you can see it, tweak it, or send it.
+                ta.value = g.panicText || '';
+                ta.dispatchEvent(new Event('input'));
+                ta.focus();
+                api.vibrate([20, 40, 20]);
+              },
+            }, '🆘 Panic'),
             submit)));
       setTimeout(() => ta.focus(), 250);
       return el;

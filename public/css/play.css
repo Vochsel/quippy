@@ -91,3 +91,8 @@ html.phone, html.phone body { height: 100%; overflow: hidden; overscroll-behavio
 .linkish { display: block; margin: .4rem auto; background: none; border: none; color: #fff; opacity: .7; text-decoration: underline; font-weight: 800; font-size: .9rem; }
 .photo-btns { display: flex; gap: .5rem; justify-content: center; margin: -.4rem 0 .9rem; flex-wrap: wrap; }
 .photo-btns .btn { font-size: .95rem; padding: .35rem .8rem; }
+
+/* Shown while the phone is reconnecting */
+body.offline::before { content: 'Reconnecting…'; position: fixed; top: calc(.4rem + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+  z-index: 50; background: var(--red); color: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .2rem .9rem; font-size: .85rem;
+  animation: pulse 1.2s ease-in-out infinite; }

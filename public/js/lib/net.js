@@ -23,14 +23,47 @@ export class LiveRoom {
     this.backoff = 500;
     this.closedForGood = false;
     this.ws = null;
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !this.isOpen()) this.connect();
-    });
-    window.addEventListener('online', () => !this.isOpen() && this.connect());
+    this.lastHeard = 0;
+    // Coming back to the page (unlock, app switch, back/forward cache): make
+    // sure the socket is really alive, and replace it if it isn't.
+    const wake = () => this.checkAlive(4000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wake(); });
+    window.addEventListener('pageshow', wake);
+    window.addEventListener('focus', wake);
+    window.addEventListener('online', () => this.reconnectNow());
     // Clock sync: ping/pong round trips; trust the fastest recent samples.
     this.samples = [];
     this.pings = new Map();
-    setInterval(() => this.ping(), 15000);
+    // Heartbeat + watchdog: phones (iOS especially) can leave a socket that
+    // looks open but is dead. If we hear nothing back for a while, start over.
+    setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      this.ping();
+      if (this.isOpen() && Date.now() - this.lastHeard > 25000) this.reconnectNow();
+    }, 8000);
+  }
+
+  // Ping, and if no reply arrives within `ms`, force a fresh connection.
+  checkAlive(ms) {
+    if (this.closedForGood) return;
+    if (!this.isOpen()) { this.reconnectNow(); return; }
+    const before = this.lastHeard;
+    this.ping();
+    setTimeout(() => { if (this.lastHeard === before) this.reconnectNow(); }, ms);
+  }
+
+  reconnectNow() {
+    if (this.closedForGood) return;
+    const old = this.ws;
+    this.ws = null;
+    if (old) {
+      old.onclose = null; old.onmessage = null; old.onerror = null;
+      try { old.close(); } catch { /* already gone */ }
+    }
+    clearTimeout(this.retry);
+    this.backoff = 500;
+    this.onStatus('closed');
+    this.connect();
   }
 
   url() {
@@ -47,13 +80,16 @@ export class LiveRoom {
     this.onStatus('connecting');
     const ws = new WebSocket(this.url());
     this.ws = ws;
+    setTimeout(() => { if (this.ws === ws && ws.readyState === WebSocket.CONNECTING) this.reconnectNow(); }, 8000);
     ws.onopen = () => {
       this.backoff = 500;
+      this.lastHeard = Date.now();
       this.onStatus('open');
       ws.send(JSON.stringify(this.hello()));
       for (let i = 0; i < 5; i++) setTimeout(() => this.ping(), i * 250);
     };
     ws.onmessage = (ev) => {
+      this.lastHeard = Date.now();
       let msg;
       try { msg = JSON.parse(ev.data); } catch { return; }
       if (msg.t === 'pong') { this.#pong(msg); return; }
@@ -69,8 +105,9 @@ export class LiveRoom {
         return;
       }
       this.onStatus('closed');
-      this.retry = setTimeout(() => this.connect(), this.backoff);
-      this.backoff = Math.min(this.backoff * 2, 8000);
+      // Keep trying forever, with jitter so a room full of phones doesn't stampede.
+      this.retry = setTimeout(() => this.connect(), this.backoff * (0.75 + Math.random() * 0.5));
+      this.backoff = Math.min(this.backoff * 1.7, 6000);
     };
   }
 

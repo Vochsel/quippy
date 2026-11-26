@@ -1,13 +1,16 @@
 // The phone controller: join a room, pick a look, play, and see your stats.
 import { avatar, avatarSvg, COLORS, FACES } from './lib/avatar.js';
 import { $, fmt, h, mountInto } from './lib/dom.js';
-import { deviceId, fingerprint, load, save, setDeviceId } from './lib/identity.js';
+import { deviceId, fingerprint, lastRoom, load, save, setDeviceId, setLastRoom } from './lib/identity.js';
 import { api, LiveRoom } from './lib/net.js';
 
 const app = $('#app');
 const top = $('#top');
 
+// Room codes never contain vowels or Y (see core/util.js), so /play, /host etc. aren't codes.
+const CODE_RE = /^[BCDFGHJKLMNPQRSTVWXZ]{4}$/;
 let code = (location.pathname.match(/^\/([A-Za-z]{4})\/?$/)?.[1] || new URLSearchParams(location.search).get('room') || '').toUpperCase();
+if (!CODE_RE.test(code)) code = '';
 let did = deviceId();
 let fp = null;
 let profile = null; // public profile from the server
@@ -38,6 +41,10 @@ start();
 
 async function start() {
   fp = await fingerprint().catch(() => null);
+  if (!code && lastRoom()) {
+    const info = await api(`/api/rooms/${lastRoom()}`).catch(() => null);
+    if (info) { code = lastRoom(); history.replaceState(null, '', `/${code}`); }
+  }
   if (!code) return codeScreen();
   return identify();
 }
@@ -74,7 +81,7 @@ async function identify() {
     profile = res.profile;
     if (profile) {
       draft = { name: profile.name || draft.name, color: profile.color || draft.color, face: profile.face ?? draft.face, photo: profile.photo || null };
-      if (load('quippy.lastRoom') === code && draft.name) return connect();
+      if (lastRoom() === code && draft.name) return connect();
       return joinScreen();
     }
     if (res.suggestion) return welcomeBackScreen(res.suggestion);
@@ -207,17 +214,17 @@ function connect() {
     onMessage,
     onStatus: (s) => {
       if (s === 'gone') {
-        save('quippy.lastRoom', '');
+        setLastRoom('');
         live = null;
         code = '';
         history.replaceState(null, '', '/play');
         codeScreen('That room has closed. Grab the new code from the TV.');
-      } else if (s === 'closed' && view) {
-        toast('Reconnecting…', 1500);
       }
+      document.body.classList.toggle('offline', s === 'closed' || s === 'connecting');
     },
   });
   live.connect();
+  window.__quippyLive = live; // handy for debugging from the console
   requestWakeLock();
   requestAnimationFrame(tickTimer);
 }
@@ -225,7 +232,7 @@ function connect() {
 function onMessage(msg) {
   switch (msg.t) {
     case 'welcome':
-      save('quippy.lastRoom', code);
+      setLastRoom(code);
       if (msg.profile) profile = msg.profile;
       break;
     case 'view':
@@ -236,7 +243,7 @@ function onMessage(msg) {
       if (msg.fx.buzz) vibrate(msg.fx.buzz);
       break;
     case 'kicked':
-      save('quippy.lastRoom', '');
+      setLastRoom('');
       live.close();
       live = null;
       mountInto(top);

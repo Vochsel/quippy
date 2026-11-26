@@ -119,8 +119,10 @@ export class QuipGame {
     switch (p.type) {
       case 'answer':
       case 'panic': {
-        const panic = p.type === 'panic';
-        const text = panic ? this.ctx.content.panic() : p.text;
+        // 'panic' (older phones) submits a canned answer directly; newer phones
+        // show the suggestion first and send it back with panic: true.
+        const panic = p.type === 'panic' || (p.panic === true && p.text === this.#panicFor(pid, p.matchupId));
+        const text = p.type === 'panic' ? this.#panicFor(pid, p.matchupId) : p.text;
         if (s.phase === 'answer') this.#submitAnswer(pid, p.matchupId, text, panic);
         else if (s.phase === 'finalAnswer') this.#submitFinal(pid, text, panic);
         break;
@@ -274,6 +276,14 @@ export class QuipGame {
     this.ctx.sayLine('answerStart', {});
     this.ctx.buzz(s.roster, [80, 60, 80]);
     this.#botsAnswer();
+  }
+
+  // One stable "safety" answer per player per prompt, shown on their phone.
+  #panicFor(pid, matchupId) {
+    this.s.panicPicks ||= {};
+    const k = `${pid}|${matchupId}`;
+    this.s.panicPicks[k] ||= this.ctx.content.panic();
+    return this.s.panicPicks[k];
   }
 
   #maxChars() {
@@ -910,14 +920,14 @@ export class QuipGame {
         const next = mine.find((m) => !m.answers[pid]);
         if (!next) return watch('phoneAnswered');
         return {
-          ...base, screen: 'answer', matchupId: next.id, prompt: next.prompt.text,
+          ...base, screen: 'answer', matchupId: next.id, prompt: next.prompt.text, panicText: this.#panicFor(pid, next.id),
           index: mine.indexOf(next) + 1, total: mine.length, maxLength: this.#maxChars(),
         };
       }
       case 'finalAnswer': {
         if (!inGame) return watch('phoneAudienceWriting');
         if (s.final.answers[pid]) return watch('phoneAnswered');
-        return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true };
+        return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true, panicText: this.#panicFor(pid, 'final') };
       }
       case 'vote': {
         const m = s.matchups[s.matchIdx];
