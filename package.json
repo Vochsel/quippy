@@ -1,0 +1,24 @@
+{
+  "name": "quippy",
+  "version": "0.1.0",
+  "description": "Quippy: a couch party-game platform. TV is the stage, phones are the controllers.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning server/index.js",
+    "dev": "QUIPPY_DEV=1 node --no-warnings=ExperimentalWarning --watch server/index.js",
+    "build": "node scripts/build.js",
+    "test": "node --no-warnings=ExperimentalWarning --test test/",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "wrangler deploy"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.22.3",
+    "qrcode-generator": "^2.0.4",
+    "ws": "^8.23.0"
+  }
+}

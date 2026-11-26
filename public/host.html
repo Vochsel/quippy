@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en-AU" class="tv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quippy · TV</title>
+  <meta name="theme-color" content="#2a0d52">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/quippy.css">
+  <link rel="stylesheet" href="/css/host.css">
+  <script src="/env.js"></script>
+</head>
+<body>
+  <div class="bg-shapes" aria-hidden="true"><i style="left:6%;top:12%"></i><i style="left:22%;top:80%;animation-delay:-3s"></i><i style="left:44%;top:8%;animation-delay:-6s"></i><i style="left:63%;top:86%;animation-delay:-2s"></i><i style="left:80%;top:22%;animation-delay:-8s"></i><i style="left:92%;top:64%;animation-delay:-5s"></i><i style="left:12%;top:52%;animation-delay:-10s"></i><i style="left:55%;top:45%;animation-delay:-12s"></i><i style="left:34%;top:30%;animation-delay:-4s"></i></div>
+
+  <div id="splash" class="splash">
+    <div class="sunburst" aria-hidden="true"></div>
+    <h1 class="logo splash-logo"><span>Q</span><span>U</span><span>I</span><span>P</span><span>P</span><span>Y</span></h1>
+    <p class="splash-sub">The party game where your phone is the controller and the TV is the stage.</p>
+    <button id="start-btn" class="btn big pink pulse">Start the show ▶</button>
+    <p class="splash-hint">Put this on the big screen. Sound on. Phones out.</p>
+  </div>
+
+  <div id="app" class="hidden">
+    <header class="tv-top">
+      <div class="logo tv-logo"><span>Q</span><span>U</span><span>I</span><span>P</span><span>P</span><span>Y</span></div>
+      <div id="top-join" class="top-join"></div>
+      <div class="top-right">
+        <span id="brain-chip" class="chip ghost"></span>
+        <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+      </div>
+    </header>
+    <main id="stage" class="stage"></main>
+    <div id="caption" class="caption"><span class="caption-mic">🎙️</span><div><b id="caption-name">Monty</b><p id="caption-text"></p></div></div>
+    <div id="timer" class="timer hidden"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="44"/><circle id="timer-arc" class="arc" cx="50" cy="50" r="44"/></svg><span id="timer-num"></span></div>
+    <div id="conn" class="conn hidden">Reconnecting…</div>
+  </div>
+
+  <dialog id="settings" class="settings card">
+    <h2>Settings</h2>
+    <label class="row"><span>Host voice-over</span><input id="set-voice-on" type="checkbox"></label>
+    <label class="row" id="voice-pick-row"><span>Voice</span><select id="set-voice"></select></label>
+    <label class="row"><span>Voice speed</span><input id="set-rate" type="range" min="0.8" max="1.3" step="0.02"></label>
+    <label class="row"><span>Voice pitch</span><input id="set-pitch" type="range" min="0.5" max="1.4" step="0.05"></label>
+    <label class="row"><span>Music</span><input id="set-music" type="range" min="0" max="1" step="0.05"></label>
+    <label class="row"><span>Sound effects</span><input id="set-sfx" type="range" min="0" max="1" step="0.05"></label>
+    <p class="small" id="voice-note"></p>
+    <div class="row buttons">
+      <button class="btn white" id="test-voice">🎙️ Test voice</button>
+      <button class="btn white" id="fullscreen">⛶ Fullscreen</button>
+      <button class="btn white" id="new-room">New room</button>
+      <button class="btn teal" id="close-settings">Done</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="/js/host.js"></script>
+</body>
+</html>

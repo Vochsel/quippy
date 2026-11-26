@@ -1,0 +1,819 @@
+{
+  "prompts": [
+    {
+      "text": "What {player} is googling at 3am",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s secret talent that nobody knows about",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The name of {player}'s future pub",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "Why {player} is no longer allowed at the RSL bingo",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "{player}'s most-used emoji, and what it really means",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The one thing {player} would bring to a desert island",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "{player}'s dream job that'll never happen",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What {player}'s boss really thinks of them",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The name of {player}'s memoir",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} will be famous for in 20 years",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s worst ever pick-up line",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "What {player}'s dating profile says",
+      "tags": [
+        "relationships",
+        "tech"
+      ]
+    },
+    {
+      "text": "{player}'s idea of a romantic night in",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "{player}'s go-to order at the servo",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The dish {player} always brings to the barbie",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "{player}'s signature democracy sausage topping",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "What's really in {player}'s fridge right now",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "{player}'s secret late-night snack",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "What {player} does when nobody's watching",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s most irrational fear",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s villain origin story",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "{player}'s superhero name and power",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What {player} was in a past life",
+      "tags": [
+        "absurd",
+        "history"
+      ]
+    },
+    {
+      "text": "What {player} would be like as a ghost",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The animal {player} would be, and why",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What {player}'s pet says about them behind their back",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The Aussie animal {player} would most likely pick a fight with",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The Big Thing {player}'s hometown would build in their honour",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What {player} would do as Prime Minister for a day",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player}'s song in the Hottest 100, and where it charted",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "The footy team {player} would coach, and its biggest weakness",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "{player}'s plan for driving across the Nullarbor",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The bumper sticker on {player}'s car",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What {player} would buy from the Aldi middle aisle",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s technique at the Bunnings sausage sizzle",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s beach day essentials",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "What {player} brings to Christmas lunch that nobody eats",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "{player}'s Christmas wish list this year",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "The worst present {player} has ever given",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "What {player}'s mum says about them at family gatherings",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "{player}'s role in the family group chat",
+      "tags": [
+        "family",
+        "tech"
+      ]
+    },
+    {
+      "text": "What {player} was like as a toddler",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "{player}'s nickname at school",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "What {player} got detention for",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "{player}'s Year 12 formal story",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "What {player}'s school report card said",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "{player}'s LinkedIn headline",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "The award {player} would win at the work Christmas party",
+      "tags": [
+        "work",
+        "christmas"
+      ]
+    },
+    {
+      "text": "{player}'s out-of-office message",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The real reason {player} is always late",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "{player}'s get-rich-quick scheme",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "What {player} would do with a division one Lotto win",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "What {player} secretly spends all their money on",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "{player}'s wi-fi password",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The last thing in {player}'s search history",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The app {player} spends way too long on",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "{player}'s ringtone, and why it's embarrassing",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The reality show {player} would be kicked off first",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The movie of {player}'s life, and its tagline",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "{player}'s karaoke song of choice",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The title of the one and only hit by {player}'s band",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "{player}'s catchphrase",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The wellness trend {player} would start",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "How {player} plans to make it to 100",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "The Olympic sport {player} would win gold in",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "{player}'s lucky ritual before a grand final",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "{player}'s excuse for getting out first ball in backyard cricket",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What {player} is like as a passenger on a long road trip",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "The souvenir {player} always brings back",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "Something {player} packs that nobody else would",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "{player}'s ideal long weekend",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "{player}'s go-to costume at a dress-up party",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "{player}'s signature move on the dance floor",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "What {player} orders at the bar to look sophisticated",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "What {player} is like after three drinks",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "{player}'s specialist subject at pub trivia",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "The red flag {player} ignores every time",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "{player}'s perfect partner, described in five words",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "What {player} would say in a wedding speech",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "{player}'s worst habit",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The rule {player} breaks every single day",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} keeps in their glovebox",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player}'s house smells like",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The thing {player} is secretly proud of",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The thing {player} would grab in a fire",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} is plotting right now",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s most controversial opinion",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The one thing {player} can't live without",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s strangest collection",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A word {player} invented and uses way too much",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} would get hopelessly wrong in the year 1850",
+      "tags": [
+        "absurd",
+        "history"
+      ]
+    },
+    {
+      "text": "What aliens would learn from abducting {player}",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "{player}'s plan for the zombie apocalypse",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What {player} dreams about",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The conspiracy theory {player} secretly believes",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "{player}'s worst DIY disaster",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} says to the self-serve checkout",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s motto in life",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player}'s neighbours really think of them",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What {player} named their car",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s most Aussie moment",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Whose face {player} would put on the $5 note",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "{player}'s excuse for not shouting a round",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The thing {player}'s nan brags about to her friends",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "{player}'s signature cocktail",
+      "tags": [
+        "food",
+        "pub"
+      ]
+    },
+    {
+      "text": "The dish that would get {player} eliminated from a cooking show",
+      "tags": [
+        "food",
+        "pop"
+      ]
+    },
+    {
+      "text": "The text {player} regrets sending",
+      "tags": [
+        "relationships",
+        "tech"
+      ]
+    },
+    {
+      "text": "The real reason {player} got fired from their first job",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What {player}'s phone would say about them if it could talk",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "Why {player} is a legend at their local",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "{player}'s biggest lie this week",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The subject {player} would teach",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "{player}'s Sunday morning routine",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "{player}'s Melbourne Cup horse name",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What {player} yells when a seagull steals their chips",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "{player}'s strategy for magpie swooping season",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "{player}'s nickname at the caravan park",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What {player}'s future grandkids will say about them",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "What {player}'s job would have been in medieval times",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "{player}'s claim to fame in ancient Rome",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "The tradie {player} would be, and their worst habit",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "{player}'s coffee order, and what it says about them",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The job {player} always gets stuck with at family Christmas",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "What {player} keeps in their bedside drawer",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player}'s smoothest move in the bedroom",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What {player} got up to on their last big night out",
+      "tags": [
+        "pub",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The pet name {player} uses when nobody else is around",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "What {player} whispers on a first date",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What {player} really did at schoolies",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    }
+  ]
+}

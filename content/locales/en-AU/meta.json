@@ -1,0 +1,8 @@
+{
+  "name": "Australian English",
+  "label": "Straya",
+  "flag": "🇦🇺",
+  "hostName": "Monty",
+  "speechLang": "en-AU",
+  "llmHint": "Write in Australian English (mum, arvo, colour, servo, reckon) for an Australian crew. Use Australian references (Bunnings, Woolies, Maccas, the footy, the cricket, Centrelink, the servo, schoolies, Jetstar, the Big Banana, magpie season) where they fit naturally, never American ones (no Thanksgiving, malls, prom, Walmart, the DMV)."
+}

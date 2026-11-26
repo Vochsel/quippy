@@ -1,0 +1,544 @@
+{
+  "prompts": [
+    {
+      "text": "The best thing about being Australian",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Something only an Australian would understand",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Australia's new national animal",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "Australia's new national dish",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A better name for Australia",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Australia's eighth wonder of the world",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The most Australian sentence ever spoken",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What Australia should be famous for",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A sport Australia should take way more seriously",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The best Aussie word ever invented",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The perfect Aussie summer day, in one sentence",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "The ultimate road trip snack",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A new tradition the whole country should adopt",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The perfect name for a pub",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The perfect Aussie Christmas lunch",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "What Australia should spend the next budget surplus on",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "The meaning of life, explained in one sentence",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What's waiting for us on the other side",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The one thing everyone in this room has in common",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something everyone in this room has done but won't admit",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst thing that could happen in the next five minutes",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What would make Monday mornings bearable",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "Tomorrow's front-page headline",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The title of the movie about tonight",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "What aliens will say when they finally land",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "Your advice for the next generation",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The best smell in the world",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A smell that instantly takes you back to being a kid",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your last meal on Earth",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A dish that would win any cook-off",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The best way to spend a rainy Sunday",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that's wildly overrated",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that's criminally underrated",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The greatest invention of all time",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The one thing you'd save from a burning house",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Where you'd go first in a time machine",
+      "tags": [
+        "absurd",
+        "history"
+      ]
+    },
+    {
+      "text": "The one skill everyone should have",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The thing you'd ban forever if you could",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the world needs more of right now",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A sure sign the world is ending",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What the robots will do once they take over",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The secret to a happy relationship",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A word that should be in the dictionary",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The best way to say goodbye",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What's really at the centre of the Earth",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "Something to put in a time capsule for 2126",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "The best thing to say when you walk into a pub",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "What you'd do with a billion dollars",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "The world's most annoying habit",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something grown-ups do that kids find hilarious",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "The greatest animal of all time",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What animals really think of us",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The secret to staying young",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A new sport the whole family can play",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "The theme song for this group of people",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A name for this group's band",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The ideal first date",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The best compliment you could ever get",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What you'd say to your boss on your last day",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "Your dream job",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The worst job in the world",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What's in the box?",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A brand new colour and what it looks like",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The perfect present",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "The best thing about school",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "The most important rule in this house",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The best way to end a night like this",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What everyone's thinking right now",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your first law as ruler of the world",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The next app everyone will be obsessed with",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The best place on Earth",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "The best thing about a day at the beach",
+      "tags": [
+        "beach"
+      ]
+    },
+    {
+      "text": "The greatest moment in human history",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What you'll be doing in 20 years",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The most underrated pleasure in life",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The real reason we're all here tonight",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "Something that never fails to make you laugh",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The best thing that happened this year",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The next big trend",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A new rule for this game",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The greatest sandwich ever built",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The perfect holiday",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "The thing nobody tells you about being a grown-up",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The name of tonight's after-party",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something every Aussie should do at least once",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Australia's next Big Thing",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What Australia would bring to an intergalactic barbie",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "The real reason Australia is upside down",
+      "tags": [
+        "aussie"
+      ]
+    }
+  ]
+}

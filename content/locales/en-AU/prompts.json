@@ -1,0 +1,4311 @@
+{
+  "prompts": [
+    {
+      "text": "A new safety rule for the Bunnings sausage sizzle",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that should never be sold in the Aldi middle aisle",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A Big Thing a country town should never have built",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What the bin chicken is actually looking for in your bin",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The secret ingredient in a servo pie",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A new tactic for surviving magpie swooping season",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The real reason nobody has ever photographed a drop bear",
+      "tags": [
+        "aussie",
+        "animals",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A terrible name for a caravan park",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Something you'd only hear at a caravan park at 6am",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The worst song to ever top the Triple J Hottest 100",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "You know it's a 40-degree Christmas when ____",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "A convincing argument for a hot roast on a 41-degree Christmas",
+      "tags": [
+        "aussie",
+        "christmas",
+        "food"
+      ]
+    },
+    {
+      "text": "What Santa should really wear for an Aussie Christmas",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "What actually happens in Canberra",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "Canberra's new tourism slogan",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Something you'd find at the end of the Nullarbor",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Day four on the Nullarbor and you've started talking to ____",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Melbourne coffee snobbery has finally gone too far when ____",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Sydney real estate has officially gone too far when ____",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "The real reason State of Origin gets so heated",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A new rule to make Test cricket go faster",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What cricket commentators talk about during a four-hour rain delay",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What AFL fans secretly think of rugby league",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A Melbourne Cup horse name that got knocked back",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The most outrageous fascinator ever worn to the Melbourne Cup",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What the Melbourne Cup winner spends the prize money on",
+      "tags": [
+        "aussie",
+        "animals",
+        "sport"
+      ]
+    },
+    {
+      "text": "A schoolies tradition that should be banned immediately",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "What tradies are really talking about at smoko",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "A sure sign you've hired a dodgy tradie",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "What's lurking at the bottom of the esky after a long weekend camping",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "An unusual use for an esky",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A bumper sticker you'd only ever see on a Hilux",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The worst possible moment for your thong to snap",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A Tim Tam flavour that should never exist",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "What tourists think Vegemite actually is",
+      "tags": [
+        "aussie",
+        "food",
+        "travel"
+      ]
+    },
+    {
+      "text": "A meat pie filling that would get you kicked out of the footy",
+      "tags": [
+        "aussie",
+        "food",
+        "sport"
+      ]
+    },
+    {
+      "text": "What's really in a democracy sausage",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Centrelink's new hold music",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst thing to hear when you finally get through to Centrelink",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "An excuse the ATO would never accept",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "A tax deduction you'd try to sneak past the ATO",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "Something Medicare should cover but doesn't",
+      "tags": [
+        "aussie",
+        "health"
+      ]
+    },
+    {
+      "text": "A new Jetstar fee nobody saw coming",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Why the red-eye to Bali had to turn around",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A rejected name for a supermarket home brand product",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Something you'd never want to hear over the Woolies loudspeaker",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The Kmart product that's secretly running the country",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The real reason everyone's in Officeworks on a Saturday",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "A new item on the Maccas brekkie menu",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear at the Maccas drive-thru at 2am",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst thing to order at the pub on a Friday arvo",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The worst team name at pub trivia",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The worst prize to win in the RSL meat raffle",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The strangest event at a country show",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A DIY job you should never attempt after one trip to Bunnings",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What Darwin locals do when it drops below 20 degrees",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "How Queenslanders prepare for \"winter\"",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What Perth gets up to three hours behind everyone else",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Adelaide's best-kept secret",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The best thing about being from Tassie",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A post you'd only see in a country town's Facebook group",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A rejected Australian of the Year category",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "Something a lifeguard should never say through the megaphone at Bondi",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "Slip, slop, slap and ____",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "A new SPF rating that should exist",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "The worst place to get sunburnt",
+      "tags": [
+        "aussie",
+        "beach",
+        "health"
+      ]
+    },
+    {
+      "text": "Something your nan says that nobody understands",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "What the kookaburra is really laughing at",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "What a wombat gets up to all day",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "Something koalas would complain about if they could talk",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "What the cassowary is so angry about",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "A new venomous Aussie animal scientists just discovered",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "Something living in your gumboot that's not paying rent",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the huntsman living in your car is planning",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "Something you'd only find in an Aussie dad's shed",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "What your mate actually means when he says \"yeah nah\"",
+      "tags": [
+        "aussie",
+        "relationships"
+      ]
+    },
+    {
+      "text": "A new bit of Aussie slang and what it means",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "An Aussie phrase guaranteed to confuse a tourist",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A polite way to tell the umpire he needs glasses",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A backyard cricket rule your uncle just made up",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What the lawn bowls club is hiding",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "Someone took \"bring a plate\" way too literally and brought ____",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "An unusual thing to put on top of a pav",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The next thing New Zealand will try to claim as their own",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A rejected question from the Australian citizenship test",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The best way to waste a long weekend",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "Something you'd find in the glovebox of an old Commodore",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A name for a ute that tells you everything about its owner",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What the snake catcher found in your roof this time",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "Melbourne's weather forecast for a single day",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A schoolyard rumour about the canteen lady",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "What's really in a school canteen sausage roll",
+      "tags": [
+        "aussie",
+        "school",
+        "food"
+      ]
+    },
+    {
+      "text": "A Year 12 formal theme the principal vetoed",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "A new event for the school athletics carnival",
+      "tags": [
+        "aussie",
+        "school",
+        "sport"
+      ]
+    },
+    {
+      "text": "A rule they should bring in at the local pool",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What your local council is actually spending your rates on",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "The worst sign to see on a servo toilet door",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A road trip game guaranteed to end a friendship",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A rejected Aussie kids' TV show",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "A Kiwi's best comeback to an Aussie sledge",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The share house rule that started a war",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A Facebook Marketplace listing you'd never reply to",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "A sure sign you're in a country pub",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "A new showbag that would sell out in an hour",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst flavour of Shapes",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A crime against the humble lamington",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A footy chant that got the whole bay thrown out",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "Why that one netball parent got banned from the sideline",
+      "tags": [
+        "aussie",
+        "sport",
+        "family"
+      ]
+    },
+    {
+      "text": "What the mozzies are saying about you",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "A clever way to keep the flies off at a barbie",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "How to explain the Aussie salute to an alien",
+      "tags": [
+        "aussie",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A fancy name for a new cask wine",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "A good excuse for leaving a buck's party early",
+      "tags": [
+        "aussie",
+        "relationships"
+      ]
+    },
+    {
+      "text": "What actually happens at the end of a Sunday session",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "A new road sign for where the kangaroos cross",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "What kangaroos are thinking when they stare at your car",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The real reason platypuses are so weird",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "What the possum in your roof is doing at 3am",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "An emu's biggest regret",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The real reason we lost the Emu War",
+      "tags": [
+        "aussie",
+        "history"
+      ]
+    },
+    {
+      "text": "The next great Aussie invention",
+      "tags": [
+        "aussie",
+        "history"
+      ]
+    },
+    {
+      "text": "A new use for the Hills Hoist",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the seagulls are plotting when you open a packet of hot chips",
+      "tags": [
+        "aussie",
+        "beach",
+        "animals"
+      ]
+    },
+    {
+      "text": "Something you should never bury your mate in the sand next to",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "A beach rule that should be strictly enforced",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "Something you should never do in the shallows at Surfers",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "What's really in Nan's Christmas trifle",
+      "tags": [
+        "aussie",
+        "christmas",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst backyard cricket injury on Christmas Day",
+      "tags": [
+        "aussie",
+        "christmas",
+        "sport"
+      ]
+    },
+    {
+      "text": "The real reason Uncle Kev always falls asleep after Christmas lunch",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "A Christmas carol rewritten for a 43-degree day",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "What pulls Santa's sleigh in the outback",
+      "tags": [
+        "aussie",
+        "christmas",
+        "animals"
+      ]
+    },
+    {
+      "text": "A Boxing Day sale bargain nobody should buy",
+      "tags": [
+        "aussie",
+        "christmas",
+        "money"
+      ]
+    },
+    {
+      "text": "What happens to the leftover prawns by Boxing Day",
+      "tags": [
+        "aussie",
+        "christmas",
+        "food"
+      ]
+    },
+    {
+      "text": "What everyone actually celebrates on the King's Birthday long weekend",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "The real reason it always rains on the Easter camping trip",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "A terrible name for a holiday house on the South Coast",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "Something you'd only see at a roadhouse in the middle of nowhere",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "\"Welcome to the Daintree. Whatever you do, don't ____\"",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What the grey nomads get up to after dark",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A sign at the edge of a country town that's a bit too honest",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What the lollipop person at the roadworks is thinking",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "The worst sign to see at a FIFO camp",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "A new rule for the office Melbourne Cup sweep",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "What the Lotto winner's family group chat looks like now",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "The worst way to blow your tax return",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "What a first home buyer can afford in 2026",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "A new design for the $5 note",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "What went horribly wrong on this season's reality reno show",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "A new challenge for a reality cooking show",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "The plot twist that finally killed off a long-running Aussie soap",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "A rejected Aussie Eurovision entry",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "The title of the worst Aussie film ever made",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "A new Olympic sport Australia would definitely win",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What swimmers think about while staring at the black line",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A terrible name for a new footy expansion team",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What the boundary umpire thinks about during the match",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A sledge so good even the batter laughed",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A new song for the cricket crowd's beer-cup snake",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The best thing to put in a jaffle",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A condiment that has no business on a snag",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A new way to eat Milo",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst fairy bread topping",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Something that tastes better with chicken salt",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The secret to the perfect sanga",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Something that should never go on a parmy",
+      "tags": [
+        "aussie",
+        "food",
+        "pub"
+      ]
+    },
+    {
+      "text": "A new ice block flavour from the servo freezer",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst pub to have as your local",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "A pub rule that would make Friday nights better",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The real reason the bloke in hi-vis has been at the bar since 2pm",
+      "tags": [
+        "aussie",
+        "pub",
+        "work"
+      ]
+    },
+    {
+      "text": "A new game for the beer garden",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "What the bartender says when you order a light beer",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "What's really happening in the pub's back room",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The most Aussie way to fix anything",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "An outfit that gets you banned from Woolies",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the self-serve checkout is really thinking",
+      "tags": [
+        "aussie",
+        "everyday",
+        "tech"
+      ]
+    },
+    {
+      "text": "The real \"unexpected item in the bagging area\"",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst noise to wake up to in the suburbs at 5am",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The real reason there's a couch on every nature strip",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The best thing ever found on council clean-up day",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst gift for a 21st",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "The speech you'd least want at your 21st",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "A family Christmas tradition that should be retired",
+      "tags": [
+        "aussie",
+        "christmas",
+        "family"
+      ]
+    },
+    {
+      "text": "Something every Aussie mum keeps in her handbag",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "What Dad yells at the telly during the footy",
+      "tags": [
+        "aussie",
+        "family",
+        "sport"
+      ]
+    },
+    {
+      "text": "The worst first date spot in your suburb",
+      "tags": [
+        "aussie",
+        "relationships"
+      ]
+    },
+    {
+      "text": "The worst way to propose at half-time at the footy",
+      "tags": [
+        "aussie",
+        "relationships",
+        "sport"
+      ]
+    },
+    {
+      "text": "How to make a bad first impression at your partner's family barbie",
+      "tags": [
+        "aussie",
+        "relationships",
+        "family"
+      ]
+    },
+    {
+      "text": "The best excuse for not wearing a hat at school",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "What the principal is thinking during school assembly",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "A new subject they should teach in Year 9",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "A new myGov security question",
+      "tags": [
+        "aussie",
+        "tech"
+      ]
+    },
+    {
+      "text": "The NBN's real excuse for being slow",
+      "tags": [
+        "aussie",
+        "tech"
+      ]
+    },
+    {
+      "text": "What the chemist is really thinking as you check out",
+      "tags": [
+        "aussie",
+        "health"
+      ]
+    },
+    {
+      "text": "What the Aussie accent sounds like to an alien",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "An extremely Aussie superhero and their power",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "What Queenslanders keep under the house",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A new state of Australia and what it's famous for",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The worst souvenir to bring back from the Gold Coast",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A sure sign you've been in the outback too long",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What the GPS says when you're lost outside Wagga Wagga",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "Something you should never do at a highway rest stop",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What lives in the creek at the end of the beach",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "A beach cricket rule for when the tide comes in",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "What the bloke with the metal detector has found this time",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "A terrible name for a surf break",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "The real reason surfers are always out at dawn",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "Something you should never yell on a packed beach",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "Something security confiscated at the MCG",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The world's most Aussie excuse for being late",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A tradie's most creative line item on a quote",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "A warning sign every Aussie national park should have",
+      "tags": [
+        "aussie",
+        "animals",
+        "travel"
+      ]
+    },
+    {
+      "text": "What's actually inside a Chiko Roll",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "The fanciest meal you can make entirely from a servo",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "What's really at the bottom of Sydney Harbour",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The best excuse for vanishing right when it's your shout",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "The best snack for a Hottest 100 party",
+      "tags": [
+        "aussie",
+        "pop",
+        "food"
+      ]
+    },
+    {
+      "text": "An Aussie life hack that's definitely illegal",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A crocodile's one-star review of the tourists",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The worst activity on the footy club's end-of-season trip",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The rule at Nan's house you never, ever break",
+      "tags": [
+        "aussie",
+        "family"
+      ]
+    },
+    {
+      "text": "What Aussie kids should leave out for Santa instead of milk",
+      "tags": [
+        "aussie",
+        "christmas"
+      ]
+    },
+    {
+      "text": "The worst excuse for missing the swimming carnival",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "A bakery item that should be illegal before 10am",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A superpower that would only be useful at Bunnings",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A horror movie set in Kmart after closing",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "A historical event that would've gone better with a sausage sizzle",
+      "tags": [
+        "aussie",
+        "history"
+      ]
+    },
+    {
+      "text": "Day three in a campervan with the in-laws, and ____",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "A new way to settle the AFL vs NRL argument for good",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What $10 buys you at the pub in 2026",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "The longest queue in Australia, and what it's for",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What's in the boot of every car at the beach car park",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "What really happens at a B&S ball",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst place to get caught in the back of a ute",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A bedroom move named after an Aussie animal",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What's really going on in the back of that campervan",
+      "tags": [
+        "aussie",
+        "travel",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What the hens' party got up to in Byron",
+      "tags": [
+        "aussie",
+        "pub",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A schoolies souvenir you'd hide from your mum",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst thing to hear through the cabin walls at a caravan park",
+      "tags": [
+        "aussie",
+        "travel",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A saucy film set entirely inside Bunnings",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A very Aussie kink",
+      "tags": [
+        "aussie",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst outfit ever worn on the Brownlow red carpet",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "What the kids found in the rock pool that made everyone run",
+      "tags": [
+        "aussie",
+        "beach"
+      ]
+    },
+    {
+      "text": "What the blue-tongue lizard in the garden is up to",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "The worst Book Week costume",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "Why that kid got sent home early from Year 6 camp",
+      "tags": [
+        "aussie",
+        "school"
+      ]
+    },
+    {
+      "text": "What's actually inside the Big Merino",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What your HECS debt is really paying for",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "What your tradie says that means the reno just doubled in price",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "What the quokka is really smiling about",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "What the Sydney to Hobart sailors argue about",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "The best thing to dunk in your cuppa",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "A very Aussie way to say \"I love you\"",
+      "tags": [
+        "aussie",
+        "relationships"
+      ]
+    },
+    {
+      "text": "How to survive Melbourne Cup Day if you're not into horses",
+      "tags": [
+        "aussie",
+        "holiday"
+      ]
+    },
+    {
+      "text": "What the Christmas beetles want for Christmas",
+      "tags": [
+        "aussie",
+        "christmas",
+        "animals"
+      ]
+    },
+    {
+      "text": "A Triple J Unearthed band name that should have stayed buried",
+      "tags": [
+        "aussie",
+        "pop"
+      ]
+    },
+    {
+      "text": "The real reason the tradie still hasn't turned up",
+      "tags": [
+        "aussie",
+        "work"
+      ]
+    },
+    {
+      "text": "The best thing to throw on the barbie that isn't meat",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "What the regulars at the front bar argue about",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "A road sign you'd only ever see in the Northern Territory",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The worst job at the footy ground on grand final day",
+      "tags": [
+        "aussie",
+        "sport"
+      ]
+    },
+    {
+      "text": "A new rule for the school drop-off zone",
+      "tags": [
+        "aussie",
+        "family",
+        "school"
+      ]
+    },
+    {
+      "text": "What \"she'll be right\" actually means",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A sure sign your neighbour just got a fat tax return",
+      "tags": [
+        "aussie",
+        "money"
+      ]
+    },
+    {
+      "text": "A lucky dip prize at the school fete that got all the parents talking",
+      "tags": [
+        "aussie",
+        "food"
+      ]
+    },
+    {
+      "text": "Why your neighbour mows his lawn at 7am every Sunday",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "A new attraction to make the drive to Broken Hill worth it",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "The real reason the brush turkey keeps wrecking your garden",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "If magpies ran the country, what would be the first new law?",
+      "tags": [
+        "aussie",
+        "animals"
+      ]
+    },
+    {
+      "text": "How would you explain a roundabout to a bushranger?",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "Why is that seagull staring at you like that?",
+      "tags": [
+        "aussie",
+        "beach",
+        "animals"
+      ]
+    },
+    {
+      "text": "Why is there a horse in the Woolies car park?",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "\"Mate, you'll never guess what happened at the pub: ____\"",
+      "tags": [
+        "aussie",
+        "pub"
+      ]
+    },
+    {
+      "text": "\"Are we there yet?\" \"No, but we're nearly at ____\"",
+      "tags": [
+        "aussie",
+        "travel"
+      ]
+    },
+    {
+      "text": "What you blurt out when the boss walks in at the wrong moment",
+      "tags": [
+        "everyday",
+        "work"
+      ]
+    },
+    {
+      "text": "The real reason the microwave beeps three times",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that should come with a warning label but doesn't",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A household chore that should be an Olympic event",
+      "tags": [
+        "everyday",
+        "sport"
+      ]
+    },
+    {
+      "text": "The most passive-aggressive note to leave on the fridge",
+      "tags": [
+        "everyday",
+        "family"
+      ]
+    },
+    {
+      "text": "Something you found in the pocket of an op shop jacket",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What's really at the back of the junk drawer",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A completely unnecessary feature for a toaster",
+      "tags": [
+        "everyday",
+        "tech"
+      ]
+    },
+    {
+      "text": "A terrible name for a hair salon",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A gym name that would put anyone off exercising",
+      "tags": [
+        "health",
+        "sport"
+      ]
+    },
+    {
+      "text": "Small talk that makes a lift ride feel like an hour",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The most alarming noise your car can make",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A reason to call in sick that your boss can't argue with",
+      "tags": [
+        "work",
+        "health"
+      ]
+    },
+    {
+      "text": "What your pot plants say about you when you leave the room",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What's evolving in the back of the vegetable crisper",
+      "tags": [
+        "food",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A product that's just a sponge with a better marketing team",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that should never be sold in a vending machine",
+      "tags": [
+        "everyday",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What a fortune cookie would say if it were brutally honest",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "What the parking inspector dreams about",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A candle scent that clears the room",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A toothpaste flavour that got pulled from the shelves",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A really bad name for a perfume",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The most embarrassing thing in your search history this week",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A slogan for a brand of toilet paper",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from your hairdresser",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from your mechanic",
+      "tags": [
+        "everyday",
+        "money"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from a tattoo artist",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from your wedding photographer",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from the vet",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What you'd least want to hear from the pilot",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A boat name that would make the harbour master sigh",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A wi-fi network name that would start a street feud",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst present to re-gift",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "An unexpected item in the lost property box",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "The most valuable thing ever found down the back of a couch",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the smoke alarm is beeping about at 3am",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A new emoji the world desperately needs",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "What your fridge would say if it could talk",
+      "tags": [
+        "tech",
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the check engine light really means",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "Something that's way better than it sounds",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The secret to a long life, according to a 103-year-old",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A magic spell that got rejected from wizard school",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What aliens would confiscate from Earth first",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A hobby that's just napping with extra steps",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A terrible thing to engrave on a watch",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The worst thing to write in a sympathy card",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "A tattoo you'd regret by Tuesday",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A truly bad motto to live by",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "An oddly specific phobia",
+      "tags": [
+        "health",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A conspiracy theory about pigeons",
+      "tags": [
+        "animals",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A conspiracy theory that's actually pretty believable",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The real reason cats knock things off tables",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What your dog thinks you do at work all day",
+      "tags": [
+        "animals",
+        "work"
+      ]
+    },
+    {
+      "text": "A dog's top complaint about humans",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What a goldfish thinks about for three seconds",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "What the cat is really staring at in the corner",
+      "tags": [
+        "animals",
+        "absurd"
+      ]
+    },
+    {
+      "text": "An animal that would make a terrible lawyer",
+      "tags": [
+        "animals",
+        "work"
+      ]
+    },
+    {
+      "text": "An animal that would be the worst housemate",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "Two animals that should never be combined",
+      "tags": [
+        "animals",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What sharks honestly think of humans",
+      "tags": [
+        "animals",
+        "beach"
+      ]
+    },
+    {
+      "text": "What cows gossip about at the fence line",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A job that should be done by a goat",
+      "tags": [
+        "animals",
+        "work"
+      ]
+    },
+    {
+      "text": "A phrase the family parrot picked up that ruined Christmas lunch",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The real reason ducks always look so calm",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "An ingredient that ruins any dish instantly",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A pizza topping that crosses the line",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The party food that made every kid at the party cry",
+      "tags": [
+        "food",
+        "family"
+      ]
+    },
+    {
+      "text": "A sandwich that should be illegal",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A new chip flavour nobody asked for",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A coffee order that tells you everything about a person",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The most pretentious item on a café menu",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "What the brunch café is charging $28 for now",
+      "tags": [
+        "food",
+        "money"
+      ]
+    },
+    {
+      "text": "A smashed avo variation that's gone too far",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A cereal mascot that would scare children",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The world's saddest sandwich",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "An ice cream flavour that only makes sense at 3am",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "You cooked dinner on a first date and it went badly because ____",
+      "tags": [
+        "food",
+        "relationships"
+      ]
+    },
+    {
+      "text": "A food that should never be served on a stick",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "Something you should never deep fry",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "What the chef does to your steak when you order it well-done",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A new food group the government should officially recognise",
+      "tags": [
+        "food",
+        "health"
+      ]
+    },
+    {
+      "text": "A fad diet that's obviously a scam",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "What's on the secret menu at a fast food joint",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "How to make a chef cry in one sentence",
+      "tags": [
+        "food",
+        "work"
+      ]
+    },
+    {
+      "text": "A new rule for sharing hot chips",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "The worst dinner party conversation starter",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A cooking show that got cancelled after one episode",
+      "tags": [
+        "food",
+        "pop"
+      ]
+    },
+    {
+      "text": "Monday morning, and the work fridge smells like ____",
+      "tags": [
+        "food",
+        "work"
+      ]
+    },
+    {
+      "text": "The worst smell to come out of the office microwave",
+      "tags": [
+        "food",
+        "work"
+      ]
+    },
+    {
+      "text": "You forgot you weren't on mute and said ____",
+      "tags": [
+        "tech",
+        "work"
+      ]
+    },
+    {
+      "text": "A meeting that definitely should have been an email",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The most dramatic way to resign",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A line in a job ad that should be a red flag",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What the boss is really doing with the office door shut",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A team-building exercise that would destroy the team",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The real reason the office printer never works",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst email to reply-all to the whole company",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A LinkedIn post that's gone way too far",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "A job title that means absolutely nothing",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The worst Secret Santa gift you could receive",
+      "tags": [
+        "work",
+        "christmas"
+      ]
+    },
+    {
+      "text": "A KPI nobody could ever hit",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "An excuse for being late that's so bad it's good",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What happens in the office after everyone goes home",
+      "tags": [
+        "work",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A question you should never ask at the end of a job interview",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A workplace award nobody wants to win",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A new rule for the office kitchen",
+      "tags": [
+        "work",
+        "food"
+      ]
+    },
+    {
+      "text": "The worst out-of-office reply",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The most suspicious thing to spot on a coworker's screen",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "A new corporate buzzword and what it actually means",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A motivational poster that would crush office morale",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What HR is really hiding in that filing cabinet",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What the IT department is actually doing all day",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "A strange thing to keep on your desk",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The email subject line that means you're getting the sack",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "A side hustle that is definitely not going to work",
+      "tags": [
+        "work",
+        "money"
+      ]
+    },
+    {
+      "text": "A startup idea that's just a bad idea with an app",
+      "tags": [
+        "work",
+        "tech"
+      ]
+    },
+    {
+      "text": "What your boss wrote in the notes from your performance review",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The worst excuse for not handing in your homework",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "What teachers really talk about in the staffroom",
+      "tags": [
+        "school",
+        "work"
+      ]
+    },
+    {
+      "text": "A school excursion that ended in disaster",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "Something a kid brought to show and tell that made the teacher call home",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "A detention punishment that's actually fun",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "A new rule for the school bus",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "What's really scribbled in the margins of a library book",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "A subject that would actually prepare you for adult life",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "Why your school photo is still legendary",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "The school reunion is ruined when ____",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "An extremely niche university degree",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "The worst thing to write in someone's yearbook",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "A rejected school motto",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "What's at the bottom of every school bag after a whole term",
+      "tags": [
+        "school"
+      ]
+    },
+    {
+      "text": "Every family has a secret recipe for ____",
+      "tags": [
+        "family",
+        "food"
+      ]
+    },
+    {
+      "text": "Something hidden at the back of your parents' wardrobe",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "What grandparents actually do once the grandkids leave",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "The worst nickname a sibling could give you",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "A family road trip rule only Dad follows",
+      "tags": [
+        "family",
+        "travel"
+      ]
+    },
+    {
+      "text": "The real reason Mum hides the good biscuits",
+      "tags": [
+        "family",
+        "food"
+      ]
+    },
+    {
+      "text": "Something parents say that has never once been true",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "A voice comes over the baby monitor and says ____",
+      "tags": [
+        "family",
+        "tech"
+      ]
+    },
+    {
+      "text": "A rejected name for a baby",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "The worst lesson to teach a toddler",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "An unusual family heirloom",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "What your cousin actually does for a living",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "A topic banned from family dinner, and why",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "What's going on in your parents' group chat",
+      "tags": [
+        "family",
+        "tech"
+      ]
+    },
+    {
+      "text": "A family holiday photo you'd never post online",
+      "tags": [
+        "family",
+        "travel"
+      ]
+    },
+    {
+      "text": "The worst way to break up with someone",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The worst pet name for your partner",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A red flag you'd only spot on the third date",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A dating app bio that's way too honest",
+      "tags": [
+        "relationships",
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst wedding vow",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A wedding speech moment nobody will ever forget",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A wedding favour that went straight into the bin",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "A new anniversary gift category, like paper or silver",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "What couples really argue about in a flat-pack furniture store",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The worst name for a shared streaming profile",
+      "tags": [
+        "relationships",
+        "tech"
+      ]
+    },
+    {
+      "text": "A relationship milestone nobody talks about",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "What your best mate's new partner is hiding",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The real reason they ghosted you",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "Something you should never say to your partner's ex",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The worst message to send to the wrong group chat",
+      "tags": [
+        "tech",
+        "relationships"
+      ]
+    },
+    {
+      "text": "The first rule of being a decent housemate",
+      "tags": [
+        "relationships",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The plot of a sequel nobody asked for",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The sidekick a superhero gets when the budget's tight",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The worst reality TV show concept",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A podcast that would run out of topics after one episode",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "An influencer's most cringe-worthy brand deal",
+      "tags": [
+        "pop",
+        "tech"
+      ]
+    },
+    {
+      "text": "A livestream with zero viewers, and why",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A new social media app that would flop in a week",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "What your phone's autocorrect is secretly trying to tell you",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst feature to add to a smartphone",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A smart home device that's gone too far",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "What the robot vacuum gets up to at night",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A terms and conditions clause nobody bothered to read",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst password hint",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "What the algorithm thinks you need right now",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "An app that rates something that should never be rated",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A question that made the voice assistant go very quiet",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "A video game that would be incredibly boring",
+      "tags": [
+        "tech",
+        "pop"
+      ]
+    },
+    {
+      "text": "A band name for a group of retired accountants",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A heavy metal band name that's far too polite",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A brand new genre of music",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A rejected children's book title",
+      "tags": [
+        "pop",
+        "family"
+      ]
+    },
+    {
+      "text": "The worst wish a fairy godmother could grant you",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A chapter in a self-help book nobody should follow",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A chapter title from your future memoir",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A crime show about extremely minor crimes",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A villain's least intimidating evil plan",
+      "tags": [
+        "pop",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A fairy tale rebooted for 2026",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A horror movie that's only scary to parents",
+      "tags": [
+        "pop",
+        "family"
+      ]
+    },
+    {
+      "text": "What the newsreader said that got them taken off air",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "A late-night infomercial product nobody needs",
+      "tags": [
+        "pop",
+        "tech"
+      ]
+    },
+    {
+      "text": "What cavemen argued about",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "An invention history rightfully forgot",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What the Romans would think of a modern shopping centre",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What a medieval knight would complain about in 2026",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "A historical job that should make a comeback",
+      "tags": [
+        "history",
+        "work"
+      ]
+    },
+    {
+      "text": "A souvenir that got you in trouble with the time travel police",
+      "tags": [
+        "history",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What the pyramids were actually built for",
+      "tags": [
+        "history",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A rejected wonder of the ancient world",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What Vikings would make of a modern cruise ship",
+      "tags": [
+        "history",
+        "travel"
+      ]
+    },
+    {
+      "text": "What's written in a pirate's will",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What the archaeologists found that they're keeping quiet about",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "What future historians will say about this decade",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "A museum exhibit from the year 3000",
+      "tags": [
+        "history",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A medieval cure for a modern problem",
+      "tags": [
+        "history",
+        "health"
+      ]
+    },
+    {
+      "text": "An extinct animal that should stay extinct",
+      "tags": [
+        "animals",
+        "history"
+      ]
+    },
+    {
+      "text": "What Stonehenge was really for",
+      "tags": [
+        "history",
+        "absurd"
+      ]
+    },
+    {
+      "text": "A town crier's most boring announcement",
+      "tags": [
+        "history"
+      ]
+    },
+    {
+      "text": "A Bunnings paint colour name that got pulled from the shelves",
+      "tags": [
+        "aussie",
+        "everyday"
+      ]
+    },
+    {
+      "text": "The secret ingredient in clouds",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What scientists aren't telling us about the bottom of the ocean",
+      "tags": [
+        "absurd",
+        "beach"
+      ]
+    },
+    {
+      "text": "The moon's biggest complaint about the sun",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A brand new law of physics",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "How to politely ask a ghost to move out",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A ghost's most annoying habit",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A very specific haunted object",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What wizards do on their day off",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A horoscope that's a little too specific",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What your Year 3 class buried in the time capsule",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What's really inside a black hole",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What garden gnomes do when nobody's watching",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The tooth fairy's new side business",
+      "tags": [
+        "absurd",
+        "money"
+      ]
+    },
+    {
+      "text": "An elf's most hated job in the lead-up to Christmas",
+      "tags": [
+        "christmas",
+        "work"
+      ]
+    },
+    {
+      "text": "What a unicorn's horn is actually for",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A dragon's most embarrassing weakness",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A mermaid's biggest complaint about the ocean",
+      "tags": [
+        "absurd",
+        "beach"
+      ]
+    },
+    {
+      "text": "A new public holiday that should exist",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "What the Easter Bunny does the other 364 days of the year",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "A terrible name for a newly discovered planet",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "An alien's first text home after visiting Earth",
+      "tags": [
+        "absurd",
+        "tech"
+      ]
+    },
+    {
+      "text": "What the aliens who abducted you really wanted to know",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The worst place to hide a spare key",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A sentence nobody has ever said out loud before",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The world's most boring world record",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A world record you could actually break tonight",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "An Olympic sport for people who hate exercise",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "A new law that would cause chaos within a week",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "Something that sounds like a compliment but is definitely an insult",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A sentence that would make any dog nervous",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The exact moment you realised you'd become your parents",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The zombie apocalypse starts and all you've got is ____",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The worst kind of person to be stuck in a lift with",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "An unusual thing to be famous for in a small town",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A strange thing to collect",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something that should be illegal but somehow isn't",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The world's most boring theme park",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "A theme park ride that would be shut down by lunchtime",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "Something on a supervillain's shopping list",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A clown's darkest secret",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A circus act that should never have been invented",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A magic trick that went horribly wrong",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The best way to wake someone who's been asleep for 100 years",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A sport that would be improved by adding a dog",
+      "tags": [
+        "sport",
+        "animals"
+      ]
+    },
+    {
+      "text": "A rule change that would make golf exciting",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "The worst thing to shout during a quiet golf putt",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "A new event for the Winter Olympics",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "What referees say to each other at half-time",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "What marathon runners think about at the 30km mark",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "A fitness class that's secretly just lying down",
+      "tags": [
+        "sport",
+        "health"
+      ]
+    },
+    {
+      "text": "The worst perk of a gym membership",
+      "tags": [
+        "sport",
+        "health"
+      ]
+    },
+    {
+      "text": "A sign your personal trainer has given up on you",
+      "tags": [
+        "sport",
+        "health"
+      ]
+    },
+    {
+      "text": "What the sniffer dog found in your bag",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "An announcement you'd never want to hear on a plane",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A travel tip from someone who's never left their suburb",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A hotel amenity that's a bit much",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A one-star review of a five-star resort",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A guided tour that should never have been offered",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "What gets you through a 14-hour flight in economy?",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "What's really in the hotel minibar",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "What the person reclining their seat into your lap is thinking",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A country that doesn't exist and its main export",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A cruise ship activity nobody signs up for",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "The worst kind of travel buddy",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "Where lost luggage actually ends up",
+      "tags": [
+        "travel",
+        "absurd"
+      ]
+    },
+    {
+      "text": "The worst Easter egg filling",
+      "tags": [
+        "holiday",
+        "food"
+      ]
+    },
+    {
+      "text": "A dress-up party theme that went badly wrong",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "A New Year's resolution you'll break by 2 January",
+      "tags": [
+        "holiday"
+      ]
+    },
+    {
+      "text": "A birthday tradition nobody should continue",
+      "tags": [
+        "holiday",
+        "family"
+      ]
+    },
+    {
+      "text": "A message in icing that ruins any birthday cake",
+      "tags": [
+        "holiday",
+        "food"
+      ]
+    },
+    {
+      "text": "A Mother's Day gift that says \"I forgot\"",
+      "tags": [
+        "family",
+        "holiday"
+      ]
+    },
+    {
+      "text": "The Father's Day present Dad will pretend to love",
+      "tags": [
+        "family",
+        "holiday"
+      ]
+    },
+    {
+      "text": "The worst way to spend your annual leave",
+      "tags": [
+        "holiday",
+        "work"
+      ]
+    },
+    {
+      "text": "The worst Christmas present from the in-laws",
+      "tags": [
+        "christmas",
+        "family"
+      ]
+    },
+    {
+      "text": "The worst joke inside a Christmas bon bon",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "A Christmas tree decoration that should be banned",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "What Santa does all of January",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "A Christmas movie that got banned",
+      "tags": [
+        "christmas",
+        "pop"
+      ]
+    },
+    {
+      "text": "A new Christmas tradition everyone should start",
+      "tags": [
+        "christmas"
+      ]
+    },
+    {
+      "text": "What Rudolph does in the off-season",
+      "tags": [
+        "christmas",
+        "animals"
+      ]
+    },
+    {
+      "text": "The worst carol to sing in a pub",
+      "tags": [
+        "christmas",
+        "pub"
+      ]
+    },
+    {
+      "text": "The worst investment you could ever make",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "A cryptocurrency that's obviously a scam",
+      "tags": [
+        "money",
+        "tech"
+      ]
+    },
+    {
+      "text": "What rich people do that would get anyone else arrested",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "A financial tip from someone who's definitely broke",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "Your budget spreadsheet has a new category called ____",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "What the bank's fraud alert was actually about",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "A new way to split the bill that ends friendships",
+      "tags": [
+        "money",
+        "food"
+      ]
+    },
+    {
+      "text": "Something that's way too expensive for what it is",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "Something that's free but costs you your dignity",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "A new symptom your GP has never heard of",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A side effect listed on a very strange medicine",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A wellness trend that's obviously nonsense",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A yoga pose nobody should attempt",
+      "tags": [
+        "health",
+        "sport"
+      ]
+    },
+    {
+      "text": "What you said while coming out of anaesthetic",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "What the physio is thinking while they hurt you",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A home remedy that will definitely not work",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "The worst magazine to find in a doctor's waiting room",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A sandcastle design that's way too ambitious",
+      "tags": [
+        "beach"
+      ]
+    },
+    {
+      "text": "The worst thing to float past while you're swimming",
+      "tags": [
+        "beach"
+      ]
+    },
+    {
+      "text": "A sign your neighbour is way too into their lawn",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst kind of neighbour to have at a campsite",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A use for gaffer tape nobody has thought of",
+      "tags": [
+        "everyday",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What the PE teacher does on weekends",
+      "tags": [
+        "school",
+        "work"
+      ]
+    },
+    {
+      "text": "The real reason you've been on hold to the GP for an hour",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "text": "A rule that should apply at every trivia night",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "What the bouncer is really thinking",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "A drinking game that would end in a hospital visit",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "A sure sign it's time to go home from the pub",
+      "tags": [
+        "pub"
+      ]
+    },
+    {
+      "text": "The worst thing to say at a baby shower",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A household rule that only exists because of one incident",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Something you lost at a music festival and never got back",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A music festival that would sell zero tickets",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The worst time for your phone to die",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "The worst thing to overhear in an airport toilet",
+      "tags": [
+        "travel"
+      ]
+    },
+    {
+      "text": "A pre-game ritual that got a player dropped",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "An excuse for losing that nobody's tried yet",
+      "tags": [
+        "sport"
+      ]
+    },
+    {
+      "text": "A new condiment that would change everything",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A smoothie ingredient that's gone too far",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "A really bad business to open next door to a funeral home",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What the Loch Ness Monster does for fun",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What you'd least expect to find in a billionaire's shopping trolley",
+      "tags": [
+        "money"
+      ]
+    },
+    {
+      "text": "You accidentally ended a work call with ____",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "The worst thing to say in bed",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A rejected name for an adult toy",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The note housekeeping left after cleaning your hotel room",
+      "tags": [
+        "travel",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What the honeymoon suite is hiding",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst thing to shout in the heat of the moment",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A pick-up line that should be illegal",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst photo to accidentally send to your mum",
+      "tags": [
+        "family",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What the couple in the next tent are actually doing",
+      "tags": [
+        "travel",
+        "spicy"
+      ]
+    },
+    {
+      "text": "What's in the bedside drawer marked \"do not open\"",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst thing to find in your parents' browser history",
+      "tags": [
+        "family",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A strip club for an extremely niche audience",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "A rejected theme for a charity nude calendar",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "What really happened at the work Christmas party",
+      "tags": [
+        "work",
+        "christmas",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A walk of shame excuse that almost works",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst place to get frisky",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "A sexy costume that is somehow not sexy at all",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst safe word",
+      "tags": [
+        "relationships",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The real reason the hotel spa is closed",
+      "tags": [
+        "travel",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The dirty little secret of the local book club",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst dating app profile photo",
+      "tags": [
+        "tech",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A romance novel title that's far too honest",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The worst thing to whisper to your massage therapist",
+      "tags": [
+        "health",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A cocktail name that would make the bartender blush",
+      "tags": [
+        "pub",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A text you should never send after midnight",
+      "tags": [
+        "tech",
+        "spicy"
+      ]
+    },
+    {
+      "text": "The sexiest thing about a tax accountant",
+      "tags": [
+        "money",
+        "spicy"
+      ]
+    },
+    {
+      "text": "A dirty-sounding phrase that's actually completely innocent",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "\"Sorry I'm late, ____\"",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "\"We need to talk. It's about ____\"",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The real secret to happiness is ____",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Breaking news: scientists finally confirm ____",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "Your phone storage is full because of ____",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "\"Don't tell Mum, but ____\"",
+      "tags": [
+        "family"
+      ]
+    },
+    {
+      "text": "What's the most suspicious thing a person can buy at 3am?",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "If ducks could vote, what would their big election promise be?",
+      "tags": [
+        "animals",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What do clouds argue about?",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "What's the most controversial way to make a cup of tea?",
+      "tags": [
+        "food"
+      ]
+    },
+    {
+      "text": "What would you name the third arm you just grew?",
+      "tags": [
+        "everyday",
+        "absurd"
+      ]
+    },
+    {
+      "text": "What would you do with a spare hour nobody knew about?",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What do you say to a bear who's just moved in next door?",
+      "tags": [
+        "absurd",
+        "animals"
+      ]
+    },
+    {
+      "text": "Why did your smart fridge just call the police?",
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "text": "What's the one thing everyone at work is secretly doing?",
+      "tags": [
+        "work"
+      ]
+    },
+    {
+      "text": "What's your dog's podcast about?",
+      "tags": [
+        "animals",
+        "pop"
+      ]
+    },
+    {
+      "text": "The twist at the end of every bad movie",
+      "tags": [
+        "pop"
+      ]
+    },
+    {
+      "text": "The one item you'd grab if your house was being invaded by geese",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your best mate's wedding speech went off the rails at ____",
+      "tags": [
+        "relationships"
+      ]
+    },
+    {
+      "text": "The most dramatic way to announce you've got a cold",
+      "tags": [
+        "health"
+      ]
+    }
+  ]
+}

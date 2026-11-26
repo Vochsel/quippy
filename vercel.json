@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/host", "destination": "/host.html" },
+    { "source": "/play", "destination": "/play.html" },
+    { "source": "/:code([A-Za-z]{4})", "destination": "/play.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.(js|css|html)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    }
+  ]
+}

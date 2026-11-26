@@ -1,0 +1,153 @@
+{
+  "_comment": "Everything the host (Monty) says, plus short status lines for phones. {placeholders} are filled in by the game. Add variants freely; one is picked at random.",
+  "lines": {
+    "lobbyWelcome": [
+      "Evening. I'm Monty. Grab your phones and scan the code. Yes, all of you. Even you.",
+      "Welcome to Quippy. Scan the code, type your name, and try to be funnier than last time. Low bar.",
+      "Righto. Phones out, codes scanned. The sooner we start, the sooner I can go home."
+    ],
+    "join": [
+      "{name} has entered the building.",
+      "Oh good. {name}'s here.",
+      "{name}. Bold choice, showing up.",
+      "Welcome, {name}. Lower your expectations accordingly.",
+      "{name} is in. The bar has been set. Somewhere.",
+      "And here's {name}, fresh from the servo."
+    ],
+    "audienceJoin": [
+      "{name} has joined the audience. Judge harshly.",
+      "{name} is in the audience. Your vote counts. Not much, but it counts."
+    ],
+    "needMorePlayers": [
+      "We need at least {min} players. Go and find a friend. Or a neighbour. Or a bot.",
+      "Not enough players. I need {min}. I can wait. I'm paid by the hour."
+    ],
+    "intro": [
+      "Welcome to {game}. Two of you get the same prompt. Everyone else picks the funnier answer. Try not to embarrass yourselves.",
+      "This is {game}. Write something funny on your phone. Everyone votes. Somebody wins. Everybody else goes home and thinks about what they've done.",
+      "{game}. Answer the prompts on your phone, then vote on everyone else's. Simple. Unlike some of you."
+    ],
+    "round1Intro": [
+      "Round one. Look at your phones and get writing.",
+      "Round one. Check your phones. Be quick. Be funny. Pick one if you must."
+    ],
+    "round2Intro": [
+      "Round two. Points are doubled, so are the stakes. Mostly the points.",
+      "Round two. Double points. Your chance to make up for round one."
+    ],
+    "finalRoundIntro": [
+      "Final round. Everyone gets the same prompt. Everyone votes. Leave nothing in the tank.",
+      "The Final Showdown. One prompt, all of you. Make it count."
+    ],
+    "roundTitle1": ["Round 1"],
+    "roundTitle2": ["Round 2 · Double Points"],
+    "roundTitle3": ["The Final Showdown"],
+    "cbRoundTitle1": ["Round 1 · Tailor-made"],
+    "cbRoundTitle2": ["Round 2 · Callbacks"],
+    "cbRoundTitle3": ["The Grand Callback"],
+    "answerStart": [
+      "Pens down. Phones up. Go.",
+      "Your prompts are on your phones. The clock is ticking. So is my patience.",
+      "Off you go. Write something your mum wouldn't be ashamed of. Or would. Your call."
+    ],
+    "readAnswers": [
+      "\"{a}\". Or. \"{b}\".",
+      "Is it \"{a}\"? Or is it \"{b}\"?",
+      "On one hand, \"{a}\". On the other, \"{b}\"."
+    ],
+    "win": [
+      "{name} takes it.",
+      "That one goes to {name}. Commiserations, {other}.",
+      "{name} wins that. {other}, there's always next time. Statistically.",
+      "Point to {name}. {other}, chin up."
+    ],
+    "shutout": [
+      "Shutout! Every single vote to {name}. {other}, I'm so sorry.",
+      "A clean sweep for {name}. {other}, go and have a little lie down.",
+      "Shutout! Nobody voted for {other}. Not even out of pity."
+    ],
+    "tie": [
+      "A tie. How very diplomatic of you all.",
+      "Dead even. Nobody wins. Very Canberra of you."
+    ],
+    "forfeit": [
+      "{other} didn't answer, so {name} wins by default. Not glamorous, but it counts.",
+      "{name} wins by forfeit. {other}, the phone works better when you type on it."
+    ],
+    "noVotes": [
+      "No votes at all. I'll take that as stunned silence.",
+      "Nobody voted. Rude, but understandable."
+    ],
+    "noContest": [
+      "Neither of you answered. Truly a meeting of minds.",
+      "Two blank answers. A bold artistic statement."
+    ],
+    "scores": [
+      "Here's the leaderboard. {leader} is out in front. {last}, you're... also here.",
+      "{leader} leads. Everyone else, try harder. Or at all.",
+      "Scores, please. {leader} on top, {last} bringing up the rear with dignity. Some dignity."
+    ],
+    "scoresClose": [
+      "It's tight at the top. {leader} by a whisker.",
+      "Close one. {leader} leads, but only just. Anyone could take it. Even {last}."
+    ],
+    "scoresNewLeader": [
+      "New leader! {leader} has taken the top spot.",
+      "Would you look at that. {leader} is leading now. Momentum is a funny thing."
+    ],
+    "finalAnswerStart": [
+      "Final Showdown. Everyone, same prompt. Here it is.",
+      "One last prompt. All of you. Here we go."
+    ],
+    "finalVoteStart": [
+      "Vote for your favourites. You get {n}. Not your own, nice try.",
+      "Time to vote. Pick your favourites. You can't vote for yourself, I checked."
+    ],
+    "finalReveal": [
+      "Let's see how you voted. From the bottom up.",
+      "The results. Starting with the ones you'd rather forget."
+    ],
+    "gameOver": [
+      "And the winner is {name}! Take a bow. Everyone else, take notes.",
+      "{name} wins! Enjoy it. It won't last.",
+      "Your champion is {name}. Somebody get them a sausage in bread."
+    ],
+    "gameOverTie": [
+      "It's a tie! {name} share the crown. Awkward.",
+      "Joint winners: {name}. Very wholesome. I hate it."
+    ],
+    "award_crowd": ["Crowd Favourite"],
+    "award_shutouts": ["Shutout Merchant"],
+    "award_panic": ["Panic Button Enthusiast"],
+    "award_ghost": ["The Ghost"],
+    "award_bridesmaid": ["Always the Bridesmaid"],
+    "cbLoadingAi": [
+      "Monty is writing prompts about you. This could get personal.",
+      "Reading the Lore Book. Writing something rude. Please hold."
+    ],
+    "cbLoadingBuiltin": [
+      "Digging through the Lore Book...",
+      "Remembering what you all said earlier. Unfortunately."
+    ],
+    "cbIntroWithLore": [
+      "Welcome back to Callback Club. I remember everything. Especially \"{joke}\".",
+      "Callback Club. The Lore Book has {count} entries now, including \"{joke}\". We'll be bringing that up.",
+      "Ah, Callback Club. Where \"{joke}\" is never forgotten. Let's add to the pile."
+    ],
+    "cbIntroFresh": [
+      "Welcome to Callback Club. I'll be writing prompts about you, and remembering everything you say. Everything.",
+      "Callback Club. Tonight I learn your running jokes. Next time, I use them against you."
+    ],
+    "phoneIntro": ["Eyes on the TV!", "Get ready. Look at the big screen."],
+    "phoneLoading": ["Prompts incoming...", "Sharpening the prompts..."],
+    "phoneAudienceWriting": ["The players are writing. Prepare your judging face.", "Players are writing. You'll get to vote soon."],
+    "phoneAnswered": ["Locked in. Look smug.", "Done! Now act like you're still writing.", "All in. Go get a drink while the slow ones finish."],
+    "phoneYourMatchup": ["This one's yours! Act natural.", "That's your answer up there. Poker face."],
+    "phoneVoted": ["Vote locked in.", "Thanks for voting. Probably the right call."],
+    "phoneWatchReveal": ["Watch the TV!", "Eyes up. Results on the big screen."],
+    "phoneWon": ["You won that one!", "Nailed it."],
+    "phoneLost": ["Lost that one. Brutal.", "Not your round. Shake it off."],
+    "phoneDraw": ["Dead heat.", "Nobody won that one."],
+    "phoneWatch": ["Eyes on the TV!"]
+  }
+}
