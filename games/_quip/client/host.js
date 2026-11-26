@@ -66,8 +66,7 @@ export function mount(root, api) {
           h('h3', '📖 From the Lore Book'),
           extra.jokes?.length
             ? h('ul', extra.jokes.map((j) => h('li', h('b', j.title), j.detail ? h('small', ` — ${j.detail}`) : null)))
-            : h('p', 'Nothing yet. Tonight we start writing it.'),
-          h('div.small', `Brain: ${extra.brain}`)) : null);
+            : h('p', 'Nothing yet. Tonight we start writing it.')) : null);
     },
 
     loading(g) {

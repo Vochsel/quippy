@@ -102,11 +102,6 @@ function renderTop(room) {
   const inGame = room.phase === 'game';
   remember('top', { inGame, short, code: room.code }, () => mountInto($('#top-join'),
     inGame ? h('div.pill', `${short} · `, h('b', room.code)) : null));
-  const llm = room.llm || {};
-  remember('brain', llm.available ? `${llm.label}|${llm.model}` : 'builtin', () => {
-    $('#brain-chip').textContent = llm.available ? `🧠 ${llm.label}${llm.model ? ` · ${llm.model}` : ''}` : '🧠 Built-in brain';
-    $('#brain-chip').title = llm.lastError || '';
-  });
 }
 
 // Re-render a section only when its data actually changed.
@@ -334,6 +329,8 @@ function setupSettings() {
     mountInto($('#set-voice'), options);
     $('#voice-pick-row').classList.toggle('hidden', !['local', 'browser'].includes(voice.provider) || !options.length);
     ['#set-rate', '#set-pitch'].forEach((id) => $(id).closest('.row').classList.toggle('hidden', voice.usesServer()));
+    const llm = view?.room?.llm || {};
+    $('#brain-note').textContent = `AI brain: ${llm.available ? `${llm.label}${llm.model ? ` · ${llm.model}` : ''}` : 'built-in templates'}${llm.lastError ? ` (last error: ${llm.lastError})` : ''}`;
     $('#voice-note').textContent = {
       local: 'Voice-over comes from your local voice model (TTS_LOCAL_URL). ElevenLabs takes over if it stops answering, then browser voices.',
       gateway: 'Voice-over comes from a speech model on the Vercel AI Gateway (TTS_GATEWAY_MODEL / TTS_GATEWAY_VOICE on the server).',
