@@ -13,8 +13,9 @@ const PREFERRED = [
 ];
 
 export class Voice {
-  constructor(audio, { provider = 'browser', lang = 'en-AU', onCaption, serverVoices = [], serverVoice = null } = {}) {
+  constructor(audio, { provider = 'browser', lang = 'en-AU', onCaption, serverVoices = [], serverVoice = null, now } = {}) {
     this.audio = audio;
+    this.now = now || (() => Date.now());
     this.provider = provider; // local | elevenlabs | browser
     this.serverVoices = serverVoices;
     this.serverVoice = localStorage.getItem('quippy.serverVoice') || serverVoice;
@@ -59,13 +60,13 @@ export class Voice {
   usesServer() { return this.provider !== 'browser'; }
   setEnabled(on) { this.enabled = on; localStorage.setItem('quippy.voiceOn', on ? '1' : '0'); if (!on) this.stop(); }
 
-  say(text) {
+  // ts = when the server said it. Lines that can't start within a few seconds
+  // are dropped so Monty never talks over the wrong screen.
+  say(text, ts = this.now()) {
     if (!text) return;
-    this.onCaption(text);
-    if (!this.enabled) return;
-    // Don't let a backlog build up: the room moves fast.
-    if (this.queue.length >= 3) this.queue.shift();
-    this.queue.push({ text, audio: this.usesServer() ? this.#fetchAudio(text) : null });
+    if (!this.enabled) { this.onCaption(text); return; }
+    if (this.queue.length >= 4) this.queue.shift();
+    this.queue.push({ text, ts, audio: this.usesServer() ? this.#fetchAudio(text) : null });
     this.#next();
   }
 
@@ -78,12 +79,20 @@ export class Voice {
   async #next() {
     if (this.busy || !this.queue.length) return;
     this.busy = true;
-    const { text, audio } = this.queue.shift();
-    this.audio.duck(true);
+    const item = this.queue.shift();
     try {
-      const url = audio ? await audio : null;
+      const url = item.audio ? await item.audio : null;
+      // Too late? Skip it (but keep the newest line even if a little late).
+      const late = this.now() - item.ts;
+      const newer = this.queue.length > 0;
+      if (late > (newer ? 4500 : 9000)) {
+        if (url) URL.revokeObjectURL(url);
+        return;
+      }
+      this.onCaption(item.text); // caption appears as the voice starts
+      this.audio.duck(true);
       if (url) await this.#playUrl(url);
-      else await this.#speakBrowser(text);
+      else await this.#speakBrowser(item.text);
     } catch {
       /* keep the show going */
     } finally {

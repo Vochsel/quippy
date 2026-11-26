@@ -99,25 +99,33 @@ export function mount(root, api) {
           g.answers.map((a, i) => h(`div.card.q-ans.pop-in${i ? '.tilt-r' : '.tilt-l'}`, { style: { animationDelay: `${0.6 + i * 0.5}s` } },
             h('span.q-letter', a.key), h('div.q-ans-text', fitText(a.text)))),
           h('div.q-vs.pop-in', { style: { animationDelay: '0.9s' } }, 'VS')),
-        h('div.q-progress', h('span', { 'data-live': 'votes' }, `${g.votersDone} / ${g.votersTotal}`), ' votes in · vote on your phone'));
+        voterRow(g.voters),
+        h('div.q-progress', 'Vote on your phone'));
     },
 
     reveal(g) {
+      // Sequence: voters land under each answer -> percentages -> who wrote it -> winner + points.
       const banner = { forfeit: 'WIN BY FORFEIT', tie: 'IT’S A TIE', noVotes: 'NOBODY VOTED', noContest: 'NO CONTEST' }[g.kind];
+      const T = { voters: 0.5, pct: 1.7, author: 2.4, result: 3.1 };
+      const decided = g.answers.some((a) => a.winner);
       return h('div.q-vote.q-reveal',
         h('div.q-meta', `${g.roundTitle || `Round ${g.round}`} · matchup ${g.matchNo} of ${g.matchTotal}`),
         promptCard(g, false),
         h('div.q-versus',
-          g.answers.map((a, i) => h(`div.card.q-ans${i ? '.tilt-r' : '.tilt-l'}${a.winner ? '.win' : ''}`,
-            a.winner ? h('span.q-crown.pop-in', { style: { animationDelay: '1.6s' } }, '👑') : null,
-            a.winner && g.kind === 'shutout' ? h('div.q-sticker.slam', { style: { animationDelay: '1.5s' } }, 'SHUTOUT!') : null,
+          g.answers.map((a, i) => h(`div.card.q-ans.q-res${a.winner ? '.win' : decided ? '.lose' : ''}`, { style: { '--c': a.author.color, '--result-delay': `${T.result}s` } },
+            a.winner ? h('div.q-ribbon', { style: { animationDelay: `${T.result}s` } }, g.kind === 'shutout' ? 'SHUTOUT!' : 'WINNER') : null,
             h('div.q-ans-text', fitText(a.text || '(no answer)')),
-            a.panic ? h('span.chip.pink.q-panic', '🆘 panic button') : null,
-            h('div.q-author.slide-up', { style: { animationDelay: '0.4s' } }, avatar(a.author, '3.6rem'), h('b', a.author.name)),
-            h('div.q-voters', a.voters.map((v, j) => h('span.pop-in', { style: { animationDelay: `${0.8 + j * 0.12}s` } }, avatar(v, '2.4rem')))),
-            h('div.q-points.pop-in', { style: { animationDelay: '1.4s' } },
-              h('span.q-votes', `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))),
-        banner && g.kind !== 'shutout' ? h('div.q-banner.slam', { style: { animationDelay: '1.5s' } }, banner) : null);
+            h('div.q-tally',
+              h('div.q-pct', { style: { animationDelay: `${T.pct}s` } }, `${a.pct}%`),
+              h('div.q-meter', h('div.q-meter-fill', { style: { width: `${a.pct}%`, animationDelay: `${T.pct}s` } }))),
+            h('div.q-voter-chips', a.voters.length
+              ? a.voters.map((v, j) => voterChip(v, T.voters + j * 0.18))
+              : h('span.q-novotes', { style: { animationDelay: `${T.voters}s` } }, 'no votes')),
+            h('div.q-byline', { style: { animationDelay: `${T.author + i * 0.25}s` } },
+              h('span.q-by', 'by'), avatar(a.author, '2.8rem'), h('b', a.author.name),
+              a.panic ? h('span.chip.pink.q-panic', '🆘 panic') : null),
+            h('div.q-points', { style: { animationDelay: `${T.result + 0.3}s` } }, `+${fmt(a.points)}`)))),
+        banner ? h('div.q-banner.slam', { style: { animationDelay: `${T.result}s` } }, banner) : null);
     },
 
     scores(g) {
@@ -137,18 +145,21 @@ export function mount(root, api) {
         promptCard(g),
         h('div.q-final-grid', g.answers.map((a, i) => h('div.card.q-final-ans.pop-in', { style: { animationDelay: `${0.4 + i * 0.2}s` } },
           h('span.q-letter', `${i + 1}`), fitText(a.text)))),
-        h('div.q-progress', h('span', { 'data-live': 'votes' }, `${g.votersDone} / ${g.votersTotal}`),
-          ` voted · pick ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
+        voterRow(g.voters),
+        h('div.q-progress', `Pick ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
     },
 
     finalReveal(g) {
       const step = 2.6;
       return h('div.q-final',
         promptCard(g, false),
-        h('div.q-final-list', g.answers.map((a, i) => h(`div.card.q-final-row${a.winner ? '.win' : ''}`, { style: { animationDelay: `${i * step + 0.5}s` } },
+        h('div.q-final-list', g.answers.map((a, i) => h(`div.card.q-final-row${a.winner ? '.win' : ''}`, { style: { animationDelay: `${i * step + 0.5}s`, '--c': a.author.color } },
+          a.winner ? h('div.q-ribbon.small', 'WINNER') : null,
           h('div.q-final-text', fitText(a.text), a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
-          h('div.q-author', avatar(a.author, '3rem', { crown: a.winner }), h('b', a.author.name)),
-          h('div.q-final-votes', h('span', '★'.repeat(Math.min(a.votes, 12)) || '—'), h('span.q-pts', `+${fmt(a.points)}`))))));
+          h('div.q-final-mid',
+            h('div.q-author', avatar(a.author, '2.6rem'), h('b', a.author.name)),
+            h('div.q-voter-chips.left', a.voters.map((v) => voterChip(v, 0)))),
+          h('div.q-final-votes', h('span.q-vcount', `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))));
     },
 
     gameOver(g) {
@@ -167,12 +178,23 @@ export function mount(root, api) {
     },
   };
 
+  function voterChip(v, delay) {
+    return h('span.q-chip', { style: { animationDelay: `${delay}s`, '--c': v.color } }, avatar(v, '1.9rem'), h('span', v.name));
+  }
+
+  function voterRow(voters = []) {
+    return h('div.q-voter-row', { 'data-live': 'voters' }, voters.map((v) => h(`span.q-vwait${v.done ? '.done' : ''}`, { 'data-id': v.id },
+      avatar(v, '2.6rem'), h('span', v.name), h('i', '✓'))));
+  }
+
   function patch(g) {
     const live = (name) => root.querySelector(`[data-live="${name}"]`);
     if (g.phase === 'answer' || g.phase === 'finalAnswer') {
       for (const p of g.players) root.querySelector(`.q-done[data-id="${p.id}"]`)?.classList.toggle('yes', !!p.done);
     }
-    if ((g.phase === 'vote' || g.phase === 'finalVote') && live('votes')) live('votes').textContent = `${g.votersDone} / ${g.votersTotal}`;
+    if (g.phase === 'vote' || g.phase === 'finalVote') {
+      for (const v of g.voters || []) root.querySelector(`.q-vwait[data-id="${v.id}"]`)?.classList.toggle('done', !!v.done);
+    }
   }
 
   return {

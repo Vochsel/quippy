@@ -12,7 +12,10 @@
       "{name}. Bold choice, showing up.",
       "Welcome, {name}. Lower your expectations accordingly.",
       "{name} is in. The bar has been set. Somewhere.",
-      "And here's {name}, fresh from the servo."
+      "And here's {name}, fresh from the servo.",
+      "{name} has arrived. Lower your voices.",
+      "Look who it is. {name}.",
+      "{name}'s here. Lock up the snags."
     ],
     "audienceJoin": [
       "{name} has joined the audience. Judge harshly.",
@@ -25,75 +28,144 @@
     "intro": [
       "Welcome to {game}. Two of you get the same prompt. Everyone else picks the funnier answer. Try not to embarrass yourselves.",
       "This is {game}. Write something funny on your phone. Everyone votes. Somebody wins. Everybody else goes home and thinks about what they've done.",
-      "{game}. Answer the prompts on your phone, then vote on everyone else's. Simple. Unlike some of you."
+      "{game}. Answer the prompts on your phone, then vote on everyone else's. Simple. Unlike some of you.",
+      "Welcome to {game}. Answer on your phone, vote for the funniest, try not to cry.",
+      "{game}. Same prompt, two answers, one winner. Let's go."
     ],
     "round1Intro": [
       "Round one. Look at your phones and get writing.",
-      "Round one. Check your phones. Be quick. Be funny. Pick one if you must."
+      "Round one. Check your phones. Be quick. Be funny. Pick one if you must.",
+      "Round one. Warm up those thumbs.",
+      "Let's begin. Round one, check your phones.",
+      "Round one. Be funny. Or at least be fast."
     ],
     "round2Intro": [
       "Round two. Points are doubled, so are the stakes. Mostly the points.",
-      "Round two. Double points. Your chance to make up for round one."
+      "Round two. Double points. Your chance to make up for round one.",
+      "Round two. Everything's worth double. Even your mistakes.",
+      "Round two, double points. Time to get serious. Ish."
     ],
     "finalRoundIntro": [
       "Final round. Everyone gets the same prompt. Everyone votes. Leave nothing in the tank.",
-      "The Final Showdown. One prompt, all of you. Make it count."
+      "The Final Showdown. One prompt, all of you. Make it count.",
+      "Last round. One prompt, everyone answers. Big points.",
+      "The final showdown. Leave it all on the screen."
     ],
-    "roundTitle1": ["Round 1"],
-    "roundTitle2": ["Round 2 · Double Points"],
-    "roundTitle3": ["The Final Showdown"],
-    "cbRoundTitle1": ["Round 1 · Tailor-made"],
-    "cbRoundTitle2": ["Round 2 · Callbacks"],
-    "cbRoundTitle3": ["The Grand Callback"],
+    "roundTitle1": [
+      "Round 1"
+    ],
+    "roundTitle2": [
+      "Round 2 · Double Points"
+    ],
+    "roundTitle3": [
+      "The Final Showdown"
+    ],
+    "cbRoundTitle1": [
+      "Round 1 · Tailor-made"
+    ],
+    "cbRoundTitle2": [
+      "Round 2 · Callbacks"
+    ],
+    "cbRoundTitle3": [
+      "The Grand Callback"
+    ],
     "answerStart": [
       "Pens down. Phones up. Go.",
       "Your prompts are on your phones. The clock is ticking. So is my patience.",
-      "Off you go. Write something your mum wouldn't be ashamed of. Or would. Your call."
+      "Off you go. Write something your mum wouldn't be ashamed of. Or would. Your call.",
+      "Go on then.",
+      "Clock's running. Make it count.",
+      "Phones out. Brains on.",
+      "Get writing. I'll wait. Not for long."
     ],
     "readAnswers": [
       "\"{a}\". Or. \"{b}\".",
       "Is it \"{a}\"? Or is it \"{b}\"?",
-      "On one hand, \"{a}\". On the other, \"{b}\"."
+      "On one hand, \"{a}\". On the other, \"{b}\".",
+      "\"{a}\". Versus. \"{b}\".",
+      "Option one: \"{a}\". Option two: \"{b}\".",
+      "\"{a}\"... or... \"{b}\". Choose wisely.",
+      "In this corner, \"{a}\". And in that corner, \"{b}\".",
+      "\"{a}\". Or, if you prefer, \"{b}\".",
+      "First up, \"{a}\". And the alternative, \"{b}\".",
+      "\"{a}\". Hmm. Or \"{b}\". Vote now."
     ],
     "win": [
       "{name} takes it.",
       "That one goes to {name}. Commiserations, {other}.",
       "{name} wins that. {other}, there's always next time. Statistically.",
-      "Point to {name}. {other}, chin up."
+      "Point to {name}. {other}, chin up.",
+      "{name}, well played.",
+      "{name} takes the points. {other}, there's always next round.",
+      "That's {name}'s. Lovely stuff.",
+      "{name} edges it. {other}, so close. Not really.",
+      "The room has spoken. {name}.",
+      "{name} wins that one. Bit of a surprise, honestly.",
+      "{name}! The people's choice.",
+      "{other} wrote something. {name} wrote something funnier."
     ],
     "shutout": [
       "Shutout! Every single vote to {name}. {other}, I'm so sorry.",
       "A clean sweep for {name}. {other}, go and have a little lie down.",
-      "Shutout! Nobody voted for {other}. Not even out of pity."
+      "Shutout! Nobody voted for {other}. Not even out of pity.",
+      "Shutout! {name} takes every vote. {other}, I'll pray for you.",
+      "A clean sweep for {name}. {other}, ouch.",
+      "Unanimous. {name}, take a bow. {other}, take a seat.",
+      "Every single vote to {name}. That's a shutout, folks.",
+      "Shutout! {other}, even your mum voted for {name}."
     ],
     "tie": [
       "A tie. How very diplomatic of you all.",
-      "Dead even. Nobody wins. Very Canberra of you."
+      "Dead even. Nobody wins. Very Canberra of you.",
+      "A tie. Nobody's happy. Perfect.",
+      "Split right down the middle. How very fair.",
+      "Even stevens. Points all round. Sort of.",
+      "It's a draw. I'll allow it.",
+      "Perfectly balanced. As all things should be. Allegedly.",
+      "A tie! You've all failed to decide. Classic.",
+      "Can't separate them. Neither can I, frankly.",
+      "Dead heat. Somebody fetch a tiebreaker. Never mind, we don't have one."
     ],
     "forfeit": [
       "{other} didn't answer, so {name} wins by default. Not glamorous, but it counts.",
-      "{name} wins by forfeit. {other}, the phone works better when you type on it."
+      "{name} wins by forfeit. {other}, the phone works better when you type on it.",
+      "{other} left it blank. {name} wins by default. Inspiring.",
+      "{name} wins by showing up. {other}, the box was right there.",
+      "Free points for {name}. {other}, typing is allowed."
     ],
     "noVotes": [
       "No votes at all. I'll take that as stunned silence.",
-      "Nobody voted. Rude, but understandable."
+      "Nobody voted. Rude, but understandable.",
+      "Not a single vote. Stunning.",
+      "No votes. The silence says it all.",
+      "Nobody voted. I'll take that as a protest."
     ],
     "noContest": [
       "Neither of you answered. Truly a meeting of minds.",
-      "Two blank answers. A bold artistic statement."
+      "Two blank answers. A bold artistic statement.",
+      "Two empty answers. A masterpiece of minimalism.",
+      "Nothing from either of you. Moving swiftly on."
     ],
     "scores": [
       "Here's the leaderboard. {leader} is out in front. {last}, you're... also here.",
       "{leader} leads. Everyone else, try harder. Or at all.",
-      "Scores, please. {leader} on top, {last} bringing up the rear with dignity. Some dignity."
+      "Scores, please. {leader} on top, {last} bringing up the rear with dignity. Some dignity.",
+      "Scores on the doors. {leader} in front.",
+      "Here's how it stands. {leader} leads, {last} is... participating.",
+      "{leader} on top. {last}, plenty of game left. Some game left.",
+      "Let's check the ladder. {leader} is flying."
     ],
     "scoresClose": [
       "It's tight at the top. {leader} by a whisker.",
-      "Close one. {leader} leads, but only just. Anyone could take it. Even {last}."
+      "Close one. {leader} leads, but only just. Anyone could take it. Even {last}.",
+      "Neck and neck up top. {leader} by a nose.",
+      "It's tight! {leader} just ahead. Anyone's game."
     ],
     "scoresNewLeader": [
       "New leader! {leader} has taken the top spot.",
-      "Would you look at that. {leader} is leading now. Momentum is a funny thing."
+      "Would you look at that. {leader} is leading now. Momentum is a funny thing.",
+      "All change! {leader} hits the front.",
+      "{leader} has snuck into first. Sneaky."
     ],
     "finalAnswerStart": [
       "Final Showdown. Everyone, same prompt. Here it is.",
@@ -101,26 +173,43 @@
     ],
     "finalVoteStart": [
       "Vote for your favourites. You get {n}. Not your own, nice try.",
-      "Time to vote. Pick your favourites. You can't vote for yourself, I checked."
+      "Time to vote. Pick your favourites. You can't vote for yourself, I checked.",
+      "Pick your favourites. Not your own, I'm watching.",
+      "Vote time. Choose the best. Be honest. Be brutal."
     ],
     "finalReveal": [
       "Let's see how you voted. From the bottom up.",
-      "The results. Starting with the ones you'd rather forget."
+      "The results. Starting with the ones you'd rather forget.",
+      "Here's how you voted. Bottom to top.",
+      "Results time. Let's start with the shame."
     ],
     "gameOver": [
       "And the winner is {name}! Take a bow. Everyone else, take notes.",
       "{name} wins! Enjoy it. It won't last.",
-      "Your champion is {name}. Somebody get them a sausage in bread."
+      "Your champion is {name}. Somebody get them a sausage in bread.",
+      "{name} is your champion! Bask in it.",
+      "And that's the game. {name} wins. Applause, please. Polite applause.",
+      "{name} takes the crown. The rest of you, there's always the rematch."
     ],
     "gameOverTie": [
       "It's a tie! {name} share the crown. Awkward.",
       "Joint winners: {name}. Very wholesome. I hate it."
     ],
-    "award_crowd": ["Crowd Favourite"],
-    "award_shutouts": ["Shutout Merchant"],
-    "award_panic": ["Panic Button Enthusiast"],
-    "award_ghost": ["The Ghost"],
-    "award_bridesmaid": ["Always the Bridesmaid"],
+    "award_crowd": [
+      "Crowd Favourite"
+    ],
+    "award_shutouts": [
+      "Shutout Merchant"
+    ],
+    "award_panic": [
+      "Panic Button Enthusiast"
+    ],
+    "award_ghost": [
+      "The Ghost"
+    ],
+    "award_bridesmaid": [
+      "Always the Bridesmaid"
+    ],
     "cbLoadingAi": [
       "Monty is writing prompts about you. This could get personal.",
       "Reading the Lore Book. Writing something rude. Please hold."
@@ -138,16 +227,67 @@
       "Welcome to Callback Club. I'll be writing prompts about you, and remembering everything you say. Everything.",
       "Callback Club. Tonight I learn your running jokes. Next time, I use them against you."
     ],
-    "phoneIntro": ["Eyes on the TV!", "Get ready. Look at the big screen."],
-    "phoneLoading": ["Prompts incoming...", "Sharpening the prompts..."],
-    "phoneAudienceWriting": ["The players are writing. Prepare your judging face.", "Players are writing. You'll get to vote soon."],
-    "phoneAnswered": ["Locked in. Look smug.", "Done! Now act like you're still writing.", "All in. Go get a drink while the slow ones finish."],
-    "phoneYourMatchup": ["This one's yours! Act natural.", "That's your answer up there. Poker face."],
-    "phoneVoted": ["Vote locked in.", "Thanks for voting. Probably the right call."],
-    "phoneWatchReveal": ["Watch the TV!", "Eyes up. Results on the big screen."],
-    "phoneWon": ["You won that one!", "Nailed it."],
-    "phoneLost": ["Lost that one. Brutal.", "Not your round. Shake it off."],
-    "phoneDraw": ["Dead heat.", "Nobody won that one."],
-    "phoneWatch": ["Eyes on the TV!"]
+    "phoneIntro": [
+      "Eyes on the TV!",
+      "Get ready. Look at the big screen."
+    ],
+    "phoneLoading": [
+      "Prompts incoming...",
+      "Sharpening the prompts..."
+    ],
+    "phoneAudienceWriting": [
+      "The players are writing. Prepare your judging face.",
+      "Players are writing. You'll get to vote soon."
+    ],
+    "phoneAnswered": [
+      "Locked in. Look smug.",
+      "Done! Now act like you're still writing.",
+      "All in. Go get a drink while the slow ones finish."
+    ],
+    "phoneYourMatchup": [
+      "This one's yours! Act natural.",
+      "That's your answer up there. Poker face."
+    ],
+    "phoneVoted": [
+      "Vote locked in.",
+      "Thanks for voting. Probably the right call."
+    ],
+    "phoneWatchReveal": [
+      "Watch the TV!",
+      "Eyes up. Results on the big screen."
+    ],
+    "phoneWon": [
+      "You won that one!",
+      "Nailed it."
+    ],
+    "phoneLost": [
+      "Lost that one. Brutal.",
+      "Not your round. Shake it off."
+    ],
+    "phoneDraw": [
+      "Dead heat.",
+      "Nobody won that one."
+    ],
+    "phoneWatch": [
+      "Eyes on the TV!"
+    ],
+    "votePreamble": [
+      "Next.",
+      "Righto, next one.",
+      "Here's one.",
+      "Moving on.",
+      "Brace yourselves.",
+      "This one's a doozy.",
+      "Eyes up.",
+      "Another one.",
+      "Let's see what you've done.",
+      "Oh dear.",
+      "Hmm. Okay.",
+      "Phones ready.",
+      "Here we go again.",
+      "Try to keep a straight face.",
+      "I've read worse. Not much worse.",
+      "Coming up."
+    ]
   }
 }

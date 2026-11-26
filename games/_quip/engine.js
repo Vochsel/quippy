@@ -56,19 +56,23 @@ export class QuipGame {
   serialize() { return this.s; }
 
   // ------------------------------------------------------------- lifecycle
-  start() {
-    this.#phase('intro', 10000, 'intro');
+  async start() {
     this.ctx.music('intro');
-    const intro = this.p.introLine?.(this) || this.ctx.line('intro', { game: this.meta.name });
-    this.ctx.say(intro);
     this.prefetch(1);
+    const intro = this.p.introLine?.(this) || this.ctx.line('intro', { game: this.meta.name });
+    const epoch = this.epoch;
+    await this.ctx.voiceReady?.([intro], 5000);
+    if (epoch !== this.epoch) return;
+    this.#phase('intro', 10000, 'intro');
+    this.ctx.say(intro);
   }
 
   resume() {
     const s = this.s;
     if (s.phase === 'intro') this.prefetch(1);
     if (s.phase === 'loading') this.beginRound(s.round);
-    if (s.phase === 'answer') this.#botsAnswer();
+    if (s.phase === 'answer' && s.answersClosed) this.#startVote();
+    else if (s.phase === 'answer') this.#botsAnswer();
     if (s.phase === 'vote') this.#botsVote();
     if (s.phase === 'finalAnswer') this.#botsFinalAnswer();
     if (s.phase === 'finalVote') this.#botsFinalVote();
@@ -188,7 +192,9 @@ export class QuipGame {
       return { id: `r${s.round}m${i}`, round: s.round, prompt: this.#personalise(prompt, authors), authors, answers: {}, votes: {}, order: [], result: null };
     });
     this.ctx.markPromptsUsed(list.map((p) => p.key).filter(Boolean));
+    this.ctx.prewarm?.(s.matchups.map((m) => m.prompt.text));
     s.matchIdx = 0;
+    s.answersClosed = false;
     this.#phase('answer', this.ctx.timing.answer * 1000);
     this.ctx.sayLine('answerStart', {});
     this.ctx.buzz(s.roster, [80, 60, 80]);
@@ -204,6 +210,7 @@ export class QuipGame {
   }
 
   #submitAnswer(pid, matchupId, text, panic) {
+    if (this.s.answersClosed) return;
     const m = this.s.matchups.find((x) => x.id === matchupId);
     if (!m || !m.authors.includes(pid) || m.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
@@ -219,14 +226,44 @@ export class QuipGame {
 
   endAnswering() {
     const s = this.s;
-    if (s.phase !== 'answer') return;
+    if (s.phase !== 'answer' || s.answersClosed) return;
+    s.answersClosed = true;
     this.ctx.clearTimer('answer');
     for (const m of s.matchups) {
       for (const a of m.authors) if (!m.answers[a] && s.tallies[a]) s.tallies[a].noAnswers += 1;
     }
     this.ctx.sfx('buzzer');
+    // Decide each matchup's A/B order and read-out now, so the voice for every
+    // vote can be generated while the first ones are playing.
+    const warm = [];
+    for (const m of s.matchups) {
+      if (m.authors.filter((a) => m.answers[a]).length < 2) continue;
+      m.order = shuffle([...m.authors]);
+      const [a, b] = m.order.map((id) => m.answers[id].text);
+      m.readLine = this.ctx.line('readAnswers', { a, b }) || `${a}. Or. ${b}.`;
+      warm.push(m.prompt.text, m.readLine);
+    }
+    this.ctx.prewarm?.(warm);
     s.matchIdx = 0;
-    this.#startVote();
+    const first = s.matchups.find((m) => m.readLine);
+    const epoch = this.epoch;
+    const go = () => { if (epoch === this.epoch && s.phase === 'answer') this.#startVote(); };
+    if (first && this.ctx.voiceReady) this.ctx.voiceReady([first.prompt.text, first.readLine], 6000).then(go);
+    else go();
+  }
+
+  // Pick the result lines for both possible winners ahead of the reveal, and
+  // start generating their audio while people vote.
+  #prepareResultLines(m) {
+    const [a, b] = m.authors;
+    const n = (id) => this.ctx.playerName(id);
+    m.lines = {
+      win: { [a]: this.ctx.line('win', { name: n(a), other: n(b) }), [b]: this.ctx.line('win', { name: n(b), other: n(a) }) },
+      shutout: { [a]: this.ctx.line('shutout', { name: n(a), other: n(b) }), [b]: this.ctx.line('shutout', { name: n(b), other: n(a) }) },
+      tie: this.ctx.line('tie', {}),
+      noVotes: this.ctx.line('noVotes', {}),
+    };
+    this.ctx.prewarm?.([...Object.values(m.lines.win), ...Object.values(m.lines.shutout), m.lines.tie]);
   }
 
   // ----------------------------------------------------------------- voting
@@ -240,16 +277,20 @@ export class QuipGame {
     const m = s.matchups[s.matchIdx];
     if (!m) return this.#roundScores();
     if (m.authors.filter((a) => m.answers[a]).length < 2) return this.reveal();
-    m.order = shuffle([...m.authors]);
+    if (!m.order?.length) m.order = shuffle([...m.authors]);
     this.#phase('vote', this.ctx.timing.vote * 1000);
     this.ctx.music('voting');
     this.ctx.sfx('whoosh');
+    // A little segue now and then, so it doesn't sound like a loop.
+    if (s.matchIdx > 0 && Math.random() < 0.6) this.ctx.sayLine('votePreamble', {});
     this.ctx.say(m.prompt.text);
     const [a, b] = m.order.map((id) => m.answers[id].text);
-    this.ctx.say(this.ctx.line('readAnswers', { a, b }) || `${a}. Or. ${b}.`);
+    this.ctx.say(m.readLine || this.ctx.line('readAnswers', { a, b }) || `${a}. Or. ${b}.`);
     this.ctx.buzz(this.#eligibleVoters(m), [40]);
+    this.#prepareResultLines(m);
     if (this.p.quip) {
-      this.quips[m.id] = withTimeout(Promise.resolve(this.p.quip(this, m)), 20000).catch(() => null);
+      this.quips[m.id] = withTimeout(Promise.resolve(this.p.quip(this, m)), 20000).catch(() => null)
+        .then((line) => { if (typeof line === 'string' && line.trim()) this.ctx.prewarm?.([cleanText(line, 200)]); return line; });
     }
     if (s.matchIdx === s.matchups.length - 1) this.prefetch(s.round + 1);
     this.#botsVote();
@@ -318,13 +359,19 @@ export class QuipGame {
     }
     if (!m.order.length) m.order = [...m.authors];
     m.result = { kind, winner, votes, points, total, quip: null };
+    // Last matchup of the round: the scoreboard line is now known, so voice it during the reveal.
+    if (s.matchIdx === s.matchups.length - 1) {
+      s.scoresLine = this.#scoresLine();
+      this.ctx.prewarm?.([s.scoresLine]);
+    }
     const epoch = this.#phase('reveal', REVEAL_MS);
     this.ctx.sfx(kind === 'shutout' ? 'shutout' : 'reveal');
 
     const loser = winner && m.authors.find((x) => x !== winner);
     const vars = { name: winner ? this.ctx.playerName(winner) : '', other: loser ? this.ctx.playerName(loser) : '' };
     const lineKey = { shutout: 'shutout', forfeit: 'forfeit', tie: 'tie', win: 'win', noVotes: 'noVotes', noContest: 'noContest' }[kind];
-    const fallback = this.ctx.line(lineKey, vars);
+    const pre = m.lines && (kind === 'win' || kind === 'shutout' ? m.lines[kind]?.[winner] : m.lines[kind]);
+    const fallback = pre || this.ctx.line(lineKey, vars);
     const quip = this.quips[m.id];
     delete this.quips[m.id];
     if (!quip) {
@@ -358,13 +405,19 @@ export class QuipGame {
     s.matchups = [];
     this.#phase('scores', SCORES_MS);
     this.ctx.music('results');
+    this.ctx.say(s.scoresLine || this.#scoresLine());
+    s.scoresLine = null;
+  }
+
+  #scoresLine() {
+    const s = this.s;
     const ranking = this.ranking();
     const leader = ranking[0];
     const last = ranking[ranking.length - 1];
     const prevLeader = Object.entries(s.roundStartScores).sort((x, y) => y[1] - x[1])[0]?.[0];
     const close = ranking.length > 1 && leader.score - ranking[1].score < 300;
     const key = close ? 'scoresClose' : prevLeader && prevLeader !== leader.id && s.round > 1 ? 'scoresNewLeader' : 'scores';
-    this.ctx.sayLine(key, { leader: this.ctx.playerName(leader.id), last: this.ctx.playerName(last.id) });
+    return this.ctx.line(key, { leader: this.ctx.playerName(leader.id), last: this.ctx.playerName(last.id) });
   }
 
   // ------------------------------------------------------------ final round
@@ -375,6 +428,14 @@ export class QuipGame {
     prompt = this.#personalise(prompt, []);
     if (prompt.key) this.ctx.markPromptsUsed([prompt.key]);
     s.final = { prompt, answers: {}, order: [], votes: {}, votesPer: 1, result: null };
+    const epoch = this.epoch;
+    const go = () => { if (epoch === this.epoch) this.#openFinal(prompt); };
+    if (this.ctx.voiceReady) this.ctx.voiceReady([prompt.text], 6000).then(go);
+    else go();
+  }
+
+  #openFinal(prompt) {
+    const s = this.s;
     this.#phase('finalAnswer', this.ctx.timing.finalAnswer * 1000);
     this.ctx.sayLine('finalAnswerStart', {});
     this.ctx.say(prompt.text);
@@ -417,18 +478,30 @@ export class QuipGame {
     return [...new Set([...this.s.roster, ...this.ctx.audienceIds()])].filter((id) => this.ctx.isConnected(id));
   }
 
+  // Each tap on a phone sends that player's current picks; they count
+  // straight away (no "lock in"). Once someone has used all their picks
+  // they're done, and when everyone is done the reveal starts.
+  #picksNeeded(pid) {
+    const f = this.s.final;
+    return Math.min(f.votesPer, f.order.filter((a) => a !== pid).length);
+  }
+
   #finalVote(pid, picks) {
     const f = this.s.final;
-    if (!f || f.votes[pid] || !Array.isArray(picks)) return;
+    if (!f || !Array.isArray(picks)) return;
+    f.done ||= {};
+    if (f.done[pid]) return;
     const ids = [...new Set(picks)]
       .map((k) => f.order[Number(String(k).replace('f', ''))])
       .filter((author) => author && author !== pid)
       .slice(0, f.votesPer);
-    if (!ids.length) return;
+    if (!ids.length) { delete f.votes[pid]; this.ctx.update(); return; }
+    const before = f.votes[pid]?.length || 0;
     f.votes[pid] = ids;
-    if (this.s.tallies[pid]) this.s.tallies[pid].votesCast += ids.length;
+    if (this.s.tallies[pid]) this.s.tallies[pid].votesCast += ids.length - before;
     this.ctx.sfx('vote');
-    if (this.#finalVoters().every((id) => f.votes[id] || (!this.#canFinalVote(id)))) this.finalReveal();
+    if (ids.length >= this.#picksNeeded(pid)) f.done[pid] = true;
+    if (this.#finalVoters().every((id) => f.done[id] || !this.#canFinalVote(id))) this.finalReveal();
     else this.ctx.update();
   }
 
@@ -666,6 +739,7 @@ export class QuipGame {
           ...base, prompt: m.prompt.text, callback: m.prompt.callback || null,
           answers: m.order.map((id, i) => ({ key: i ? 'B' : 'A', text: m.answers[id].text })),
           votersDone: voters.filter((v) => m.votes[v]).length, votersTotal: voters.length,
+          voters: voters.map((v) => ({ ...this.#pub(v), done: !!m.votes[v] })),
           matchNo: s.matchIdx + 1, matchTotal: s.matchups.length,
         };
       }
@@ -678,6 +752,7 @@ export class QuipGame {
           answers: m.order.map((id) => ({
             text: m.answers[id]?.text || null, panic: !!m.answers[id]?.panic, author: this.#pub(id),
             votes: r.votes[id] || 0, points: r.points[id] || 0, winner: r.winner === id,
+            pct: r.total ? Math.round(((r.votes[id] || 0) / r.total) * 100) : 0,
             voters: Object.entries(m.votes).filter(([, v]) => v === id).map(([voter]) => this.#pub(voter)),
           })),
         };
@@ -690,7 +765,8 @@ export class QuipGame {
         return {
           ...base, prompt: f.prompt.text, votesPer: f.votesPer,
           answers: f.order.map((id, i) => ({ id: `f${i}`, text: f.answers[id].text })),
-          votersDone: voters.filter((v) => f.votes[v]).length, votersTotal: voters.length,
+          votersDone: voters.filter((v) => f.done?.[v]).length, votersTotal: voters.length,
+          voters: voters.map((v) => ({ ...this.#pub(v), done: !!f.done?.[v] })),
         };
       }
       case 'finalReveal': {
@@ -700,6 +776,7 @@ export class QuipGame {
           answers: (f.result?.ascending || []).map((id) => ({
             text: f.answers[id].text, panic: !!f.answers[id].panic, author: this.#pub(id),
             votes: f.result.votes[id], points: f.result.points[id], winner: f.result.winners.includes(id),
+            voters: Object.entries(f.votes).filter(([, picks]) => picks.includes(id)).map(([voter]) => this.#pub(voter)),
           })),
         };
       }
@@ -756,7 +833,7 @@ export class QuipGame {
       }
       case 'finalVote': {
         const f = s.final;
-        if (f.votes[pid]) return watch('phoneVoted');
+        if (f.done?.[pid]) return watch('phoneVoted');
         if (!this.#canFinalVote(pid)) return watch('phoneWatchReveal');
         return {
           ...base, screen: 'finalVote', prompt: f.prompt.text, votesPer: f.votesPer,

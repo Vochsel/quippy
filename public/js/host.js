@@ -39,6 +39,7 @@ async function boot() {
   voice = new Voice(audio, {
     provider: cfg.voice?.provider, lang: cfg.speechLang, onCaption: showCaption,
     serverVoices: cfg.voice?.voices || [], serverVoice: cfg.voice?.voice,
+    now: () => (live ? live.serverNow() : Date.now()),
   });
   const params = new URLSearchParams(location.search);
   let room;
@@ -70,7 +71,7 @@ function onMessage(msg) {
 }
 
 function handleFx(fx) {
-  if (fx.say) voice?.say(fx.say);
+  if (fx.say) voice?.say(fx.say, fx.ts);
   if (fx.sfx) audio.sfx(fx.sfx);
   if (fx.sfx === 'fanfare') confetti();
 }

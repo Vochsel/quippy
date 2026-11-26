@@ -80,7 +80,7 @@ const ttlMs = config.roomTtlHours * 3600 * 1000;
 
 function deps() {
   return {
-    store, llm, config, content, joinUrl, log,
+    store, llm, config, content, joinUrl, log, tts,
     persist: async (snapshot) => {
       await store.saveRoom(snapshot.code, snapshot.crewId, snapshot);
       if (process.env.QUIPPY_DEBUG) log(`saved ${snapshot.code} game=${snapshot.game?.phase || '-'}`);

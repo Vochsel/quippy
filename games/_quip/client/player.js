@@ -70,26 +70,31 @@ export function mount(root, api) {
         }, o.text)));
     },
 
+    // Tap to vote: every tap counts immediately. When all picks are used the
+    // phone moves on by itself (the server marks you done).
     finalVote(g) {
       const picks = new Set();
-      const submit = h('button.btn.pink.block', { disabled: true }, `Lock in ${g.votesPer > 1 ? 'votes' : 'vote'}`);
+      const need = Math.min(g.votesPer, g.options.filter((o) => !o.mine).length);
+      const status = h('div.ph-count');
+      const paint = () => {
+        status.textContent = need > 1 ? `Tap ${need} favourites · ${picks.size} / ${need}` : 'Tap your favourite';
+      };
       const opts = g.options.map((o) => {
         const b = h(`button.btn.white.ph-opt${o.mine ? '.mine' : ''}`, { disabled: o.mine }, o.text, o.mine ? h('small', 'yours') : null);
         b.addEventListener('click', () => {
           if (picks.has(o.id)) picks.delete(o.id);
-          else if (picks.size < g.votesPer) picks.add(o.id);
-          else if (g.votesPer === 1) { picks.clear(); picks.add(o.id); }
+          else if (picks.size < need) picks.add(o.id);
           for (const [i, el] of opts.entries()) el.classList.toggle('on', picks.has(g.options[i].id));
-          submit.disabled = picks.size === 0;
-          submit.textContent = g.votesPer > 1 ? `Lock in ${picks.size} / ${g.votesPer}` : 'Lock in vote';
-          api.vibrate(15);
+          paint();
+          api.send({ type: 'finalVote', picks: [...picks] });
+          api.vibrate(picks.size >= need ? [30, 40, 30] : 15);
         });
         return b;
       });
-      submit.addEventListener('click', () => { api.send({ type: 'finalVote', picks: [...picks] }); submit.disabled = true; });
+      paint();
       return h('div.ph-vote.slide-up',
-        h('div.card', h('div.ph-count', g.votesPer > 1 ? `Pick up to ${g.votesPer} favourites` : 'Pick your favourite'), h('p.ph-prompt', g.prompt)),
-        opts, submit);
+        h('div.card', status, h('p.ph-prompt', g.prompt)),
+        opts);
     },
 
     gameOver(g, room, me) {

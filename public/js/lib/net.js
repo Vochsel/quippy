@@ -27,7 +27,10 @@ export class LiveRoom {
       if (document.visibilityState === 'visible' && !this.isOpen()) this.connect();
     });
     window.addEventListener('online', () => !this.isOpen() && this.connect());
-    setInterval(() => this.send({ t: 'ping' }), 20000);
+    // Clock sync: ping/pong round trips; trust the fastest recent samples.
+    this.samples = [];
+    this.pings = new Map();
+    setInterval(() => this.ping(), 15000);
   }
 
   url() {
@@ -48,11 +51,14 @@ export class LiveRoom {
       this.backoff = 500;
       this.onStatus('open');
       ws.send(JSON.stringify(this.hello()));
+      for (let i = 0; i < 5; i++) setTimeout(() => this.ping(), i * 250);
     };
     ws.onmessage = (ev) => {
       let msg;
       try { msg = JSON.parse(ev.data); } catch { return; }
-      if (typeof msg.now === 'number') this.offset = msg.now - Date.now();
+      if (msg.t === 'pong') { this.#pong(msg); return; }
+      // Until the first ping returns, use the server's clock as a rough guide.
+      if (!this.samples.length && typeof msg.now === 'number') this.offset = msg.now - Date.now();
       this.onMessage(msg);
     };
     ws.onclose = (ev) => {
@@ -66,6 +72,26 @@ export class LiveRoom {
       this.retry = setTimeout(() => this.connect(), this.backoff);
       this.backoff = Math.min(this.backoff * 2, 8000);
     };
+  }
+
+  ping() {
+    if (!this.isOpen()) return;
+    const id = Math.random().toString(36).slice(2, 9);
+    this.pings.set(id, performance.now());
+    this.send({ t: 'ping', id });
+  }
+
+  #pong(msg) {
+    const sent = this.pings.get(msg.id);
+    if (sent === undefined || typeof msg.now !== 'number') return;
+    this.pings.delete(msg.id);
+    const rtt = performance.now() - sent;
+    // Server stamped `now` about halfway through the round trip.
+    this.samples.push({ rtt, offset: msg.now + rtt / 2 - Date.now() });
+    if (this.samples.length > 12) this.samples.shift();
+    const best = [...this.samples].sort((a, b) => a.rtt - b.rtt).slice(0, 3);
+    this.offset = best.reduce((x, b) => x + b.offset, 0) / best.length;
+    this.rtt = best[0].rtt;
   }
 
   send(obj) {

@@ -69,6 +69,7 @@ export class Room {
         Object.entries({ locale, family, answerSeconds, answerChars }).filter(([, v]) => v !== undefined)));
     }
     await this.refreshHall();
+    this.#prewarmStockLines();
     if (this.restoreState && this.gameMeta) {
       const def = gameById(this.gameMeta.type);
       try {
@@ -340,6 +341,13 @@ export class Room {
       // Persist right now (phase changes), rather than on the debounced timer.
       checkpoint: () => room.saveNow().catch((e) => room.log('checkpoint failed', e)),
       say: (text) => room.say(text),
+      // Generate voice audio ahead of time (cached), so it plays on cue.
+      prewarm: (texts) => room.prewarm(texts),
+      // Resolve once these lines' audio is ready (or after maxMs): lets a
+      // game hold a screen until the host can actually say its line.
+      voiceReady: (texts, maxMs = 6000) => (room.deps.tts
+        ? Promise.race([room.prewarm(texts), new Promise((r) => setTimeout(r, maxMs))])
+        : Promise.resolve()),
       line: (key, vars) => room.content().line(key, vars),
       sayLine: (key, vars) => room.say(room.content().line(key, vars)),
       sfx: (name) => room.fx({ sfx: name }),
@@ -461,7 +469,37 @@ export class Room {
   }
 
   // --------------------------------------------------------- views & effects
-  say(text) { if (text) this.fx({ say: text }); }
+  // `ts` lets the TV drop lines that arrive too late to still make sense.
+  say(text) { if (text) this.fx({ say: text, ts: Date.now() }); }
+
+  // Host lines with no {placeholders} are the same for everyone: generate
+  // them once per server process (then they live in the cache for good).
+  #prewarmStockLines() {
+    const pack = this.content().pack;
+    const key = `${pack.id}`;
+    Room.warmed ||= new Set();
+    if (Room.warmed.has(key) || !this.deps.tts) return;
+    Room.warmed.add(key);
+    const stock = Object.entries(pack.host)
+      .filter(([k]) => !k.startsWith('phone') && !k.startsWith('award_') && !/Title/.test(k))
+      .flatMap(([, v]) => v).filter((t) => !t.includes('{'));
+    this.prewarm(stock);
+  }
+
+  prewarm(texts) {
+    const tts = this.deps.tts;
+    if (!tts) return Promise.resolve();
+    const list = [...new Set((texts || []).filter((t) => typeof t === 'string' && t.trim()))];
+    let i = 0;
+    const worker = async () => {
+      while (i < list.length) {
+        const t = list[i++];
+        await tts.speak(t).catch(() => null);
+      }
+    };
+    // A few at a time: plenty of headroom before each line is needed.
+    return Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
+  }
 
   fx(event) {
     for (const c of this.conns) if (c.role === 'host') c.send({ t: 'fx', fx: event });

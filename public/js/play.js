@@ -21,6 +21,7 @@ let myStats = null;
 let statsFetchedAt = 0;
 let wakeLock = null;
 let lastKey = '';
+let editingProfile = false; // keep the edit form up while lobby updates arrive
 
 const vibrate = (p) => { try { navigator.vibrate?.(p); } catch { /* ignore */ } };
 
@@ -110,6 +111,7 @@ function statsRow(st) {
 }
 
 function joinScreen({ editing = false } = {}) {
+  editingProfile = editing;
   mountInto(top);
   const name = h('input', { type: 'text', maxLength: 14, placeholder: 'Your name', value: draft.name, autocomplete: 'nickname' });
   const preview = h('div.preview');
@@ -134,8 +136,14 @@ function joinScreen({ editing = false } = {}) {
     save('quippy.color', draft.color);
     save('quippy.face', String(draft.face));
     if (editing && live) {
+      editingProfile = false;
       live.action('profile', { name: draft.name, color: draft.color, face: draft.face });
+      // Show the change right away; the server's next view confirms it.
+      if (view?.me) Object.assign(view.me, { name: draft.name, color: draft.color, face: draft.face });
+      lastKey = '';
+      renderTop.key = '';
       renderView();
+      toast('Saved ✓', 1400);
     } else {
       connect();
     }
@@ -148,8 +156,8 @@ function joinScreen({ editing = false } = {}) {
       preview,
       h('div.field', h('label', 'Colour'), sw),
       h('div.field', h('label', 'Face'), faces),
-      h('button.btn.pink.block.big', { onClick: go }, editing ? 'Save' : `Join ${code} ▶`)),
-    editing ? h('button.btn.white.block', { onClick: () => renderView() }, 'Cancel') : null);
+      h('button.btn.pink.block.big', { onClick: go }, editing ? 'Save ✓' : `Join ${code} ▶`)),
+    editing ? h('button.btn.white.block', { onClick: () => { editingProfile = false; lastKey = ''; renderView(); } }, 'Cancel') : null);
   if (!draft.name) name.focus();
 }
 
@@ -222,9 +230,11 @@ function renderView() {
   renderTop(me, room);
   if (room.phase === 'lobby') {
     destroyGame();
+    if (editingProfile) return;
     renderLobby(me, room);
   } else {
     lastKey = '';
+    editingProfile = false;
     renderGame(me, room, view.game);
   }
 }
@@ -252,8 +262,9 @@ function renderLobby(me, room) {
 
   const lastMine = room.lastResults?.players.find((p) => p.id === me.id);
   mountInto(app,
-    h('div.lobby-me.pop-in', avatar(me, '7rem', { crown: me.vip }), h('h2', me.name),
-      h('div', me.audience ? '🍿 You’re in the audience' : 'You’re in! Eyes on the TV.')),
+    h('div.lobby-me.pop-in', { onClick: () => joinScreen({ editing: true }) }, avatar(me, '7rem', { crown: me.vip }), h('h2', me.name),
+      h('div', me.audience ? '🍿 You’re in the audience' : 'You’re in! Eyes on the TV.'),
+      h('button.btn.white.edit-me', { onClick: (e) => { e.stopPropagation(); joinScreen({ editing: true }); } }, '✏️ Edit name & look')),
     lastMine ? h('div.card.center', h('b', `Last game: #${lastMine.rank} with ${fmt(lastMine.score)} points`)) : null,
     me.vip
       ? h('div.card',
@@ -353,3 +364,28 @@ function tickTimer() {
   $('#ph-timer-fill').style.width = `${Math.min(100, (left / total) * 100)}%`;
   bar.classList.toggle('low', left < 6000);
 }
+
+// ------------------------------------------------------------- fit screen
+// Phones never scroll: if a screen's content is taller than the space left
+// under the header, shrink it (down to 55%) so everything stays visible.
+function fitScreen() {
+  const kids = [...app.children];
+  if (!kids.length) return;
+  for (const k of kids) k.style.zoom = '';
+  const avail = app.clientHeight - parseFloat(getComputedStyle(app).paddingTop) - parseFloat(getComputedStyle(app).paddingBottom);
+  const need = app.scrollHeight - parseFloat(getComputedStyle(app).paddingTop) - parseFloat(getComputedStyle(app).paddingBottom);
+  if (need <= avail + 1) return;
+  const z = Math.max(0.55, Math.floor((avail / need) * 100) / 100);
+  for (const k of kids) k.style.zoom = String(z);
+}
+let fitQueued = false;
+const queueFit = () => {
+  if (fitQueued) return;
+  fitQueued = true;
+  requestAnimationFrame(() => { fitQueued = false; fitScreen(); });
+};
+new MutationObserver(queueFit).observe(app, { childList: true, subtree: true });
+app.addEventListener('input', queueFit);
+window.addEventListener('resize', queueFit);
+window.visualViewport?.addEventListener('resize', queueFit);
+document.fonts?.ready.then(queueFit);
