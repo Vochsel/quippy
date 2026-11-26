@@ -162,7 +162,9 @@ export function mount(root, api) {
   function promptCard(g, animate = true) {
     return h(`div.card.q-prompt${animate ? '.pop-in' : ''}`,
       h('div.q-prompt-text', g.prompt),
-      g.callback ? h('span.chip.teal.q-callback', `↩ callback: ${g.callback}`) : null);
+      // Only label the callback when it adds something the prompt doesn't already say.
+      g.callback && !String(g.prompt || '').toLowerCase().includes(String(g.callback).toLowerCase())
+        ? h('span.chip.teal.q-callback', `↩ callback: ${g.callback}`) : null);
   }
 
   function playersDone(players) {

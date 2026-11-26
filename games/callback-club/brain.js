@@ -27,6 +27,19 @@ function topAnswers(game, n = 8) {
   return rows.sort((x, y) => y.votes - x.votes || (y.won - x.won)).slice(0, n);
 }
 
+// Normalise for comparing prompts ("same joke again?").
+const norm = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+function earlierPrompts(game) {
+  return [...game.s.history, ...game.s.matchups].map((m) => norm(m.prompt?.text)).filter(Boolean);
+}
+
+// A callback prompt mustn't just be an earlier prompt again (or contain it whole).
+function repeatsEarlier(text, seen) {
+  const t = norm(text);
+  return seen.some((p) => p === t || (p.length > 20 && t.includes(p)) || (t.length > 20 && p.includes(t)));
+}
+
 function rosterNames(game) {
   return game.s.roster.filter((id) => !game.ctx.isBot(id)).map((id) => game.ctx.playerName(id));
 }
@@ -43,6 +56,7 @@ function systemPrompt(ctx) {
     '- Never about appearance, weight, race, religion, sexuality, disability, health or anything genuinely hurtful.',
     '- Never acronyms, letter puzzles, rhymes or "fill in exactly N words" mechanics.',
     '- Callbacks should make sense to people who were in the room even if they half-forgot: quote the earlier answer briefly.',
+    '- A callback must take the earlier moment somewhere NEW (a sequel, consequence, new setting, someone else\'s view). Never repeat or lightly reword an earlier prompt, and never make the prompt just the old answer restated. The callback should set up a fresh joke, not be the old one.',
     meta.llmHint || '',
     ctx.settings.family ? 'FAMILY MODE: keep everything suitable for kids. No innuendo, no drinking jokes.' : 'Cheeky innuendo is okay in moderation; nothing explicit.',
   ].filter(Boolean).join('\n');
@@ -79,9 +93,11 @@ async function aiRoundPrompts(ctx, game, round, count) {
     ].filter((x) => x !== '').join('\n'),
     maxTokens: 5000,
   });
+  const seen = earlierPrompts(game);
   const prompts = (out?.prompts || [])
     .filter((p) => p && typeof p.text === 'string' && p.text.trim().length > 8)
-    .map((p) => ({ text: cleanText(p.text, MAX_PROMPT_CHARS), callback: cleanText(p.callback || '', 60) || null }));
+    .map((p) => ({ text: cleanText(p.text, MAX_PROMPT_CHARS), callback: cleanText(p.callback || '', 60) || null }))
+    .filter((p) => !repeatsEarlier(p.text, seen));
   if (!prompts.length) throw new Error('model returned no prompts');
   return prompts;
 }
@@ -101,6 +117,7 @@ async function aiFinalPrompt(ctx, game) {
     maxTokens: 2500,
   });
   if (!out?.text) throw new Error('model returned no final prompt');
+  if (repeatsEarlier(out.text, earlierPrompts(game))) throw new Error('final prompt repeated an earlier one');
   return { text: cleanText(out.text, MAX_PROMPT_CHARS), callback: cleanText(out.callback || '', 60) || null };
 }
 
