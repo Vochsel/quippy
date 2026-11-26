@@ -144,9 +144,20 @@ export class Tts {
   }
 
   // Returns { bytes, type, provider } or null (= let the browser speak).
-  async speak(text, { voice } = {}) {
+  // Concurrent requests for the same line (e.g. the TV plus a spectator
+  // screen) share one synthesis, so each line is only ever paid for once.
+  speak(text, { voice } = {}) {
     const clean = String(text || '').trim().slice(0, 500);
-    if (!clean) return null;
+    if (!clean) return Promise.resolve(null);
+    const id = `${voice || ''}|${clean}`;
+    this.inflight ||= new Map();
+    if (!this.inflight.has(id)) {
+      this.inflight.set(id, this.#speak(clean, voice).finally(() => this.inflight.delete(id)));
+    }
+    return this.inflight.get(id);
+  }
+
+  async #speak(clean, voice) {
     for (const p of this.cfg.route) {
       try {
         let bytes = null;

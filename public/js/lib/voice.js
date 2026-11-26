@@ -95,10 +95,10 @@ export class Voice {
 
   async #fetchAudio(text) {
     try {
-      const res = await fetch(`${LIVE}/api/tts`, {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ text, voice: this.provider === 'local' ? this.serverVoice : undefined }),
-      });
+      // A plain GET so the browser (and the edge in production) can cache it.
+      const q = new URLSearchParams({ t: text });
+      if (this.provider === 'local' && this.serverVoice) q.set('v', this.serverVoice);
+      const res = await fetch(`${LIVE}/api/tts?${q}`);
       if (res.status !== 200) return null;
       return URL.createObjectURL(await res.blob());
     } catch {

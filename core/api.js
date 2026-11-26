@@ -18,6 +18,10 @@ export async function handleApi(req, deps) {
   const { store, config, llm, content } = deps;
   let m;
 
+  if (method === 'GET' && path === '/api/tts' && !(req.query || {}).t) {
+    return ok(await deps.tts.status());
+  }
+
   if (method === 'GET' && path === '/api/config') {
     await llm.init();
     return ok({
@@ -74,16 +78,22 @@ export async function handleApi(req, deps) {
     });
   }
 
-  if (method === 'GET' && path === '/api/tts') {
+  if (method === 'GET' && path === '/api/tts/status') {
     return ok(await deps.tts.status());
   }
 
-  if (method === 'POST' && path === '/api/tts') {
-    const out = await deps.tts.speak(body.text, { voice: body.voice }).catch(() => null);
-    if (!out) return { status: 204, body: null };
+  // GET /api/tts?t=<text>&v=<voice> is a plain cacheable URL: the TV's
+  // browser and (in production) Cloudflare's edge cache keep the audio, so a
+  // repeated line costs no synthesis and usually not even an R2 read.
+  if ((method === 'GET' || method === 'POST') && path === '/api/tts') {
+    const q = req.query || {};
+    const text = method === 'GET' ? q.t : body.text;
+    const voice = method === 'GET' ? q.v : body.voice;
+    const out = await deps.tts.speak(text, { voice }).catch(() => null);
+    if (!out) return { status: 204, body: null, headers: { 'cache-control': 'no-store' } };
     return {
       status: 200, body: out.bytes,
-      headers: { 'content-type': out.type, 'cache-control': 'public, max-age=31536000', 'x-tts-provider': out.provider },
+      headers: { 'content-type': out.type, 'cache-control': 'public, max-age=31536000, immutable', 'x-tts-provider': out.provider },
     };
   }
 

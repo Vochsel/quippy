@@ -28,7 +28,7 @@ function cors(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const headers = cors(request, env);
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
@@ -68,13 +68,23 @@ export default {
           return res.ok ? res.json() : null;
         },
       };
+      // Voice lines: answer from Cloudflare's edge cache before touching R2 or a model.
+      const ttsGet = request.method === 'GET' && url.pathname === '/api/tts' && url.searchParams.get('t');
+      const edge = ttsGet ? caches.default : null;
+      if (edge) {
+        const hit = await edge.match(request);
+        if (hit) return new Response(hit.body, { status: hit.status, headers: { ...Object.fromEntries(hit.headers), ...headers, 'x-tts-cache': 'edge' } });
+      }
       let body = {};
       if (request.method === 'POST') body = await request.json().catch(() => ({}));
       try {
-        const out = await handleApi({ method: request.method, path: url.pathname, body }, { ...d, rooms });
+        const out = await handleApi(
+          { method: request.method, path: url.pathname, body, query: Object.fromEntries(url.searchParams) }, { ...d, rooms });
         if (!out) return Response.json({ error: 'not found' }, { status: 404, headers });
         if (out.json !== undefined) return Response.json(out.json, { status: out.status, headers });
-        return new Response(out.body, { status: out.status, headers: { ...headers, ...(out.headers || {}) } });
+        const res = new Response(out.body, { status: out.status, headers: { ...headers, ...(out.headers || {}) } });
+        if (edge && out.status === 200) ctx.waitUntil(edge.put(request, res.clone()));
+        return res;
       } catch (e) {
         console.error('api error', e);
         return Response.json({ error: 'server error' }, { status: 500, headers });

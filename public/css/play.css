@@ -45,7 +45,7 @@ html.phone { font-size: 17px; }
 .game-pick .btn:not(.on) { background: var(--paper); }
 .vip-settings { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; font-size: .9rem; color: var(--ink); }
 .vip-settings label { display: flex; align-items: center; gap: .4rem; }
-.vip-settings select { width: auto; padding: .2rem .4rem; border-width: 3px; }
+.vip-settings select { width: auto; font-size: 1rem; }
 .waiting { text-align: center; font-size: 1.1rem; }
 
 .tabs-ph { display: flex; gap: .4rem; margin: 1rem 0 .6rem; }

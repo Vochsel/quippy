@@ -149,7 +149,7 @@ app.use(express.json({ limit: '64kb' }));
 app.use('/api', async (req, res) => {
   try {
     const out = await handleApi(
-      { method: req.method, path: `/api${req.path}`, body: req.body },
+      { method: req.method, path: `/api${req.path}`, body: req.body, query: req.query },
       { store, config, llm, content, tts, rooms: { create: createRoom, info: roomInfo } },
     );
     if (!out) return res.status(404).json({ error: 'not found' });
