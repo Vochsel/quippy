@@ -4,6 +4,7 @@
 import { GAMES } from '../games/registry.js';
 import { identify, publicProfile, PHOTO_RE } from './profiles.js';
 import { loreSummary } from './lore.js';
+import { EXT_TYPE, MEDIA_KEY_RE } from './images.js';
 
 import { ROOM_CODE_RE, sha256Hex } from './util.js';
 
@@ -100,6 +101,38 @@ export async function handleApi(req, deps) {
     const bytes = await deps.media.get(`photos/${m[1]}`);
     if (!bytes) return bad('not found', 404);
     return { status: 200, body: bytes, headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' } };
+  }
+
+  // Reference photos for image games (Picture Duel): same small square JPEG as
+  // profile photos, kept under ref/. The game only accepts a ref whose key
+  // starts with the sender's own device id.
+  if (method === 'POST' && path === '/api/media/ref') {
+    if (!ID_RE.test(body.deviceId || '')) return bad('deviceId required');
+    const m2 = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(body.image || '');
+    if (!m2) return bad('send a JPEG data URL');
+    const bin = atob(m2[1]);
+    if (bin.length > 400 * 1024) return bad('photo too large', 413);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return bad('not a JPEG');
+    const key = `ref/${body.deviceId}-${(await sha256Hex(m2[1])).slice(0, 16)}.jpg`;
+    await deps.media.put(key, bytes, 'image/jpeg');
+    return ok({ key });
+  }
+
+  // Game media (generated images, reference photos). Keys are content- or
+  // random-named and never reused, so they cache forever.
+  if (method === 'GET' && (m = path.match(/^\/api\/media\/(.+)$/))) {
+    if (!MEDIA_KEY_RE.test(m[1])) return bad('bad key');
+    const bytes = await deps.media.get(m[1]);
+    if (!bytes) return bad('not found', 404);
+    const type = EXT_TYPE[m[1].split('.').pop()] || 'application/octet-stream';
+    return {
+      status: 200, body: bytes,
+      headers: {
+        'content-type': type, 'cache-control': 'public, max-age=31536000, immutable',
+        'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'",
+      },
+    };
   }
 
   if (method === 'GET' && path === '/api/tts/status') {

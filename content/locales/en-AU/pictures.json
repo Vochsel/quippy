@@ -1,0 +1,611 @@
+{
+  "_comment": "Visual briefs for Picture Duel: each player writes an image prompt that answers one of these. Tag \"spicy\" ones are hidden in family mode.",
+  "prompts": [
+    {
+      "text": "A koala's worst first date",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A cockatoo's mugshot after a big night out",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The bin chicken's wedding photo",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A wombat starring in an action movie poster",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A kangaroo's LinkedIn profile picture",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "Two magpies running a swooping school",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A platypus explaining itself to scientists",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A crocodile's very relaxing day spa",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A possum caught raiding the pantry, on CCTV",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The emu who won the war, at the victory parade",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A quokka influencer's most staged selfie",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A drop bear ambush, as seen by the tourists",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A huntsman spider moving into your car's sun visor",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A seagull's master plan for stealing your hot chips",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A dingo at a fancy dinner party",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A blue-tongue lizard's holiday snaps",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The local kookaburra doing stand-up comedy",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "A cassowary as a nightclub bouncer",
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "text": "The Big Banana's awkward family reunion with the Big Pineapple",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A new Big Thing that a country town definitely regrets",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The Bunnings sausage sizzle in the year 3000",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A thong that got lost and went on an adventure",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The world's most Australian superhero",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A ute decked out for the end of the world",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Christmas lunch at 42 degrees",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The Aldi middle aisle's most cursed product",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A servo pie that has achieved enlightenment",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A backyard cricket match against aliens",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A Hills Hoist being used as a theme park ride",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The Melbourne Cup, but every horse is a different animal",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A meat pie as a fancy wedding cake",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The beach on Boxing Day, as a battlefield painting",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A lamington's dramatic glamour photoshoot",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Vegemite as a luxury perfume ad",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A tradie's smoko break on the moon",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The footy grand final played by grandmas",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A surf lifesaver rescuing something ridiculous",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "Schoolies week for retirees",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A road trip in a Commodore driven by a kangaroo",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The ultimate esky, fully loaded",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A bushfire-season superhero made entirely of zinc cream",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "A sausage roll knighted by the King",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "The worst possible room to find at an Airbnb",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your fridge's secret double life",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A group chat, if it were a real place",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What your houseplants do when you leave for work",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The office printer finally snapping",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A self-checkout machine that has had enough",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your Uber driver, but he's a medieval knight",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The most chaotic kids' birthday party ever thrown",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A gym where everyone is clearly giving up",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Monday morning, as a horror movie poster",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The dentist's waiting room in a heavy metal style",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A wedding where something has gone horribly wrong",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "What really happens to the socks the washing machine eats",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A family photo where nobody was ready",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "The worst possible job interview outfit",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A real estate listing for a haunted shed",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "Your nan's secret life as a DJ",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A traffic jam made entirely of shopping trolleys",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A barbecue that has become self-aware",
+      "tags": [
+        "everyday"
+      ]
+    },
+    {
+      "text": "A cooking show where the food fights back",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The world's least relaxing meditation retreat",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A boy band made of vegetables",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A medieval painting of someone discovering Wi-Fi",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A tiny horse with a very big job",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The world's most intimidating garden gnome",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A noir detective who is also a sandwich",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A pigeon mafia boss in his office",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "An Olympic sport that should never exist",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A cloud that's clearly having a bad day",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A Renaissance portrait of a very proud goose",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A haunted toaster's family portrait",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A dragon who is terrible at its job",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A spaceship made out of things found in a junk drawer",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A rubber duck leading a revolution",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "An art gallery where every painting is of a potato",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The worst superhero costume ever designed",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A unicorn at the DMV",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A snowman's holiday to Queensland",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A very serious business meeting of toddlers",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The final boss of a video game about doing taxes",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A bear opening a cafe and taking it far too seriously",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A motivational poster that is deeply unmotivating",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A pirate ship crewed entirely by cats",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "A lighthouse that is afraid of the dark",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The moon's embarrassing school photo",
+      "tags": [
+        "absurd"
+      ]
+    },
+    {
+      "text": "The movie poster for \"Gone with the Southerly Buster\"",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A blockbuster about a heroic lawnmower",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A romantic comedy starring two traffic cones",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A nature documentary about the office kitchen",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "The album cover for a band called The Feral Galahs",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A disaster movie where the disaster is mild inconvenience",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A cereal box for the world's most dangerous breakfast",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A tourism ad for the most boring town on earth",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A children's book cover that went horribly wrong",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "A video game cover for \"Grand Theft Ute\"",
+      "tags": [
+        "movies"
+      ]
+    },
+    {
+      "text": "What the neighbours really get up to on a Saturday night",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "A bucks party that has gotten wildly out of hand",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "The morning after a big night at the races",
+      "tags": [
+        "spicy"
+      ]
+    },
+    {
+      "text": "A hens' night at a petting zoo",
+      "tags": [
+        "spicy"
+      ]
+    }
+  ]
+}

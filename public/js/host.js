@@ -95,14 +95,18 @@ function onMessage(msg) {
 }
 
 function handleFx(fx) {
+  if (fx.pause) voice?.stop();
   if (fx.say && fx.now) voice?.sayNow(fx.say);
   else if (fx.say) {
+    // A cue may be tagged ':last' (e.g. 'F7:last'): the final line of a read-out.
+    const [cue, tag] = String(fx.cue || '').split(':');
+    const last = cue === 'B' || tag === 'last';
     voice?.say(fx.say, fx.ts, {
       scene: fx.scene,
-      cue: fx.cue,
-      onStart: fx.cue ? () => emitCue(fx.cue, fx.cueId) : null,
+      cue: cue || undefined,
+      onStart: cue ? () => emitCue(cue, fx.cueId) : null,
       // When the last answer has been read, tell the server voting can open.
-      onEnd: fx.cue === 'B' ? () => live?.game({ type: 'readDone', matchupId: fx.cueId }) : null,
+      onEnd: last ? () => live?.game({ type: 'readDone', matchupId: fx.cueId }) : null,
     });
   }
   if (fx.sfx) audio.sfx(fx.sfx);
@@ -120,6 +124,7 @@ function showCaption(text) {
 // ---------------------------------------------------------------- render
 function render() {
   const room = view.room;
+  $('#paused').classList.toggle('hidden', !room.paused);
   audio.music(room.music);
   renderTop(room);
   if (room.phase === 'lobby') {
@@ -343,7 +348,7 @@ async function renderGame(room, gv) {
 // ------------------------------------------------------------------- timer
 function tickTimer() {
   requestAnimationFrame(tickTimer);
-  const g = view?.room?.phase === 'game' ? view.game : null;
+  const g = view?.room?.phase === 'game' && !view.room.paused ? view.game : null;
   const el = $('#timer');
   if (!g?.timer || !g.deadline) { el.classList.add('hidden'); lastTick = null; return; }
   el.classList.remove('hidden');
@@ -370,6 +375,8 @@ function setupSettings() {
   $('#settings-btn').addEventListener('click', () => {
     $('#set-voice-on').checked = voice.enabled;
     $('#to-lobby').classList.toggle('hidden', view?.room?.phase !== 'game' || !isOwner);
+    $('#pause-btn').classList.toggle('hidden', view?.room?.phase !== 'game' || !isOwner);
+    $('#pause-btn').textContent = view?.room?.paused ? '▶ Resume game' : '⏸ Pause game';
     const local = voice.provider === 'local';
     const current = local ? voice.serverVoice : voice.pickVoice()?.name;
     const options = local
@@ -400,6 +407,10 @@ function setupSettings() {
   $('#test-voice').addEventListener('click', () => voice.say('Righto. This is how I sound. Try not to be too impressed.'));
   $('#fullscreen').addEventListener('click', () => document.documentElement.requestFullscreen?.());
   $('#new-room').addEventListener('click', () => location.replace('/host?new'));
+  $('#pause-btn').addEventListener('click', () => {
+    live.action(view?.room?.paused ? 'unpause' : 'pause');
+    dlg.close();
+  });
   $('#to-lobby').addEventListener('click', () => {
     if (view?.room?.phase !== 'game') { dlg.close(); return; }
     if (!confirm('End this game and go back to the lobby? Scores from this game won\'t count.')) return;

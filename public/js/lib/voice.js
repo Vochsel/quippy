@@ -80,7 +80,12 @@ export class Voice {
       setTimeout(() => item.onEnd?.(), 1200);
       return;
     }
-    if (this.queue.length >= 5) { const dropped = this.queue.shift(); dropped.onStart?.(); dropped.onEnd?.(); }
+    // Keep the queue short by dropping chatter, but never read-out lines
+    // (cues): the final reads out every answer back to back.
+    if (this.queue.length >= 5) {
+      const i = this.queue.findIndex((q) => !q.cue);
+      if (i >= 0) { const [dropped] = this.queue.splice(i, 1); dropped.onStart?.(); dropped.onEnd?.(); }
+    }
     item.audio = this.usesServer() ? this.#fetchAudio(text) : null;
     this.queue.push(item);
     this.#next();

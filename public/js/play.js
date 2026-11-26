@@ -271,6 +271,7 @@ async function requestWakeLock() {
 function renderView() {
   if (!view) return;
   const { me, room } = view;
+  document.body.classList.toggle('paused', !!room.paused);
   renderTop(me, room);
   if (room.phase === 'lobby') {
     destroyGame();

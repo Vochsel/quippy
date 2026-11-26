@@ -4,6 +4,7 @@ import { buildConfig } from '../core/config.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
 import { Tts } from '../core/tts.js';
+import { ImageGen } from '../core/images.js';
 import { SqlStore } from '../core/sqlstore.js';
 import { PACKS } from '../content/index.js';
 
@@ -25,6 +26,7 @@ export function workerDeps(env) {
     config,
     store: new SqlStore(d1Driver(env.DB)),
     llm: new LLM(config.llm),
+    images: new ImageGen(config.image),
     content: new ContentLibrary(PACKS, config.defaultLocale),
     joinUrl: (code) => `${base}/${code}`,
     media: {

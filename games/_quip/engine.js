@@ -20,6 +20,8 @@ const SCORES_MS = 9000;
 const GAME_OVER_MS = 40000;
 const TIMED = ['answer', 'vote', 'finalAnswer', 'finalVote'];
 const READ_CAP_MS = 15000;
+// The final read-out: the prompt, then every answer one by one.
+const finalReadCapMs = (n) => Math.min(120000, 8000 + n * 10000);
 
 export function defineQuipGame(meta, makeProvider) {
   return {
@@ -84,8 +86,25 @@ export class QuipGame {
     if (s.phase === 'answer' && s.answersClosed) this.#startVote();
     else if (s.phase === 'answer') this.#botsAnswer();
     if (s.phase === 'vote' && s.reading) { s.reading = true; this.#openVoting(); } else if (s.phase === 'vote') this.#botsVote();
+    if (s.phase === 'finalAnswer' && s.final?.closed) this.#startFinalRead();
+    else if (s.phase === 'finalAnswer') this.#botsFinalAnswer();
+    // Restarted mid read-out: the TV's voice queue is gone, so just open voting.
+    if (s.phase === 'finalVote' && s.final?.reading) this.#openFinalVoting();
+    else if (s.phase === 'finalVote') this.#botsFinalVote();
+  }
+
+  // After a pause: show the real (shifted) deadline and restart the cosmetic
+  // timers (countdown calls, bot moves) that the pause cancelled.
+  onUnpause() {
+    const s = this.s;
+    const d = this.ctx.timerDeadline?.(s.phase);
+    if (d) s.deadline = d;
+    this.countdown = [];
+    if (TIMED.includes(s.phase) && s.deadline && !s.reading && !s.final?.reading) this.#scheduleCountdown();
+    if (s.phase === 'answer' && !s.answersClosed) this.#botsAnswer();
+    if (s.phase === 'vote' && !s.reading) this.#botsVote();
     if (s.phase === 'finalAnswer') this.#botsFinalAnswer();
-    if (s.phase === 'finalVote') this.#botsFinalVote();
+    if (s.phase === 'finalVote' && !s.final?.reading) this.#botsFinalVote();
   }
 
   onTimer(name) {
@@ -94,6 +113,7 @@ export class QuipGame {
       case 'answer': return this.endAnswering();
       case 'vote': return this.reveal();
       case 'readCap': return this.#openVoting();
+      case 'finalReadCap': return this.#openFinalVoting();
       case 'reveal': return this.#afterReveal();
       case 'scores': return this.beginRound(this.s.round + 1);
       case 'finalAnswer': return this.endFinalAnswering();
@@ -111,7 +131,8 @@ export class QuipGame {
 
   onHostAction(p) {
     if (p.type === 'skip') this.onContinue();
-    if (p.type === 'readDone') this.#openVoting(p.matchupId);
+    if (p.type === 'readDone' && p.matchupId === 'final') this.#openFinalVoting();
+    else if (p.type === 'readDone') this.#openVoting(p.matchupId);
   }
 
   onAction(pid, p) {
@@ -549,7 +570,7 @@ export class QuipGame {
 
   #submitFinal(pid, text, panic) {
     const f = this.s.final;
-    if (!f || !this.s.roster.includes(pid) || f.answers[pid]) return;
+    if (!f || f.closed || !this.s.roster.includes(pid) || f.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
     if (!t) return;
     f.answers[pid] = { text: t, panic: !!panic };
@@ -562,20 +583,60 @@ export class QuipGame {
 
   endFinalAnswering() {
     const s = this.s;
-    if (s.phase !== 'finalAnswer') return;
-    this.ctx.clearTimer('finalAnswer');
     const f = s.final;
+    if (s.phase !== 'finalAnswer' || f.closed) return;
+    this.ctx.clearTimer('finalAnswer');
+    f.closed = true;
+    s.deadline = null;
     for (const id of s.roster) if (!f.answers[id] && s.tallies[id]) s.tallies[id].noAnswers += 1;
     f.order = shuffle(Object.keys(f.answers));
     this.ctx.sfx('buzzer');
     if (f.order.length < 2) return this.finalReveal();
     f.votesPer = Math.max(1, Math.min(3, f.order.length - 2));
-    this.#phase('finalVote', this.ctx.timing.finalVote * 1000);
+    // Pick every read-out line now so their audio is generated ahead.
+    f.reads = f.order.map((id) => {
+      const a = f.answers[id].text;
+      return this.ctx.line('readFinalAnswer', { a }) || `"${a}".`;
+    });
+    f.voteLine = this.ctx.line('finalVoteStart', { n: f.votesPer });
+    this.ctx.prewarm?.([f.prompt.text, ...f.reads, f.voteLine]);
+    this.ctx.update();
+    this.ctx.checkpoint?.();
+    const epoch = this.epoch;
+    const go = () => { if (epoch === this.epoch && s.phase === 'finalAnswer') this.#startFinalRead(); };
+    if (this.ctx.voiceReady) this.ctx.voiceReady([f.prompt.text, ...f.reads.slice(0, 2)], 6000).then(go);
+    else go();
+    return undefined;
+  }
+
+  // Monty reads the prompt, then each answer: the TV shows them one at a
+  // time (cues F0, F1, ...; the last one is tagged ':last' so the TV reports
+  // 'readDone' when it finishes). Voting opens then, or after a cap.
+  #startFinalRead() {
+    const s = this.s;
+    const f = s.final;
+    if (!f.reads?.length) f.reads = f.order.map((id) => `"${f.answers[id].text}".`);
+    f.reading = true;
+    this.#phase('finalVote');
+    this.ctx.setTimer('finalReadCap', finalReadCapMs(f.order.length));
     this.ctx.music('voting');
-    this.ctx.sayLine('finalVoteStart', { n: f.votesPer });
+    this.ctx.sfx('whoosh');
+    this.ctx.sayCue(f.prompt.text, 'prompt', 'final');
+    f.reads.forEach((line, i) => this.ctx.sayCue(line, `F${i}${i === f.reads.length - 1 ? ':last' : ''}`, 'final'));
+    // No TV to read it out: open voting straight away.
+    if (this.ctx.hostCount && this.ctx.hostCount() === 0) this.#openFinalVoting();
+  }
+
+  #openFinalVoting() {
+    const s = this.s;
+    const f = s.final;
+    if (s.phase !== 'finalVote' || !f?.reading) return;
+    f.reading = false;
+    this.ctx.clearTimer('finalReadCap');
+    this.#phase('finalVote', this.ctx.timing.finalVote * 1000);
+    this.ctx.say(f.voteLine || this.ctx.line('finalVoteStart', { n: f.votesPer }));
     this.ctx.buzz(null, [40]);
     this.#botsFinalVote();
-    return undefined;
   }
 
   #finalVoters() {
@@ -592,7 +653,7 @@ export class QuipGame {
 
   #finalVote(pid, picks) {
     const f = this.s.final;
-    if (!f || !Array.isArray(picks)) return;
+    if (!f || f.reading || !Array.isArray(picks)) return;
     f.done ||= {};
     if (f.done[pid]) return;
     const ids = [...new Set(picks)]
@@ -798,7 +859,7 @@ export class QuipGame {
     const f = this.s.final;
     for (const id of this.#finalVoters().filter((x) => this.ctx.isBot(x))) {
       this.ctx.later(this.#rand(2500, 7000), () => {
-        if (this.s.phase !== 'finalVote') return;
+        if (this.s.phase !== 'finalVote' || f.reading) return;
         const options = f.order.map((a, i) => (a === id ? null : `f${i}`)).filter(Boolean);
         this.#finalVote(id, shuffle(options).slice(0, f.votesPer));
       });
@@ -840,7 +901,7 @@ export class QuipGame {
         return {
           ...base,
           prompt: s.phase === 'finalAnswer' ? s.final.prompt.text : null,
-          closed: s.phase === 'answer' && !!s.answersClosed,
+          closed: s.phase === 'answer' ? !!s.answersClosed : !!s.final?.closed,
           players: s.roster.map((id) => ({ ...this.#pub(id), done: this.#answeredAll(id) })),
         };
       case 'vote': {
@@ -875,7 +936,7 @@ export class QuipGame {
         const f = s.final;
         const voters = this.#finalVoters();
         return {
-          ...base, prompt: f.prompt.text, votesPer: f.votesPer,
+          ...base, prompt: f.prompt.text, votesPer: f.votesPer, reading: !!f.reading,
           answers: f.order.map((id, i) => ({ id: `f${i}`, text: f.answers[id].text })),
           votersDone: voters.filter((v) => f.done?.[v]).length, votersTotal: voters.length,
           voters: voters.map((v) => ({ ...this.#pub(v), done: !!f.done?.[v] })),
@@ -926,7 +987,7 @@ export class QuipGame {
       }
       case 'finalAnswer': {
         if (!inGame) return watch('phoneAudienceWriting');
-        if (s.final.answers[pid]) return watch('phoneAnswered');
+        if (s.final.answers[pid] || s.final.closed) return watch('phoneAnswered');
         return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true, panicText: this.#panicFor(pid, 'final') };
       }
       case 'vote': {
@@ -947,6 +1008,7 @@ export class QuipGame {
       }
       case 'finalVote': {
         const f = s.final;
+        if (f.reading) return watch('phoneListen');
         if (f.done?.[pid]) return watch('phoneVoted');
         if (!this.#canFinalVote(pid)) return watch('phoneWatchReveal');
         return {

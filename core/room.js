@@ -11,6 +11,13 @@ import { GAMES, gameById } from '../games/registry.js';
 import { applyGameResult, pickFreeColor, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
 import { cleanName, FACE_COUNT, PLAYER_COLORS, pick, uid } from './util.js';
+import { ImageGen, MEDIA_KEY_RE } from './images.js';
+
+// Rooms without a media store (tests) keep game images in memory.
+const memoryMedia = () => {
+  const m = new Map();
+  return { get: async (k) => m.get(k) || null, put: async (k, bytes) => { m.set(k, bytes); } };
+};
 
 const BOT_NAMES = ['Bazza', 'Shazza', 'Davo', 'Kylie', 'Robbo', 'Tezza', 'Macca', 'Jonno', 'Steph', 'Gazza'];
 const MAX_PLAYERS_HARD = 12;
@@ -55,6 +62,7 @@ export class Room {
     this.music = s.music || 'lobby';
     this.restoreState = s.game || null;
     this.restoreTimers = s.timers || {};
+    this.restorePaused = !!s.paused;
     this.hadSnapshot = !!snapshot;
   }
 
@@ -77,10 +85,11 @@ export class Room {
         this.game = def.restore(this.makeCtx(def), this.restoreState);
         // Give everyone a moment to reconnect before timers run out.
         const now = Date.now();
+        this.paused = this.restorePaused;
         for (const [name, deadline] of Object.entries(this.restoreTimers)) {
           this.setTimer(name, Math.max(deadline - now, 12000));
         }
-        this.game.resume?.();
+        if (!this.paused) this.game.resume?.();
         this.log(`room ${this.code}: resumed ${def.id} game`);
       } catch (e) {
         this.log(`room ${this.code}: could not resume game:`, e);
@@ -188,7 +197,7 @@ export class Room {
     const a = msg.a;
 
     if (a === 'game') {
-      if (!this.game) return;
+      if (!this.game || this.paused) return;
       if (conn.role === 'player') this.game.onAction?.(conn.playerId, msg.payload || {});
       else if (isOwnerHost) this.game.onHostAction?.(msg.payload || {});
       // Any TV may report it finished reading out a matchup.
@@ -249,7 +258,13 @@ export class Room {
         this.game?.onContinue?.();
         break;
       case 'abort':
-        if (this.game) this.#endGame(null);
+        if (this.game) { this.paused = false; this.#endGame(null); }
+        break;
+      case 'pause':
+        if (isOwnerHost) this.pause();
+        break;
+      case 'unpause':
+        if (isOwnerHost) this.unpause();
         break;
       case 'newSession':
         if (!this.game) { this.session = newSession(); this.lastResults = null; }
@@ -332,6 +347,21 @@ export class Room {
       dev: this.deps.config.dev,
       content: this.content(),
       llm: this.deps.llm,
+      // AI images: available(), generate({ prompt, reference }) -> { bytes, type }.
+      // Off (no key / tests) -> available() is false; draw a placeholder instead.
+      images: this.deps.images || (this.deps.images = new ImageGen(this.deps.config.image || {})),
+      // Game media (generated images, reference photos). Store bytes here and
+      // keep only the key in game state; url(key) is what screens load.
+      media: {
+        put: async (key, bytes, type) => {
+          if (!MEDIA_KEY_RE.test(key)) throw new Error(`bad media key ${key}`);
+          room.deps.media ||= memoryMedia();
+          await room.deps.media.put(key, bytes, type);
+          return key;
+        },
+        get: async (key) => (MEDIA_KEY_RE.test(key) && room.deps.media ? room.deps.media.get(key) : null),
+        url: (key) => `/api/media/${key}`,
+      },
       store: this.deps.store,
       log: this.log,
       lore: () => room.crew?.lore || {},
@@ -390,6 +420,12 @@ export class Room {
 
   setTimer(name, ms) {
     this.clearTimer(name);
+    if (this.paused) {
+      // Frozen: remember how long it had left; it starts when the room resumes.
+      this.timers.set(name, { deadline: null, remaining: ms, handle: null });
+      this.save();
+      return Date.now() + ms;
+    }
     const deadline = Date.now() + ms;
     const handle = setTimeout(() => {
       this.timers.delete(name);
@@ -401,6 +437,34 @@ export class Room {
     return deadline;
   }
 
+  // Pause: freeze every timer (keeping what's left) and cancel cosmetic
+  // delays; the game picks its bots/countdown back up on resume.
+  pause() {
+    if (this.paused || !this.game) return;
+    this.paused = true;
+    const now = Date.now();
+    for (const [name, t] of this.timers) {
+      clearTimeout(t.handle);
+      this.timers.set(name, { deadline: null, remaining: Math.max(1000, (t.deadline ?? now) - now), handle: null });
+    }
+    for (const h of this.laters) clearTimeout(h);
+    this.laters.clear();
+    this.fx({ pause: true });
+    this.say(this.content().line('paused'));
+    this.dirty();
+  }
+
+  unpause() {
+    if (!this.paused) return;
+    this.paused = false;
+    for (const [name, t] of [...this.timers]) {
+      if (t.deadline === null) this.setTimer(name, Math.max(3000, t.remaining));
+    }
+    this.game?.onUnpause?.();
+    this.say(this.content().line('unpaused'));
+    this.dirty();
+  }
+
   clearTimer(name) {
     const t = this.timers.get(name);
     if (t) clearTimeout(t.handle);
@@ -408,6 +472,9 @@ export class Room {
   }
 
   later(ms, fn) {
+    // Cosmetic delays (bots, countdown calls) don't run while paused; the
+    // game re-schedules them in onUnpause().
+    if (this.paused) return () => {};
     const handle = setTimeout(() => {
       this.laters.delete(handle);
       try { fn(); } catch (e) { this.log(`room ${this.code}: later() failed`, e); }
@@ -429,6 +496,7 @@ export class Room {
     this.#clearGameTimers();
     this.game = null;
     this.gameMeta = null;
+    this.paused = false;
     this.music = 'lobby';
     // People who joined mid-game were parked in the audience: deal them in now.
     for (const p of this.players.values()) {
@@ -612,6 +680,7 @@ export class Room {
       llm: this.deps.llm.status(),
       gameType: this.gameMeta?.type || null,
       music: this.music,
+      paused: !!this.paused,
       hostName: this.content().meta.hostName || 'Monty',
       dev: this.deps.config.dev,
     };
@@ -630,7 +699,7 @@ export class Room {
         code: room.code, phase: room.phase, players: room.players, vipId: room.vipId, selectedGame: room.selectedGame,
         games: room.games, minPlayers: room.minPlayers, settings: room.settings, locales: room.locales,
         answerCharOptions: room.answerCharOptions,
-        session: room.session, lastResults: room.lastResults, gameType: room.gameType, hostName: room.hostName,
+        session: room.session, lastResults: room.lastResults, gameType: room.gameType, hostName: room.hostName, paused: room.paused,
         llm: { available: room.llm.available, label: room.llm.label },
       },
       game: this.game && p ? this.game.playerView(pid) : null,
@@ -652,7 +721,8 @@ export class Room {
       music: this.music,
       gameMeta: this.gameMeta,
       game: this.game ? this.game.serialize() : null,
-      timers: Object.fromEntries([...this.timers.entries()].map(([k, v]) => [k, v.deadline])),
+      timers: Object.fromEntries([...this.timers.entries()].map(([k, v]) => [k, v.deadline ?? Date.now() + (v.remaining || 0)])),
+      paused: !!this.paused,
       savedAt: Date.now(),
     };
   }

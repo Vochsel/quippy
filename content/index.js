@@ -9,6 +9,7 @@ import enAUpersonal from './locales/en-AU/personal.json' with { type: 'json' };
 import enAUpanic from './locales/en-AU/panic.json' with { type: 'json' };
 import enAUcallbacks from './locales/en-AU/callbacks.json' with { type: 'json' };
 import enAUhost from './locales/en-AU/host.json' with { type: 'json' };
+import enAUpictures from './locales/en-AU/pictures.json' with { type: 'json' };
 
 export const PACKS = {
   'en-AU': {
@@ -19,5 +20,6 @@ export const PACKS = {
     panic: enAUpanic,
     callbacks: enAUcallbacks,
     host: enAUhost,
+    pictures: enAUpictures,
   },
 };

@@ -36,6 +36,7 @@
     <div id="caption" class="caption"><span class="caption-mic">🎙️</span><div><b id="caption-name">Monty</b><p id="caption-text"></p></div></div>
     <div id="timer" class="timer hidden"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="44"/><circle id="timer-arc" class="arc" cx="50" cy="50" r="44"/></svg><span id="timer-num"></span></div>
     <div id="conn" class="conn hidden">Reconnecting…</div>
+    <div id="paused" class="paused-overlay hidden"><div class="paused-card slam">⏸ PAUSED</div><p>Back in a sec. Resume from ⚙️ settings.</p></div>
   </div>
 
   <dialog id="settings" class="settings card">
@@ -51,6 +52,7 @@
     <div class="row buttons">
       <button class="btn white" id="test-voice">🎙️ Test voice</button>
       <button class="btn white" id="fullscreen">⛶ Fullscreen</button>
+      <button class="btn lime" id="pause-btn">⏸ Pause game</button>
       <button class="btn pink" id="to-lobby">⏹ End game → lobby</button>
       <button class="btn white" id="new-room">New room</button>
       <button class="btn teal" id="close-settings">Done</button>

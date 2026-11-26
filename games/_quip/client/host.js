@@ -40,7 +40,7 @@ function autoScroll(root) {
     box.classList.toggle('scrolling', overflow > 4);
     if (overflow > 4) {
       box.style.setProperty('--scroll', `${-overflow}px`);
-      box.style.setProperty('--dur', `${Math.max(5, overflow / 18)}s`);
+      box.style.setProperty('--dur', `${Math.max(2.5, overflow / 45)}s`);
     }
   }
 }
@@ -65,7 +65,99 @@ export function mount(root, api) {
   const onResize = () => fitStage(root);
   addEventListener('resize', onResize);
   const flip = (key) => root.querySelector(`.q-ans[data-ans="${key}"]`)?.classList.remove('face-down');
-  const offCue = api.onCue?.((cue) => { if (cue === 'A' || cue === 'B') flip(cue); });
+  const offCue = api.onCue?.((cue) => {
+    if (cue === 'A' || cue === 'B') flip(cue);
+    const m = /^F(\d+)$/.exec(cue);
+    if (m) finalCue(Number(m[1]));
+  });
+
+  // ---- Final read-out: each answer pops up big in the middle as Monty reads
+  // it, then flies into its slot in the grid. Cues are spaced out a little so
+  // they still play in turn when the voice is off (all cues fire at once).
+  let finalView = null;
+  let solo = null; // { el, i } in the centre right now
+  let cueQueue = [];
+  let cueBusyUntil = 0;
+  let cueTimer = null;
+  const MIN_SOLO_MS = 900;
+
+  // Cues can beat the view here (views are debounced, and with the voice off
+  // cues fire at once), so early ones are held until the screen mounts.
+  let earlyCues = [];
+  function finalCue(i) {
+    if (!finalView?.reading) { earlyCues.push({ i, at: performance.now() }); return; }
+    cueQueue.push(i);
+    pumpCues();
+  }
+
+  function pumpCues() {
+    clearTimeout(cueTimer);
+    if (!cueQueue.length) return;
+    const wait = cueBusyUntil - performance.now();
+    if (wait > 0) { cueTimer = setTimeout(pumpCues, wait); return; }
+    showSolo(cueQueue.shift());
+    cueBusyUntil = performance.now() + MIN_SOLO_MS;
+    if (cueQueue.length) cueTimer = setTimeout(pumpCues, MIN_SOLO_MS);
+  }
+
+  function slotOf(i) { return root.querySelector(`.q-final-ans[data-f="${i}"]`); }
+
+  function showSolo(i) {
+    const a = finalView?.answers?.[i];
+    const overlay = root.querySelector('.q-final-overlay');
+    if (!a || !overlay) return;
+    if (solo) land(solo);
+    const el = h('div.card.q-final-solo', h('span.q-letter', `${i + 1}`), fitText(a.text));
+    overlay.append(el);
+    overlay.classList.add('on');
+    solo = { el, i };
+    requestAnimationFrame(() => autoScroll(el));
+  }
+
+  // FLIP: fly the centre card onto its grid slot, then reveal the slot.
+  function land({ el, i }) {
+    if (solo?.el === el) solo = null;
+    const slot = slotOf(i);
+    const overlay = root.querySelector('.q-final-overlay');
+    if (!solo) overlay?.classList.remove('on');
+    if (!slot || !el.isConnected) { el.remove(); reveal(slot); return; }
+    const from = el.getBoundingClientRect();
+    const to = slot.getBoundingClientRect();
+    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+    const sc = to.width / from.width;
+    el.classList.add('flying');
+    const anim = el.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc}) rotate(-2deg)`, opacity: 0.95, offset: 0.85 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: 0 },
+    ], { duration: 650, easing: 'cubic-bezier(.5, 0, .3, 1)', fill: 'forwards' });
+    setTimeout(() => reveal(slot), 520);
+    anim.onfinish = () => el.remove();
+  }
+
+  function reveal(slot) {
+    if (!slot || !slot.classList.contains('waiting')) return;
+    slot.classList.remove('waiting');
+    slot.classList.add('landed');
+    requestAnimationFrame(() => autoScroll(slot));
+  }
+
+  // Reading is over (or this TV missed the cues): everything into the grid.
+  function finishFinalRead() {
+    cueQueue = [];
+    clearTimeout(cueTimer);
+    if (solo) land(solo);
+    setTimeout(() => {
+      root.querySelectorAll('.q-final-ans.waiting').forEach((el) => reveal(el));
+      root.querySelector('.q-final')?.classList.remove('reading');
+      const hint = root.querySelector('[data-live="final-hint"]');
+      if (hint && finalView) hint.textContent = voteHint(finalView);
+      setTimeout(() => autoScroll(root), 400);
+    }, 300);
+  }
+
+  const voteHint = (g) => `Tap ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`;
 
   function promptCard(g, animate = true) {
     return h(`div.card.q-prompt${animate ? '.pop-in' : ''}`,
@@ -115,6 +207,11 @@ export function mount(root, api) {
     },
 
     finalAnswer(g) {
+      if (g.closed) {
+        return h('div.q-loading',
+          h('div.q-round-card.slam', 'Answers locked!'),
+          h('p.q-loading-text', h('span.spinner'), ' Monty’s about to read them out…'));
+      }
       return h('div.q-answer',
         h('h2.q-heading.slide-up', g.roundTitle || 'Final round'),
         promptCard(g),
@@ -202,15 +299,18 @@ export function mount(root, api) {
       return h('div.q-scores', h('h2.q-heading.slide-up', g.roundTitle ? `Scores after ${g.roundTitle.split(' ·')[0]}` : 'Scores'), board);
     },
 
+    // While Monty reads them out the grid holds empty slots; answers arrive
+    // one by one via the centre stage (see showSolo/land above).
     finalVote(g) {
       const cols = Math.min(4, Math.max(2, Math.ceil(g.answers.length / 2)));
-      return h('div.q-final',
+      return h(`div.q-final${g.reading ? '.reading' : ''}`,
         promptCard(g),
         h('div.q-final-grid', { style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } },
-          g.answers.map((a, i) => h('div.card.q-final-ans.pop-in', { style: { animationDelay: `${0.4 + i * 0.2}s` } },
+          g.answers.map((a, i) => h(`div.card.q-final-ans${g.reading ? '.waiting' : '.pop-in'}`,
+            { 'data-f': i, style: g.reading ? {} : { animationDelay: `${0.4 + i * 0.2}s` } },
             h('span.q-letter', `${i + 1}`), fitText(a.text)))),
         voterRow(g.voters),
-        h('div.q-progress', `Tap ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
+        h('div.q-progress', { 'data-live': 'final-hint' }, g.reading ? 'Listen up…' : voteHint(g)));
     },
 
     // Same grid as the vote, revealed from fewest votes to most.
@@ -279,6 +379,11 @@ export function mount(root, api) {
       const hint = live('vote-hint');
       if (hint) hint.textContent = 'Vote on your phone!';
     }
+    if (g.phase === 'finalVote' && !g.reading && finalView?.reading) {
+      finalView = g;
+      finishFinalRead();
+    }
+    if (g.phase === 'finalVote') finalView = g;
     if (g.phase === 'vote' || g.phase === 'finalVote') {
       for (const v of g.voters || []) root.querySelector(`.q-vwait[data-id="${v.id}"]`)?.classList.toggle('done', !!v.done);
     }
@@ -291,7 +396,15 @@ export function mount(root, api) {
       if (k !== key) {
         key = k;
         const fn = screens[g.phase];
+        cueQueue = []; clearTimeout(cueTimer); solo = null;
+        finalView = g.phase === 'finalVote' ? g : null;
         mountInto(root, fn ? fn(g) : h('div'));
+        if (g.phase === 'finalVote' && g.reading) {
+          root.append(h('div.q-final-overlay'));
+          const fresh = earlyCues.filter((c) => performance.now() - c.at < 5000).map((c) => c.i);
+          earlyCues = [];
+          if (fresh.length) { cueQueue.push(...fresh); setTimeout(pumpCues, 300); }
+        }
         // Measure after layout (and again once fonts and pop-in animations settle).
         const settle = () => { fitStage(root); autoScroll(root); };
         requestAnimationFrame(settle);
@@ -303,6 +416,6 @@ export function mount(root, api) {
         patch(g);
       }
     },
-    destroy() { offCue?.(); removeEventListener('resize', onResize); },
+    destroy() { offCue?.(); clearTimeout(cueTimer); removeEventListener('resize', onResize); },
   };
 }

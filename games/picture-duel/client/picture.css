@@ -1,0 +1,68 @@
+/* Picture Duel (TV + phone). Builds on quippy.css + the quip styles. */
+
+/* ---------- TV ---------- */
+.pd-note { font-size: 1.5rem; opacity: .85; margin: 0; }
+
+.pd-brief { max-width: 72rem; margin: 0 auto 1.6rem; text-align: center; position: relative; padding-top: 1.6rem; }
+.pd-brief-label { position: absolute; top: -1.1rem; left: 50%; transform: translateX(-50%) rotate(-2deg); background: var(--teal); color: var(--ink); border: 4px solid var(--ink); border-radius: 999px; padding: .05rem 1rem; font-family: var(--head); font-size: 1.3rem; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.pd-brief-text { font-family: var(--head); font-size: 3rem; line-height: 1.12; }
+.pd-reveal .pd-brief { margin-bottom: 1.4rem; padding: 1.2rem 1.4rem .8rem; }
+.pd-reveal .pd-brief-text { font-size: 2.2rem; }
+
+.pd-versus { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; max-width: 92rem; margin: 0 auto; position: relative; align-items: start; justify-items: center; }
+.pd-frame { position: relative; padding: 1rem; width: min(100%, 54vh); }
+.pd-img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border: 4px solid var(--ink); border-radius: 14px; background: var(--paper-2); opacity: 0; transition: opacity .5s; }
+.pd-img.loaded { opacity: 1; }
+.pd-img.small { width: 62%; margin: 0 auto; }
+.pd-vs { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--head); font-size: 3.6rem; color: var(--yellow); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 5px 5px 0 var(--ink); }
+.pd-empty { aspect-ratio: 1; width: 72%; margin: 0 auto; display: grid; place-items: center; border: 4px dashed var(--muted); border-radius: 14px; color: var(--muted); font-size: 1.6rem; }
+
+.pd-reveal .pd-frame { padding: 1.6rem 1.4rem 1rem; width: 100%; max-width: 44rem; }
+.pd-said { margin: .8rem 0 0; text-align: center; font-size: 1.45rem; line-height: 1.25; font-style: italic; color: var(--ink); animation: popIn .4s both; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pd-ref { font-style: normal; font-size: .95rem; margin-left: .5rem; vertical-align: middle; }
+.pd-reveal .q-tally { margin-top: .6rem; }
+.pd-reveal .q-voter-chips { margin-top: .5rem; min-height: 2.2rem; }
+.pd-reveal .q-byline { margin-top: .6rem; }
+
+/* Who's done / still painting. */
+.pd-artist .pd-brush { position: absolute; top: -.6rem; left: -.6rem; font-size: 2rem; transform: scale(0); transition: transform .25s cubic-bezier(.2, 1.8, .4, 1); }
+.pd-artist.painting .pd-brush { transform: scale(1); animation: pdWiggle .8s ease-in-out infinite; }
+.pd-artist.painting { opacity: .85; }
+.pd-dots { display: flex; gap: .35rem; }
+.pd-dots i { width: .9rem; height: .9rem; border-radius: 50%; border: 3px solid var(--ink); background: rgba(255, 255, 255, .25); }
+.pd-dots i.on { background: var(--teal); }
+@keyframes pdWiggle { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(14deg); } }
+
+/* ---------- Phone ---------- */
+.pd-create-ph .card { margin-bottom: .8rem; }
+.pd-create-ph textarea { font-size: 1.05rem; min-height: 4.6rem; margin: .7rem 0 .2rem; width: 100%; }
+.pd-refbox { display: flex; align-items: center; gap: .5rem; margin-top: .4rem; }
+.pd-refbtn { font-size: .9rem; padding: .45rem .7rem; }
+.pd-refthumb { width: 2.8rem; height: 2.8rem; border-radius: 10px; border: 3px solid var(--ink); object-fit: cover; }
+.pd-gen { font-size: 1.1rem; }
+.pd-status:empty { display: none; }
+.pd-status { margin-top: .7rem; color: var(--ink); }
+.pd-painting { display: flex; align-items: center; gap: .5rem; font-size: 1rem; }
+.pd-bar { height: .7rem; border: 3px solid var(--ink); border-radius: 999px; overflow: hidden; margin-top: .4rem; background: rgba(26, 15, 46, .08); }
+.pd-bar div { height: 100%; width: 0; background: var(--teal); transition: width .25s linear; }
+.pd-error { background: #ffe0dc; border: 3px solid var(--red); border-radius: 12px; padding: .45rem .7rem; font-size: .95rem; }
+
+.pd-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: .8rem; }
+.pd-gallery:empty { display: none; }
+.pd-tile { position: relative; padding: 0; border: 4px solid var(--ink); border-radius: 14px; overflow: hidden; background: var(--paper-2); aspect-ratio: 1; cursor: pointer; box-shadow: var(--shadow-sm); }
+.pd-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pd-tile.on { outline: 4px solid var(--lime); outline-offset: 2px; transform: rotate(-1.5deg) scale(1.03); }
+.pd-tile-n { position: absolute; left: .25rem; top: .25rem; background: var(--yellow); color: var(--ink); border: 3px solid var(--ink); border-radius: 50%; width: 1.6rem; height: 1.6rem; display: grid; place-items: center; font-family: var(--head); font-size: .9rem; }
+.pd-tile-ref { position: absolute; right: .25rem; bottom: .2rem; font-size: 1rem; }
+.pd-tile-busy { display: grid; place-items: center; }
+.pd-picked-prompt { grid-column: 1 / -1; margin: .1rem 0 0; font-size: .9rem; font-style: italic; opacity: .9; overflow-wrap: anywhere; }
+.pd-send { font-size: 1.2rem; }
+.pd-hint { text-align: center; font-size: .8rem; opacity: .7; margin: .6rem 0 0; }
+
+.pd-vote-ph .card { margin-bottom: .8rem; }
+.pd-vote-opts { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-top: 1rem; }
+.pd-opt { position: relative; padding: 0; border: 4px solid var(--ink); border-radius: 18px; overflow: visible; background: var(--paper); box-shadow: var(--shadow-sm); cursor: pointer; }
+.pd-opt img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
+.pd-opt .q-letter { top: -.7rem; left: -.7rem; width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
+.pd-opt.on { outline: 5px solid var(--lime); outline-offset: 2px; }
+.pd-opt:disabled:not(.on) { opacity: .5; }

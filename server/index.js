@@ -17,6 +17,7 @@ import { handleApi } from '../core/api.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
 import { Tts } from '../core/tts.js';
+import { ImageGen } from '../core/images.js';
 import { Room } from '../core/room.js';
 import { SqlStore } from '../core/sqlstore.js';
 import { makeRoomCode, ROOM_CODE_RE, uid } from '../core/util.js';
@@ -55,7 +56,7 @@ const ttsCache = {
   put: async (key, bytes) => fs.writeFileSync(path.join(ttsDir, path.basename(key)), bytes),
 };
 
-// Uploaded media (profile photos): data/media/<key>
+// Uploaded media (profile photos, game images): data/media/<key>
 const mediaDir = path.join(config.dataDir, 'media');
 const media = {
   get: async (key) => {
@@ -71,6 +72,7 @@ const media = {
 
 const llm = new LLM(config.llm);
 const tts = new Tts(config.voice, ttsCache);
+const images = new ImageGen(config.image);
 const content = new ContentLibrary(PACKS, config.defaultLocale);
 
 // --------------------------------------------------------------- join URLs
@@ -96,7 +98,7 @@ const ttlMs = config.roomTtlHours * 3600 * 1000;
 
 function deps() {
   return {
-    store, llm, config, content, joinUrl, log, tts,
+    store, llm, config, content, joinUrl, log, tts, media, images,
     persist: async (snapshot) => {
       await store.saveRoom(snapshot.code, snapshot.crewId, snapshot);
       if (process.env.QUIPPY_DEBUG) log(`saved ${snapshot.code} game=${snapshot.game?.phase || '-'}`);
@@ -250,4 +252,5 @@ server.listen(config.port, () => {
     log(st.available ? `  AI brain:          ${st.label} · ${st.model}` : `  AI brain:          built-in templates${st.lastError ? ` (${st.lastError})` : ''}`);
   });
   tts.status().then((v) => log(`  Host voice:        ${v.label}${v.voice ? ` · ${v.voice}` : ''}`));
+  log(`  Images:            ${images.available() ? `AI Gateway · ${config.image.model}` : 'placeholders (no AI_GATEWAY_API_KEY or IMAGE_PROVIDER=none)'}`);
 });

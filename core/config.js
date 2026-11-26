@@ -62,6 +62,23 @@ export function buildConfig(env = {}) {
       elevenLabsModel: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
     },
 
+    // Image generation (Picture Duel), through the Vercel AI Gateway with the
+    // same AI_GATEWAY_API_KEY. Without a key (or IMAGE_PROVIDER=none) games get
+    // cheap SVG placeholders instead, and bots never call the model.
+    //   IMAGE_MODEL  default bfl/flux-3-image-klein (~US$0.008 at 768px, ~5 s,
+    //                takes a reference photo). Alternatives on the gateway:
+    //                openai/gpt-image-1-mini (slower, flatter), recraft/recraft-v4.1-flash,
+    //                bytedance/seedream-5.5, bfl/flux-3-image (pricier, sharper).
+    //                Gemini "flash image" models are chat models on the gateway and
+    //                aren't supported by this image path.
+    image: {
+      provider: (env.IMAGE_PROVIDER || 'auto').toLowerCase(), // auto | gateway | none
+      gatewayKey: env.AI_GATEWAY_API_KEY || '',
+      model: env.IMAGE_MODEL || 'bfl/flux-3-image-klein',
+      size: env.IMAGE_SIZE || '768x768',
+      timeoutMs: num(env.IMAGE_TIMEOUT_MS, 60000),
+    },
+
     // Default timings in seconds (answer time can be changed per room).
     timing: {
       answer: num(env.QUIPPY_ANSWER_SECONDS, 90),

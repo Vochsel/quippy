@@ -96,3 +96,6 @@ html.phone, html.phone body { height: 100%; overflow: hidden; overscroll-behavio
 body.offline::before { content: 'Reconnecting…'; position: fixed; top: calc(.4rem + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
   z-index: 50; background: var(--red); color: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: .2rem .9rem; font-size: .85rem;
   animation: pulse 1.2s ease-in-out infinite; }
+
+body.paused::after { content: '⏸ Paused'; position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; font-family: var(--head);
+  font-size: 3rem; color: var(--yellow); background: rgba(20, 8, 40, .8); backdrop-filter: blur(4px); }

@@ -69,6 +69,8 @@ The instance:
 | `ctx.content` | the room's locale pack: `pickPrompts(n, used)`, `pickFinal()`, `pickPersonal()`, `panic()`, `line()`, `meta` |
 | `ctx.usedPrompts`, `ctx.markPromptsUsed(keys)` | so a crew doesn't see the same prompt twice |
 | `ctx.llm` | `available()`, `json({ system, user, maxTokens })` → parsed JSON. Always have a fallback. |
+| `ctx.images` | AI pictures: `available()`, `generate({ prompt, reference })` → `{ bytes, type, ms }`. Never call it for bots; use a placeholder (`placeholderSvg` in `core/images.js`) |
+| `ctx.media` | `put(key, bytes, type)` → key, `get(key)`, `url(key)`. Keys are `gen/<id>.<jpg|png|webp|svg>` or `ref/<deviceId>-<hash>.jpg`; keep keys (never bytes) in game state |
 | `ctx.lore()` | the crew's Lore Book (`{ jokes, taste }`) |
 | `ctx.settings` | room settings (`locale`, `family`, `answerSeconds`, `answerChars`) |
 | `ctx.timing` | default phase lengths |

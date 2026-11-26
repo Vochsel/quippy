@@ -21,6 +21,11 @@ LLM_PROVIDER = "vercel"
 # the TV's browser voices. To use your local voice model in production, expose it
 # (e.g. a Cloudflare Tunnel) and set TTS_PROVIDER = "local,elevenlabs" + TTS_LOCAL_URL.
 TTS_PROVIDER = "gateway,elevenlabs"
+# Picture Duel images via the AI Gateway (same key). Pictures + reference photos
+# are stored in the MEDIA R2 bucket under gen/ and ref/.
+# IMAGE_MODEL = "bfl/flux-3-image-klein"   # default; or openai/gpt-image-1-mini,
+#   recraft/recraft-v4.1-flash, bytedance/seedream-5.5, bfl/flux-3-image
+# IMAGE_PROVIDER = "none"                  # placeholders only (no image spend)
 
 # Secrets (wrangler secret put <NAME>):
 #   AI_GATEWAY_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID

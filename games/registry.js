@@ -3,8 +3,9 @@
 // below. See docs/MAKING_GAMES.md.
 import zingerDuel from './zinger-duel/index.js';
 import callbackClub from './callback-club/index.js';
+import pictureDuel from './picture-duel/index.js';
 
-export const GAMES = [zingerDuel, callbackClub];
+export const GAMES = [zingerDuel, callbackClub, pictureDuel];
 
 export function gameById(id) {
   return GAMES.find((g) => g.id === id) || null;

@@ -1,6 +1,56 @@
 {
   "_comment": "Everything the host (Monty) says, plus short status lines for phones. {placeholders} are filled in by the game. Add variants freely; one is picked at random.",
   "lines": {
+    "pdIntro": [
+      "Welcome to {game}. You each get a brief. Write an image prompt, the robot paints it, and the room picks the better picture. Art school, but quicker.",
+      "This is {game}. Describe a picture, the machine draws it, everyone else judges. No talent required. Just as well."
+    ],
+    "pdRoundTitle1": [
+      "Round 1 · Sketchy"
+    ],
+    "pdRoundTitle2": [
+      "Round 2 · Double points"
+    ],
+    "pdRound1Intro": [
+      "Round one. Phones out. Describe something beautiful. Or at least something.",
+      "Round one. You've got a brief, a robot artist and three tries. Don't waste them."
+    ],
+    "pdRound2Intro": [
+      "Round two. Double points. The robot has been warned.",
+      "Round two, and every vote's worth double. Paint like you mean it."
+    ],
+    "pdCreateStart": [
+      "Write your prompt, hit generate, pick your favourite. Three goes each.",
+      "Off you go. Three tries each. Pick the best one and send it in."
+    ],
+    "pdCreateClosing": [
+      "Time's up. Just waiting on the robot to finish painting.",
+      "Brushes down. A couple of masterpieces are still drying."
+    ],
+    "pdStarter": [
+      "The brief: {prompt}.",
+      "Here's the brief. {prompt}.",
+      "{prompt}. Which picture nails it?"
+    ],
+    "phonePdLoading": [
+      "Handing out the briefs…",
+      "Sharpening the robot's pencils…",
+      "Mixing the paints…"
+    ],
+    "award_artist": [
+      "Most generations"
+    ],
+    "phonePdSubmitted": [
+      "Masterpiece submitted. Eyes on the TV.",
+      "Sent. The gallery opens soon."
+    ],
+    "phonePdYourMatchup": [
+      "That's your picture up there. Look casual.",
+      "Your art's on the TV. Act natural."
+    ],
+    "phonePdVoted": [
+      "Vote in. Art critic of the year."
+    ],
     "lobbyWelcome": [
       "Evening. I'm Monty. Grab your phones and scan the code. Yes, all of you. Even you.",
       "Welcome to Quippy. Scan the code, type your name, and try to be funnier than last time. Low bar.",
@@ -356,6 +406,16 @@
       "Option two: \"{b}\".",
       "Or. \"{b}\". Vote now."
     ],
+    "readFinalAnswer": [
+      "\"{a}\".",
+      "Next: \"{a}\".",
+      "Then there's \"{a}\".",
+      "Someone wrote: \"{a}\".",
+      "How about: \"{a}\".",
+      "And: \"{a}\".",
+      "This one says: \"{a}\".",
+      "Ahem. \"{a}\"."
+    ],
     "phoneListen": [
       "Listen up…",
       "Monty's reading them out. Voting opens in a sec.",
@@ -370,6 +430,14 @@
       "{name} is joining us this round. Better late than never.",
       "Welcome aboard, {name}. You're starting from zero. Good luck.",
       "{name} has finally shown up. Deal them in."
+    ],
+    "paused": [
+      "Paused. Go get a snack. I'll be here. Forever.",
+      "Game paused. Nobody move. Except to the fridge."
+    ],
+    "unpaused": [
+      "And we're back.",
+      "Right, where were we? Oh yes. Suffering."
     ]
   }
 }

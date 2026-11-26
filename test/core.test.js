@@ -166,3 +166,84 @@ test('someone who missed the deal is added at the next round', async (t) => {
   assert.ok(await advance(room, (r) => !r.game && r.lastResults), 'game still finishes');
   assert.equal(room.lastResults.players.length, 4);
 });
+
+test('picture-duel: visual briefs pack', () => {
+  const lib = new ContentLibrary(PACKS, 'en-AU');
+  const adult = lib.forRoom({ locale: 'en-AU', family: false });
+  const family = lib.forRoom({ locale: 'en-AU', family: true });
+  assert.ok(adult.pictures.length >= 80, 'at least 80 briefs');
+  assert.equal(new Set(adult.pictures.map((p) => p.key)).size, adult.pictures.length, 'brief keys are unique');
+  assert.ok(family.pictures.every((p) => !p.tags.includes('spicy')));
+  assert.equal(adult.pickPictures(3, new Set()).length, 3);
+});
+
+test('picture-duel: odd players, cost guards, restart mid-create, no paid calls for bots', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const saved = {};
+  const calls = [];
+  // A fake paid model: counts calls, answers with a tiny "JPEG".
+  const images = {
+    available: () => true,
+    generate: async ({ prompt }) => { calls.push(prompt); return { bytes: new Uint8Array([0xff, 0xd8, 1, 2]), type: 'image/jpeg', ms: 1 }; },
+  };
+  const deps = { ...makeDeps(store, saved), images };
+  const room = new Room({ code: 'PICS', crewId: 'h_testcrew04', deps });
+  await room.init();
+  for (let i = 0; i < 5; i++) room.addBot();
+  // One "human" (a bot entry flipped to human so it never acts by itself).
+  const human = [...room.players.keys()][0];
+  room.players.get(human).isBot = false;
+  await room.startGame('picture-duel');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'create'), 'reached create');
+  const g = room.game;
+  const mine = g.s.matchups.filter((m) => m.authors.includes(human));
+  assert.ok(mine.length >= 1);
+  assert.ok(g.s.matchups.every((m) => m.authors.length === 2), 'pairs only');
+  assert.equal(g.s.matchups.length, 3, '5 players -> 3 pairs (one player draws twice)');
+  const mid = mine[0].id;
+  for (let i = 0; i < 6; i++) {
+    g.onAction(human, { type: 'generate', matchupId: mid, prompt: `try ${i}` });
+    g.onAction(human, { type: 'generate', matchupId: mid, prompt: 'while busy' }); // ignored: one at a time
+    await flush(10);
+  }
+  const e = mine[0].entries[human];
+  assert.equal(e.tries.length, 3, 'max 3 pictures per brief');
+  assert.equal(calls.length, 3, 'only the human hit the paid model');
+  assert.ok(e.tries.every((x) => /^gen\/[\w-]+\.jpg$/.test(x.key)), 'state keeps media keys, not bytes');
+  assert.ok(!JSON.stringify(g.serialize()).includes('base64'));
+  assert.ok(await room.deps.media.get(e.tries[0].key), 'bytes are in the media store');
+
+  // Restart mid-create: the revived game keeps the pictures and finishes.
+  await room.saveNow();
+  const snap = structuredClone(saved.last);
+  for (const tmr of room.timers.values()) clearTimeout(tmr.handle);
+  for (const h of room.laters) clearTimeout(h);
+  room.game = null;
+  const revived = new Room({ code: 'PICS', crewId: 'h_testcrew04', deps: { ...deps, media: room.deps.media }, snapshot: snap });
+  await revived.init();
+  assert.equal(revived.game.s.phase, 'create');
+  assert.ok(await advance(revived, (r) => !r.game && r.lastResults), 'revived game finished');
+  const res = revived.lastResults;
+  assert.equal(res.players.length, 5);
+  assert.equal(calls.length, 3, 'still no paid calls from bots');
+});
+
+test('pausing freezes the game; resuming carries on to the end', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const saved = {};
+  const room = new Room({ code: 'PAUS', crewId: 'h_testcrew04', deps: makeDeps(store, saved) });
+  await room.init();
+  for (let i = 0; i < 3; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'vote' && !r.game.s.reading), 'voting open');
+  const where = `${room.game.s.round}|${room.game.s.matchIdx}|${room.game.s.phase}`;
+  room.pause();
+  await advance(room, () => false, 800); // 200s of nothing
+  assert.equal(`${room.game.s.round}|${room.game.s.matchIdx}|${room.game.s.phase}`, where, 'nothing moved while paused');
+  room.unpause();
+  assert.ok(await advance(room, (r) => !r.game && r.lastResults), 'finished after resuming');
+});
