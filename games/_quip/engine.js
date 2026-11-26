@@ -440,7 +440,8 @@ export class QuipGame {
       this.ctx.prewarm?.([s.scoresLine]);
     }
     const epoch = this.#phase('reveal', REVEAL_MS);
-    this.ctx.sfx(kind === 'shutout' ? 'shutout' : 'reveal');
+    // The TV times the shutout fanfare to its own animation.
+    this.ctx.sfx('reveal');
 
     const loser = winner && m.authors.find((x) => x !== winner);
     const vars = { name: winner ? this.ctx.playerName(winner) : '', other: loser ? this.ctx.playerName(loser) : '' };

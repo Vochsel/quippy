@@ -2,10 +2,10 @@
 // Returns { status, json } or { status, body, headers }, or null if the path
 // isn't an API route.
 import { GAMES } from '../games/registry.js';
-import { identify, publicProfile } from './profiles.js';
+import { identify, publicProfile, PHOTO_RE } from './profiles.js';
 import { loreSummary } from './lore.js';
 
-import { ROOM_CODE_RE } from './util.js';
+import { ROOM_CODE_RE, sha256Hex } from './util.js';
 
 const ID_RE = /^[\w-]{6,64}$/;
 const ok = (json) => ({ status: 200, json });
@@ -34,6 +34,7 @@ export async function handleApi(req, deps) {
       games: GAMES.map((g) => ({ id: g.id, name: g.name, tagline: g.tagline, usesAi: !!g.usesAi })),
       publicUrl: config.publicUrl || null,
       dev: config.dev,
+      version: config.version,
     });
   }
 
@@ -77,6 +78,28 @@ export async function handleApi(req, deps) {
       hall: await store.hallOfFame(crew.id, 12),
       leaderboard: await store.crewLeaderboard(crew.id, 20),
     });
+  }
+
+  // Profile photos: the phone sends a small square JPEG (data URL); we keep it
+  // in R2 (or on disk locally) under an unguessable-enough content hash.
+  if (method === 'POST' && path === '/api/photo') {
+    if (!ID_RE.test(body.deviceId || '')) return bad('deviceId required');
+    const m2 = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(body.image || '');
+    if (!m2) return bad('send a JPEG data URL');
+    const bin = atob(m2[1]);
+    if (bin.length > 400 * 1024) return bad('photo too large', 413);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return bad('not a JPEG');
+    const file = `${body.deviceId}-${(await sha256Hex(m2[1])).slice(0, 16)}.jpg`;
+    await deps.media.put(`photos/${file}`, bytes, 'image/jpeg');
+    return ok({ photo: file });
+  }
+
+  if (method === 'GET' && (m = path.match(/^\/api\/photo\/([\w.-]+)$/))) {
+    if (!PHOTO_RE.test(m[1])) return bad('bad name');
+    const bytes = await deps.media.get(`photos/${m[1]}`);
+    if (!bytes) return bad('not found', 404);
+    return { status: 200, body: bytes, headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' } };
   }
 
   if (method === 'GET' && path === '/api/tts/status') {

@@ -71,7 +71,7 @@ html.phone, html.phone body { height: 100%; overflow: hidden; overscroll-behavio
 .phone body { display: flex; flex-direction: column; height: 100dvh; min-height: 0; }
 .ph-top { position: relative; flex: none; }
 .ph-timer { position: relative; flex: none; width: 100%; }
-.ph-main { flex: 1; min-height: 0; width: 100%; overflow: hidden; padding-bottom: calc(.8rem + env(safe-area-inset-bottom)); }
+.ph-main { flex: 1; min-height: 0; width: 100%; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: calc(.8rem + env(safe-area-inset-bottom)); }
 .ph-fit { transform-origin: top center; }
 .ph-logo { font-size: 2.8rem; margin: .6rem 0 .2rem; }
 .ph-tag { margin-bottom: .8rem; }
@@ -89,3 +89,5 @@ html.phone, html.phone body { height: 100%; overflow: hidden; overscroll-behavio
 .ph-timer { max-width: 520px; align-self: center; }
 
 .linkish { display: block; margin: .4rem auto; background: none; border: none; color: #fff; opacity: .7; text-decoration: underline; font-weight: 800; font-size: .9rem; }
+.photo-btns { display: flex; gap: .5rem; justify-content: center; margin: -.4rem 0 .9rem; flex-wrap: wrap; }
+.photo-btns .btn { font-size: .95rem; padding: .35rem .8rem; }

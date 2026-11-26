@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gitVersion } from './version.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(ROOT, 'dist');
@@ -18,5 +19,6 @@ for (const dir of fs.readdirSync(path.join(ROOT, 'games'), { withFileTypes: true
 }
 
 const live = (process.env.QUIPPY_LIVE_URL || '').replace(/\/+$/, '');
-fs.writeFileSync(path.join(out, 'env.js'), `window.QUIPPY = ${JSON.stringify({ live })};\n`);
+const version = process.env.QUIPPY_VERSION || gitVersion();
+fs.writeFileSync(path.join(out, 'env.js'), `window.QUIPPY = ${JSON.stringify({ live, version })};\n`);
 console.log(`Built dist/ (live server: ${live || 'same origin'})`);

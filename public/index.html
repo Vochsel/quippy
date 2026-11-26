@@ -23,6 +23,7 @@
     .code-row { display: flex; gap: .6rem; }
     .code-row input { flex: 1; }
     footer { text-align: center; opacity: .6; font-size: .85rem; margin: 2.5rem 0 1rem; }
+    .version { display: inline-block; margin-top: .5rem; padding: .1rem .6rem; border-radius: 999px; background: rgba(0,0,0,.3); font-size: .8rem; letter-spacing: .03em; }
   </style>
   <script src="/env.js"></script>
 </head>
@@ -46,7 +47,8 @@
         <a class="btn teal block" href="/host" style="text-decoration:none; text-align:center">Start hosting ▶</a>
       </div>
     </div>
-    <footer>Zinger Duel · Callback Club · more games coming</footer>
+    <footer>Zinger Duel · Callback Club · more games coming<br><span id="version" class="version"></span></footer>
+    <script>document.getElementById('version').textContent = (window.QUIPPY && window.QUIPPY.version) || '';</script>
   </main>
 </body>
 </html>

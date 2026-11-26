@@ -12,6 +12,7 @@ import { WebSocketServer } from 'ws';
 import { DatabaseSync } from 'node:sqlite';
 
 import { config, ROOT } from './config.js';
+import { gitVersion } from '../scripts/version.js';
 import { handleApi } from '../core/api.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
@@ -21,6 +22,7 @@ import { SqlStore } from '../core/sqlstore.js';
 import { makeRoomCode, ROOM_CODE_RE, uid } from '../core/util.js';
 import { PACKS } from '../content/index.js';
 
+if (config.version === 'dev') config.version = `${gitVersion()} (local)`;
 const log = (...args) => console.log(new Date().toISOString().slice(11, 19), ...args);
 
 // ------------------------------------------------------------------ storage
@@ -51,6 +53,20 @@ const ttsCache = {
     return fs.existsSync(f) ? new Uint8Array(fs.readFileSync(f)) : null;
   },
   put: async (key, bytes) => fs.writeFileSync(path.join(ttsDir, path.basename(key)), bytes),
+};
+
+// Uploaded media (profile photos): data/media/<key>
+const mediaDir = path.join(config.dataDir, 'media');
+const media = {
+  get: async (key) => {
+    const f = path.join(mediaDir, key.replace(/\.\.+/g, ''));
+    return fs.existsSync(f) ? new Uint8Array(fs.readFileSync(f)) : null;
+  },
+  put: async (key, bytes) => {
+    const f = path.join(mediaDir, key.replace(/\.\.+/g, ''));
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, bytes);
+  },
 };
 
 const llm = new LLM(config.llm);
@@ -144,13 +160,13 @@ setInterval(() => {
 // --------------------------------------------------------------------- http
 const app = express();
 app.disable('x-powered-by');
-app.use(express.json({ limit: '64kb' }));
+app.use(express.json({ limit: '700kb' }));
 
 app.use('/api', async (req, res) => {
   try {
     const out = await handleApi(
       { method: req.method, path: `/api${req.path}`, body: req.body, query: req.query },
-      { store, config, llm, content, tts, rooms: { create: createRoom, info: roomInfo } },
+      { store, config, llm, content, tts, media, rooms: { create: createRoom, info: roomInfo } },
     );
     if (!out) return res.status(404).json({ error: 'not found' });
     if (out.headers) res.set(out.headers);
@@ -163,7 +179,7 @@ app.use('/api', async (req, res) => {
 });
 
 const pub = path.join(ROOT, 'public');
-app.get('/env.js', (req, res) => res.type('js').send('window.QUIPPY = { live: "" };'));
+app.get('/env.js', (req, res) => res.type('js').send(`window.QUIPPY = ${JSON.stringify({ live: '', version: config.version })};`));
 app.get('/host', (req, res) => res.sendFile(path.join(pub, 'host.html')));
 app.get('/play', (req, res) => res.sendFile(path.join(pub, 'play.html')));
 app.get(/^\/[A-Za-z]{4}\/?$/, (req, res) => res.sendFile(path.join(pub, 'play.html')));

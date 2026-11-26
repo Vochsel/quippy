@@ -10,6 +10,7 @@ export function buildConfig(env = {}) {
     publicUrl: trimSlash(env.PUBLIC_URL),
     defaultLocale: env.QUIPPY_LOCALE || 'en-AU',
     dev: env.QUIPPY_DEV === '1' || env.QUIPPY_DEV === 'true',
+    version: env.QUIPPY_VERSION || 'dev',
 
     // Language model for AI-flavoured games. Every provider is spoken to over
     // the OpenAI-compatible chat-completions protocol.

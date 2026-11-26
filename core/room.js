@@ -144,7 +144,7 @@ export class Room {
     const color = pickFreeColor(taken, PLAYER_COLORS.includes(msg.color) ? msg.color : existing?.color);
     const face = Number.isInteger(msg.face) ? Math.abs(msg.face) % FACE_COUNT : existing?.face ?? 0;
     const name = cleanName(msg.name || existing?.name);
-    const profile = await saveProfileBasics(this.deps.store, { id, fingerprint: msg.fingerprint, name, color, face });
+    const profile = await saveProfileBasics(this.deps.store, { id, fingerprint: msg.fingerprint, name, color, face, photo: msg.photo });
 
     let p = existing;
     if (!p) {
@@ -152,7 +152,7 @@ export class Room {
       const def = gameById(this.selectedGame);
       const full = activePlayers.length >= Math.min(def.maxPlayers, MAX_PLAYERS_HARD);
       // Joining mid-game: watch and vote now, play from the next game.
-      p = { id, name, color, face, isBot: false, audience: !!this.game || full, autoAudience: !!this.game && !full, joinedAt: Date.now() };
+      p = { id, name, color, face, photo: profile.photo || null, isBot: false, audience: !!this.game || full, autoAudience: !!this.game && !full, joinedAt: Date.now() };
       this.players.set(id, p);
       this.fx({ sfx: 'join' });
       if (Date.now() - this.lastJoinLineAt > 2500) {
@@ -162,6 +162,7 @@ export class Room {
     } else if (!this.game) {
       Object.assign(p, { name, color, face });
     }
+    p.photo = profile.photo || null;
     p.kicked = false;
     p.connected = true;
     conn.role = 'player';
@@ -202,7 +203,8 @@ export class Room {
         const taken = new Set([...this.players.values()].filter((x) => x.id !== p.id).map((x) => x.color));
         p.color = pickFreeColor(taken, msg.color);
       }
-      await saveProfileBasics(this.deps.store, { id: p.id, name: p.name, color: p.color, face: p.face });
+      const saved = await saveProfileBasics(this.deps.store, { id: p.id, name: p.name, color: p.color, face: p.face, photo: msg.photo });
+      p.photo = saved.photo || null;
       this.dirty();
       return;
     }
@@ -327,7 +329,7 @@ export class Room {
       playerName: (id) => room.players.get(id)?.name || 'Someone',
       publicPlayer: (id) => {
         const p = room.players.get(id);
-        return p ? { id: p.id, name: p.name, color: p.color, face: p.face, isBot: !!p.isBot } : { id, name: 'Someone', color: '#ccc', face: 0 };
+        return p ? { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, isBot: !!p.isBot } : { id, name: 'Someone', color: '#ccc', face: 0 };
       },
       isConnected: (id) => !!room.players.get(id)?.connected,
       hostCount: () => [...room.conns].filter((c) => c.role === 'host').length,
@@ -417,7 +419,7 @@ export class Room {
     if (results && meta) {
       this.lastResults = {
         gameType: meta.type,
-        players: results.players.map(({ id, name, color, face, score, rank, isBot }) => ({ id, name, color, face, score, rank, isBot })),
+        players: results.players.map(({ id, name, color, face, photo, score, rank, isBot }) => ({ id, name, color, face, photo, score, rank, isBot })),
         winnerIds: results.winnerIds,
         awards: results.awards || [],
         highlights: (results.highlights || []).slice(0, 3),
@@ -438,7 +440,7 @@ export class Room {
     s.games += 1;
     for (const p of results.players) {
       const st = s.standings[p.id] || { id: p.id, name: p.name, color: p.color, face: p.face, games: 0, wins: 0, points: 0 };
-      Object.assign(st, { name: p.name, color: p.color, face: p.face });
+      Object.assign(st, { name: p.name, color: p.color, face: p.face, photo: p.photo || null });
       st.games += 1;
       st.points += p.score || 0;
       if (results.winnerIds.includes(p.id)) st.wins += 1;
@@ -558,7 +560,7 @@ export class Room {
       .filter((p) => !p.kicked)
       .sort((a, b) => a.joinedAt - b.joinedAt)
       .map((p) => ({
-        id: p.id, name: p.name, color: p.color, face: p.face, isBot: !!p.isBot,
+        id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, isBot: !!p.isBot,
         audience: !!p.audience, connected: !!p.connected, vip: p.id === this.vipId,
       }));
   }
@@ -605,7 +607,7 @@ export class Room {
     const p = this.players.get(pid);
     const room = this.roomView();
     return {
-      me: p ? { id: p.id, name: p.name, color: p.color, face: p.face, audience: !!p.audience, vip: pid === this.vipId } : null,
+      me: p ? { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, audience: !!p.audience, vip: pid === this.vipId } : null,
       room: {
         code: room.code, phase: room.phase, players: room.players, vipId: room.vipId, selectedGame: room.selectedGame,
         games: room.games, minPlayers: room.minPlayers, settings: room.settings, locales: room.locales,

@@ -1,5 +1,8 @@
 // Original blob characters: 8 body shapes x 8 faces, tinted in the player's colour.
 import { h } from './dom.js';
+import { LIVE } from './net.js';
+
+export const photoUrl = (file) => `${LIVE}/api/photo/${encodeURIComponent(file)}`;
 
 export const COLORS = [
   '#ff5d8f', '#ffb23f', '#ffe14d', '#7ee081', '#3fd0c9', '#5aa9ff', '#a98bff', '#ff8a5b',
@@ -20,7 +23,7 @@ const BODIES = [
 ];
 
 function face(i) {
-  const eye = (cx, cy, r = 7) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${INK}" stroke-width="3"/><circle cx="${cx + 1.5}" cy="${cy + 1}" r="${r * 0.45}" fill="${INK}"/>`;
+  const eye = (cx, cy, r = 7) => `<g class="eye"><circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${INK}" stroke-width="3"/><circle class="pupil" cx="${cx + 1.5}" cy="${cy + 1}" r="${r * 0.45}" fill="${INK}"/></g>`;
   switch (i % FACES) {
     case 0: return `${eye(36, 44)}${eye(64, 44)}<path d="M36 64 Q50 76 64 64" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`;
     case 1: return `${eye(35, 42, 10)}${eye(65, 42, 10)}<ellipse cx="50" cy="70" rx="7" ry="9" fill="${INK}"/>`;
@@ -38,17 +41,31 @@ export function avatarSvg(color = COLORS[0], faceIndex = 0, bodyIndex = faceInde
   const body = BODIES[Math.abs(bodyIndex) % BODIES.length];
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="${body}" transform="translate(4 5)" fill="${INK}"/>
-    <path d="${body}" fill="${safe}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+    <g class="blob"><path d="${body}" fill="${safe}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
     <ellipse cx="34" cy="24" rx="12" ry="6" fill="#fff" opacity=".35" transform="rotate(-20 34 24)"/>
-    ${face(faceIndex)}
+    <g class="face">${face(faceIndex)}</g></g>
   </svg>`;
 }
 
 export function avatar(p, size = '3em', opts = {}) {
   const el = h('span.avatar', { style: { width: size, height: size } });
   el.style.setProperty('--s', size);
+  if (p?.photo) {
+    // A photo in a sticker frame in the player's colour; it still bobs and reacts.
+    el.classList.add('photo');
+    el.style.setProperty('--c', COLORS.includes(p.color) ? p.color : '#ccc');
+    el.append(h('span.blob', h('img', { src: photoUrl(p.photo), alt: '', loading: 'lazy', draggable: 'false' })));
+    el.style.setProperty('--d', `${(-Math.random() * 4).toFixed(2)}s`);
+    if (opts.crown) el.append(h('span.crown', '👑'));
+    if (opts.className) el.classList.add(...opts.className.split(' ').filter(Boolean));
+    if (opts.mood) el.classList.add(opts.mood);
+    return el;
+  }
+  // Desync idle loops so a row of characters doesn't move in lockstep.
+  el.style.setProperty('--d', `${(-Math.random() * 4).toFixed(2)}s`);
   el.innerHTML = avatarSvg(p?.color, p?.face ?? 0);
   if (opts.crown) el.append(h('span.crown', '👑'));
-  if (opts.className) el.classList.add(...opts.className.split(' '));
+  if (opts.className) el.classList.add(...opts.className.split(' ').filter(Boolean));
+  if (opts.mood) el.classList.add(opts.mood); // happy | sad | cheer
   return el;
 }

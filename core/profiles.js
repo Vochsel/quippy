@@ -22,7 +22,7 @@ export function publicProfile(p) {
   if (!p) return null;
   const s = { ...emptyStats(), ...(p.stats || {}) };
   return {
-    id: p.id, name: p.name, color: p.color, face: p.face ?? 0,
+    id: p.id, name: p.name, color: p.color, face: p.face ?? 0, photo: p.photo || null,
     stats: {
       gamesPlayed: s.gamesPlayed, gamesWon: s.gamesWon, points: s.points, podiums: s.podiums,
       bestWinStreak: s.bestWinStreak, counters: s.counters, byGame: s.byGame, bestAnswer: s.bestAnswer,
@@ -44,7 +44,10 @@ export async function identify(store, { deviceId, fingerprint, exclude = [] }) {
   return { profile: null, suggestion: suggestion ? publicProfile(suggestion) : null };
 }
 
-export async function saveProfileBasics(store, { id, fingerprint, name, color, face }) {
+export const PHOTO_RE = /^[\w-]{6,64}-[0-9a-f]{8,40}\.jpg$/;
+
+// photo: a stored photo file name, null to clear it, undefined to keep it.
+export async function saveProfileBasics(store, { id, fingerprint, name, color, face, photo }) {
   const existing = await store.getProfile(id);
   const profile = {
     id,
@@ -52,6 +55,7 @@ export async function saveProfileBasics(store, { id, fingerprint, name, color, f
     name: cleanName(name || existing?.name),
     color: PLAYER_COLORS.includes(color) ? color : existing?.color || PLAYER_COLORS[0],
     face: Number.isInteger(face) && face >= 0 && face < FACE_COUNT ? face : existing?.face ?? 0,
+    photo: photo === null ? null : PHOTO_RE.test(photo || '') ? photo : existing?.photo || null,
     createdAt: existing?.createdAt,
     stats: existing?.stats || emptyStats(),
   };

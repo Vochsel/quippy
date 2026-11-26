@@ -222,6 +222,18 @@ const SFX = {
     a.tone(t, 110, 0.5, { type: 'sine', gain: 0.8, slideTo: 40 });
     [523, 659, 784, 1046].forEach((f, i) => a.tone(t + 0.05 + i * 0.07, f, 0.9, { type: 'sawtooth', gain: 0.1, filter: 3000 }));
   },
+  // The big one: drum roll -> airhorn chord -> crash -> sparkle.
+  shutoutBig: (a, t) => {
+    for (let i = 0; i < 10; i++) a.noiseHit(t + i * 0.045, 0.06, { type: 'bandpass', freqFrom: 1800, q: 1, gain: 0.12 + i * 0.02 });
+    const hit = t + 0.48;
+    a.tone(hit, 90, 0.7, { type: 'sine', gain: 0.9, slideTo: 38 });
+    a.noiseHit(hit, 1.6, { type: 'highpass', freqFrom: 4500, gain: 0.4 });
+    [261.6, 329.6, 392, 523.2].forEach((f) => {
+      a.tone(hit, f, 1.1, { type: 'sawtooth', gain: 0.1, filter: 2800, attack: 0.02 });
+      a.tone(hit, f * 1.006, 1.1, { type: 'square', gain: 0.05, filter: 2200, attack: 0.02 });
+    });
+    [1046, 1318, 1568, 2093, 2637].forEach((f, i) => a.tone(hit + 0.25 + i * 0.07, f, 0.25, { type: 'triangle', gain: 0.12 }));
+  },
   buzzer: (a, t) => { a.tone(t, 150, 0.45, { type: 'square', gain: 0.18, filter: 900 }); a.tone(t, 155, 0.45, { type: 'sawtooth', gain: 0.1, filter: 900 }); },
   tick: (a, t) => a.tone(t, 1800, 0.03, { type: 'square', gain: 0.08, filter: 4000 }),
   fanfare: (a, t) => {

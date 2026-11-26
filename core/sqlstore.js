@@ -36,6 +36,8 @@ export class SqlStore {
   init() {
     this.ready ||= (async () => {
       for (const stmt of SCHEMA) await this.d.run(stmt, []);
+      // Added later: profile photos. Ignore "duplicate column" on existing DBs.
+      await this.d.run('ALTER TABLE profiles ADD COLUMN photo TEXT', []).catch(() => {});
     })();
     return this.ready;
   }
@@ -47,7 +49,7 @@ export class SqlStore {
   // ---------- profiles ----------
   #profile(r) {
     return r && {
-      id: r.id, fingerprint: r.fingerprint, name: r.name, color: r.color, face: r.face ?? 0,
+      id: r.id, fingerprint: r.fingerprint, name: r.name, color: r.color, face: r.face ?? 0, photo: r.photo || null,
       createdAt: r.created_at, lastSeen: r.last_seen, stats: parse(r.stats, {}),
     };
   }
@@ -66,11 +68,11 @@ export class SqlStore {
   async upsertProfile(p) {
     const now = Date.now();
     await this.run(
-      `INSERT INTO profiles (id, fingerprint, name, color, face, created_at, last_seen, stats)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO profiles (id, fingerprint, name, color, face, photo, created_at, last_seen, stats)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET fingerprint = excluded.fingerprint, name = excluded.name,
-         color = excluded.color, face = excluded.face, last_seen = excluded.last_seen, stats = excluded.stats`,
-      [p.id, p.fingerprint || null, p.name || null, p.color || null, p.face ?? 0, p.createdAt || now, now,
+         color = excluded.color, face = excluded.face, photo = excluded.photo, last_seen = excluded.last_seen, stats = excluded.stats`,
+      [p.id, p.fingerprint || null, p.name || null, p.color || null, p.face ?? 0, p.photo || null, p.createdAt || now, now,
         JSON.stringify(p.stats || {})],
     );
     return { ...p, lastSeen: now };
@@ -193,7 +195,7 @@ export class SqlStore {
       if (!res?.players) continue;
       for (const p of res.players) {
         if (p.isBot) continue;
-        const t = table.get(p.id) || { id: p.id, name: p.name, color: p.color, face: p.face, games: 0, wins: 0, points: 0 };
+        const t = table.get(p.id) || { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, games: 0, wins: 0, points: 0 };
         t.games += 1;
         t.points += p.score || 0;
         if (res.winnerIds?.includes(p.id)) t.wins += 1;

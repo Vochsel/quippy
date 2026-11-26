@@ -73,7 +73,7 @@ async function identify() {
     const res = await api('/api/identify', { deviceId: did, fingerprint: fp, room: code });
     profile = res.profile;
     if (profile) {
-      draft = { name: profile.name || draft.name, color: profile.color || draft.color, face: profile.face ?? draft.face };
+      draft = { name: profile.name || draft.name, color: profile.color || draft.color, face: profile.face ?? draft.face, photo: profile.photo || null };
       if (load('quippy.lastRoom') === code && draft.name) return connect();
       return joinScreen();
     }
@@ -95,11 +95,26 @@ function welcomeBackScreen(s) {
           did = s.id;
           setDeviceId(did);
           profile = s;
-          draft = { name: s.name, color: s.color, face: s.face };
+          draft = { name: s.name, color: s.color, face: s.face, photo: s.photo || null };
           joinScreen();
         },
       }, 'That’s me!'),
       h('button.btn.white.block', { style: { marginTop: '.7rem' }, onClick: () => joinScreen() }, 'Nope, I’m someone else')));
+}
+
+async function squareJpeg(fileObj, size) {
+  const bmp = await createImageBitmap(fileObj, { imageOrientation: 'from-image' }).catch(() => null);
+  const img = bmp || await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = () => rej(new Error('unreadable image'));
+    i.src = URL.createObjectURL(fileObj);
+  });
+  const w = img.width; const hgt = img.height; const side = Math.min(w, hgt);
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  c.getContext('2d').drawImage(img, (w - side) / 2, (hgt - side) / 2, side, side, 0, 0, size, size);
+  return c.toDataURL('image/jpeg', 0.8);
 }
 
 function statsRow(st) {
@@ -117,8 +132,29 @@ function joinScreen({ editing = false } = {}) {
   const preview = h('div.preview');
   const sw = h('div.swatches');
   const faces = h('div.faces');
+  // Photo instead of a character: crop to a square, shrink, upload.
+  const file = h('input', { type: 'file', accept: 'image/*', style: { display: 'none' } });
+  const photoBtns = h('div.photo-btns');
+  file.addEventListener('change', async () => {
+    const f = file.files?.[0];
+    if (!f) return;
+    try {
+      toast('Uploading photo…', 4000);
+      const image = await squareJpeg(f, 320);
+      const res = await api('/api/photo', { deviceId: did, image });
+      draft.photo = res.photo;
+      paint();
+      toast('Looking good ✓', 1400);
+    } catch (e) {
+      toast(`Couldn't use that photo (${e.message})`);
+    }
+    file.value = '';
+  });
   const paint = () => {
     mountInto(preview, avatar(draft, '6rem'));
+    mountInto(photoBtns,
+      h('button.btn.white', { onClick: () => file.click() }, draft.photo ? '📷 Change photo' : '📷 Use a photo'),
+      draft.photo ? h('button.btn.white', { onClick: () => { draft.photo = null; paint(); } }, '🙂 Use a character') : null);
     mountInto(sw, COLORS.map((c) => h(`button.swatch${c === draft.color ? '.on' : ''}`, {
       style: { background: c }, 'aria-label': c, onClick: () => { draft.color = c; paint(); },
     })));
@@ -137,9 +173,9 @@ function joinScreen({ editing = false } = {}) {
     save('quippy.face', String(draft.face));
     if (editing && live) {
       editingProfile = false;
-      live.action('profile', { name: draft.name, color: draft.color, face: draft.face });
+      live.action('profile', { name: draft.name, color: draft.color, face: draft.face, photo: draft.photo ?? null });
       // Show the change right away; the server's next view confirms it.
-      if (view?.me) Object.assign(view.me, { name: draft.name, color: draft.color, face: draft.face });
+      if (view?.me) Object.assign(view.me, { name: draft.name, color: draft.color, face: draft.face, photo: draft.photo ?? null });
       lastKey = '';
       renderTop.key = '';
       renderView();
@@ -154,7 +190,8 @@ function joinScreen({ editing = false } = {}) {
     h('div.card.slide-up',
       h('div.field', h('label', 'Name'), name),
       preview,
-      h('div.field', h('label', 'Colour'), sw),
+      photoBtns, file,
+      h('div.field', h('label', draft.photo ? 'Frame colour' : 'Colour'), sw),
       h('div.field', h('label', 'Face'), faces),
       h('button.btn.pink.block.big', { onClick: go }, editing ? 'Save ✓' : `Join ${code} ▶`)),
     editing ? h('button.btn.white.block', { onClick: () => { editingProfile = false; lastKey = ''; renderView(); } }, 'Cancel') : null);
@@ -166,7 +203,7 @@ function connect() {
   if (live) return renderView();
   mountInto(app, h('div.ph-watch', h('span.spinner'), h('p', 'Joining…')));
   live = new LiveRoom(code, {
-    hello: () => ({ t: 'hello', role: 'player', profileId: did, fingerprint: fp, name: draft.name, color: draft.color, face: draft.face }),
+    hello: () => ({ t: 'hello', role: 'player', profileId: did, fingerprint: fp, name: draft.name, color: draft.color, face: draft.face, photo: draft.photo }),
     onMessage,
     onStatus: (s) => {
       if (s === 'gone') {
@@ -367,27 +404,5 @@ function tickTimer() {
   bar.classList.toggle('low', left < 6000);
 }
 
-// ------------------------------------------------------------- fit screen
-// Phones never scroll: if a screen's content is taller than the space left
-// under the header, shrink it (down to 55%) so everything stays visible.
-function fitScreen() {
-  const kids = [...app.children];
-  if (!kids.length) return;
-  for (const k of kids) k.style.zoom = '';
-  const avail = app.clientHeight - parseFloat(getComputedStyle(app).paddingTop) - parseFloat(getComputedStyle(app).paddingBottom);
-  const need = app.scrollHeight - parseFloat(getComputedStyle(app).paddingTop) - parseFloat(getComputedStyle(app).paddingBottom);
-  if (need <= avail + 1) return;
-  const z = Math.max(0.55, Math.floor((avail / need) * 100) / 100);
-  for (const k of kids) k.style.zoom = String(z);
-}
-let fitQueued = false;
-const queueFit = () => {
-  if (fitQueued) return;
-  fitQueued = true;
-  requestAnimationFrame(() => { fitQueued = false; fitScreen(); });
-};
-new MutationObserver(queueFit).observe(app, { childList: true, subtree: true });
-app.addEventListener('input', queueFit);
-window.addEventListener('resize', queueFit);
-window.visualViewport?.addEventListener('resize', queueFit);
-document.fonts?.ready.then(queueFit);
+// Phones scroll only when a screen is taller than the viewport (the main
+// area is exactly one screen high, with overflow-y: auto).

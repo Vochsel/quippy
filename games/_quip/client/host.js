@@ -45,6 +45,16 @@ function autoScroll(root) {
   }
 }
 
+// TVs can't scroll: if a screen is taller than the stage, scale it down to fit.
+function fitStage(root) {
+  const el = root.firstElementChild;
+  if (!el) return;
+  el.style.zoom = '';
+  const avail = root.clientHeight - parseFloat(getComputedStyle(root).paddingBottom || 0);
+  const need = el.scrollHeight;
+  if (need > avail + 2) el.style.zoom = String(Math.max(0.5, Math.floor((avail / need) * 100) / 100));
+}
+
 export function mount(root, api) {
   ensureCss('/games/_quip/client/quip.css');
   const { h, avatar, fmt } = api;
@@ -52,6 +62,8 @@ export function mount(root, api) {
 
   const keyOf = (g) => [g.phase, g.round, g.matchNo || 0, g.closed ? 'closed' : ''].join('|');
 
+  const onResize = () => fitStage(root);
+  addEventListener('resize', onResize);
   const flip = (key) => root.querySelector(`.q-ans[data-ans="${key}"]`)?.classList.remove('face-down');
   const offCue = api.onCue?.((cue) => { if (cue === 'A' || cue === 'B') flip(cue); });
 
@@ -223,7 +235,7 @@ export function mount(root, api) {
       return h('div.q-over',
         h('h2.q-heading.slam', g.scoreboard[0] ? `${g.scoreboard.filter((p) => p.rank === 1).map((p) => p.name).join(' & ')} wins!` : 'Game over'),
         h('div.q-podium', order.map((p) => h(`div.q-pod.r${p.rank}.slide-up`, { style: { animationDelay: `${(3 - p.rank) * 0.4}s` } },
-          avatar(p, p.rank === 1 ? '9rem' : '6.5rem', { crown: p.rank === 1, className: p.rank === 1 ? 'wiggle' : '' }),
+          avatar(p, p.rank === 1 ? '9rem' : '6.5rem', { crown: p.rank === 1, mood: p.rank === 1 ? 'cheer' : p.rank === 3 ? 'happy' : '' }),
           h('b', p.name), h('span', fmt(p.score)), h('div.q-block', `#${p.rank}`)))),
         g.awards?.length ? h('div.q-awards', g.awards.map((a, i) => h('div.card.q-award.pop-in', { style: { animationDelay: `${1.5 + i * 0.3}s` } },
           h('small', a.title), h('b', a.name)))) : null,
@@ -231,6 +243,21 @@ export function mount(root, api) {
           : h('p.small', `Back to the lobby shortly${room?.vipId ? ' (or when the VIP taps continue)' : ''}.`));
     },
   };
+
+  // Shutout: drum roll, slam, screen flash, shake, star burst from the card.
+  function shutoutShow() {
+    setTimeout(() => api.audio?.sfx('shutoutBig'), 2600);
+    setTimeout(() => {
+      const card = root.querySelector('.q-res.win');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.classList.add('shutout-hit');
+      document.body.classList.add('flash');
+      setTimeout(() => document.body.classList.remove('flash'), 450);
+      api.confetti({ count: 160, duration: 2600, origin: { x: r.left + r.width / 2, y: r.top + r.height / 2 }, spread: true });
+      setTimeout(() => api.confetti({ count: 120, duration: 3500 }), 600);
+    }, 3100);
+  }
 
   function voterChip(v, delay) {
     return h('span.q-chip', { style: { animationDelay: `${delay}s`, '--c': v.color } }, avatar(v, '1.9rem'), h('span', v.name));
@@ -266,14 +293,16 @@ export function mount(root, api) {
         const fn = screens[g.phase];
         mountInto(root, fn ? fn(g) : h('div'));
         // Measure after layout (and again once fonts and pop-in animations settle).
-        requestAnimationFrame(() => autoScroll(root));
-        setTimeout(() => autoScroll(root), 1600);
-        document.fonts?.ready.then(() => autoScroll(root));
-        if (g.phase === 'reveal' && g.kind === 'shutout') setTimeout(() => api.confetti({ count: 90, duration: 2500 }), 1500);
+        const settle = () => { fitStage(root); autoScroll(root); };
+        requestAnimationFrame(settle);
+        setTimeout(settle, 700);
+        setTimeout(settle, 1800);
+        document.fonts?.ready.then(settle);
+        if (g.phase === 'reveal' && g.kind === 'shutout') shutoutShow();
       } else {
         patch(g);
       }
     },
-    destroy() { offCue?.(); },
+    destroy() { offCue?.(); removeEventListener('resize', onResize); },
   };
 }

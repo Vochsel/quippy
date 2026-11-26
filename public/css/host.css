@@ -28,7 +28,7 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .top-right { display: flex; align-items: center; gap: 1rem; font-size: 1.1rem; }
 .icon-btn { background: none; border: none; font-size: 2rem; cursor: pointer; opacity: .8; }
 .icon-btn:hover { opacity: 1; transform: rotate(30deg); }
-.stage { position: relative; padding: 0 2.4rem 2rem; min-height: 0; }
+.stage { position: relative; padding: 0 2.4rem 2rem; min-height: 0; overflow: hidden; }
 
 /* Host caption bubble */
 .caption {

@@ -202,3 +202,15 @@
 .q-final-foot { display: flex; gap: .8rem; align-items: baseline; justify-content: center; }
 .q-final-foot .q-pts { font-size: 2rem; }
 .q-final-card.win { background: #fff6c2; box-shadow: 8px 8px 0 var(--ink), 0 0 0 7px var(--yellow); }
+
+/* Shutout moment */
+.q-res.shutout-hit { animation: shutoutShake .55s cubic-bezier(.36, .07, .19, .97) both, winPop .6s .55s both; z-index: 4; }
+@keyframes shutoutShake {
+  10%, 90% { transform: translate(-6px, 2px) rotate(-1deg) scale(1.08); }
+  20%, 80% { transform: translate(8px, -3px) rotate(1.5deg) scale(1.1); }
+  30%, 50%, 70% { transform: translate(-12px, 4px) rotate(-2deg) scale(1.12); }
+  40%, 60% { transform: translate(12px, -4px) rotate(2deg) scale(1.12); }
+}
+.q-res.shutout-hit .q-ribbon { font-size: 3.4rem; padding: .1rem 2rem; background: var(--pink); color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; animation: slam .6s cubic-bezier(.2, 1.8, .4, 1) both; }
+body.flash::after { content: ''; position: fixed; inset: 0; background: #fff; z-index: 40; pointer-events: none; animation: flashOut .45s ease-out both; }
+@keyframes flashOut { from { opacity: .85; } to { opacity: 0; } }

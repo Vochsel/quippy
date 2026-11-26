@@ -39,8 +39,10 @@ for (;;) {
   await new Promise((r) => setTimeout(r, 30000));
 }
 
-console.log('No games running. Deploying the live server (Cloudflare)...');
-execFileSync('npx', ['wrangler@4', 'deploy'], { stdio: 'inherit' });
+const git = (...a) => execFileSync('git', a, { encoding: 'utf8' }).trim();
+const version = `v0.${git('rev-list', '--count', 'HEAD')} · ${git('rev-parse', '--short', 'HEAD')}`;
+console.log(`No games running. Deploying ${version}: live server (Cloudflare)...`);
+execFileSync('npx', ['wrangler@4', 'deploy', '--var', `QUIPPY_VERSION:${version}`], { stdio: 'inherit' });
 console.log('Deploying the website (Vercel)...');
-execFileSync('vercel', ['deploy', '--prod', '--yes'], { stdio: 'inherit' });
+execFileSync('vercel', ['deploy', '--prod', '--yes', '--build-env', `QUIPPY_VERSION=${version}`], { stdio: 'inherit' });
 console.log('Done.');

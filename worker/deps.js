@@ -27,6 +27,13 @@ export function workerDeps(env) {
     llm: new LLM(config.llm),
     content: new ContentLibrary(PACKS, config.defaultLocale),
     joinUrl: (code) => `${base}/${code}`,
+    media: {
+      get: async (key) => {
+        const obj = await env.MEDIA?.get(key);
+        return obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+      },
+      put: async (key, bytes, type) => { await env.MEDIA?.put(key, bytes, { httpMetadata: { contentType: type || 'application/octet-stream' } }); },
+    },
     log: (...args) => console.log(...args),
     tts: new Tts(config.voice, env.MEDIA
       ? {
