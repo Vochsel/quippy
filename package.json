@@ -11,7 +11,8 @@
     "test": "node --no-warnings=ExperimentalWarning --test test/*.test.js",
     "cf:dev": "npx wrangler@4 dev",
     "cf:deploy": "npx wrangler@4 deploy",
-    "new-game": "node scripts/new-game.js"
+    "new-game": "node scripts/new-game.js",
+    "deploy": "node scripts/safe-deploy.mjs"
   },
   "engines": {
     "node": ">=22.13"

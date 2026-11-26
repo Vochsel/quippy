@@ -42,6 +42,7 @@ test/            node:test suite — simulates full games with bots + mocked tim
 - `npm test` — fast suite (full simulated games, restart survival, content checks)
 - `npm run new-game <id> "<Name>"` — scaffold a working game and register it
 - `npm run build` — static site into `dist/` for Vercel (`QUIPPY_LIVE_URL` points it at the Worker)
-- `npm run cf:dev` / `npm run cf:deploy` — Cloudflare Worker locally / to production
+- `npm run deploy` — deploy Worker then website, refusing while a game is live (`-- --wait` to wait). Prefer this over `cf:deploy`/`vercel deploy`: deploys restart rooms
+- `npm run cf:dev` / `npm run cf:deploy` — Cloudflare Worker locally / to production (unguarded)
 
 See `docs/MAKING_GAMES.md` for the game API and `docs/DEPLOY.md` for production.
