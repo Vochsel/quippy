@@ -55,6 +55,7 @@ export class RoomDO {
       const humans = room.publicPlayers().filter((p) => !p.isBot);
       return Response.json({
         code: room.code, players: humans.length, phase: room.game ? 'game' : 'lobby',
+        names: humans.map((p) => p.name).slice(0, 8), // internal; stripped by the API
         connectedIds: humans.filter((p) => p.connected).map((p) => p.id), // internal; stripped by the API
       });
     }

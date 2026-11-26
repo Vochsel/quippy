@@ -117,6 +117,10 @@ export class SqlStore {
     await this.run('UPDATE rooms SET updated_at = ? WHERE code = ?', [Date.now(), code]);
   }
 
+  async reopenRoom(code) {
+    await this.run('UPDATE rooms SET closed = 0, updated_at = ? WHERE code = ?', [Date.now(), code]);
+  }
+
   async closeRoom(code) {
     await this.run('UPDATE rooms SET closed = 1 WHERE code = ?', [code]);
   }
@@ -133,13 +137,21 @@ export class SqlStore {
     return r?.code || null;
   }
 
+  // Every room this crew (TV) has made, newest first, so it can reopen one.
+  async roomsForCrew(crewId, limit = 12) {
+    const rows = await this.all(
+      'SELECT code, updated_at, closed FROM rooms WHERE crew_id = ? ORDER BY updated_at DESC LIMIT ?', [crewId, limit]);
+    return rows.map((r) => ({ code: r.code, updatedAt: r.updated_at, closed: !!r.closed }));
+  }
+
   async loadOpenRooms(sinceMs) {
     const rows = await this.all('SELECT * FROM rooms WHERE closed = 0 AND updated_at > ?', [sinceMs]);
     return rows.map((r) => ({ code: r.code, crewId: r.crew_id, state: parse(r.state, null) })).filter((r) => r.state?.code);
   }
 
-  async roomCodeTaken(code, sinceMs) {
-    return !!(await this.get('SELECT 1 AS x FROM rooms WHERE code = ? AND closed = 0 AND updated_at > ?', [code, sinceMs]));
+  // Codes are never reused, so a crew's old rooms can always be reopened.
+  async roomCodeTaken(code) {
+    return !!(await this.get('SELECT 1 AS x FROM rooms WHERE code = ?', [code]));
   }
 
   // ---------- sessions & games ----------

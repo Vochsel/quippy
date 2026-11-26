@@ -46,11 +46,38 @@
         <h2>📺 Host on this screen</h2>
         <p>Open this on a TV, laptop or anything with a big screen and speakers.</p>
         <a class="btn teal block" href="/host" style="text-decoration:none; text-align:center">Start hosting ▶</a>
+        <div id="my-rooms" style="display:none; margin-top: 1rem">
+          <p style="margin-bottom:.4rem">Or reopen one of this screen’s rooms:</p>
+          <div id="my-rooms-list" class="code-row" style="flex-wrap: wrap"></div>
+        </div>
       </div>
     </div>
     <footer>Zinger Duel · Callback Club · more games coming<br><span id="version" class="version"></span></footer>
     <script>
       document.getElementById('version').textContent = (window.QUIPPY && window.QUIPPY.version) || '';
+      // A screen that has hosted before: list its rooms so it can hop back into one.
+      (async () => {
+        let hostId = '';
+        try { hostId = localStorage.getItem('quippy.hostId') || ''; } catch (e) {}
+        if (!hostId) return;
+        const live = ((window.QUIPPY && window.QUIPPY.live) || '').replace(/\/+$/, '');
+        try {
+          const res = await fetch(live + '/api/rooms/mine', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ hostId }) });
+          const rooms = res.ok ? (await res.json()).rooms || [] : [];
+          if (!rooms.length) return;
+          const list = document.getElementById('my-rooms-list');
+          for (const r of rooms.slice(0, 8)) {
+            const a = document.createElement('a');
+            a.className = 'btn white';
+            a.href = '/host?room=' + r.code;
+            a.style.cssText = 'text-decoration:none; font-size:1rem; padding:.3rem .8rem';
+            a.textContent = r.code + (r.players ? ' · ' + r.players + ' 👤' : '') + (r.phase === 'game' ? ' 🎮' : '');
+            a.title = (r.names || []).join(', ');
+            list.appendChild(a);
+          }
+          document.getElementById('my-rooms').style.display = 'block';
+        } catch (e) {}
+      })();
       // Back from the lock screen / a closed tab: offer the room you were in.
       (async () => {
         let code = '';

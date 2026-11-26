@@ -41,7 +41,25 @@ export async function handleApi(req, deps) {
 
   if (method === 'POST' && path === '/api/rooms') {
     if (!ID_RE.test(body.hostId || '')) return bad('hostId required');
+    const code = typeof body.code === 'string' ? body.code.toUpperCase() : '';
+    if (code) {
+      if (!ROOM_CODE_RE.test(code)) return bad('bad code');
+      const reopened = await deps.rooms.reopen(body.hostId, code);
+      if (!reopened) return bad('That room isn’t one of this TV’s rooms.', 404);
+      return ok(reopened);
+    }
     return ok(await deps.rooms.create(body.hostId, { fresh: !!body.fresh }));
+  }
+
+  // The rooms this TV has made, to switch between.
+  if (method === 'POST' && path === '/api/rooms/mine') {
+    if (!ID_RE.test(body.hostId || '')) return bad('hostId required');
+    const list = await deps.store.roomsForCrew(body.hostId, 12);
+    const rooms = await Promise.all(list.map(async (r) => {
+      const info = await deps.rooms.info(r.code).catch(() => null);
+      return info && { code: r.code, updatedAt: r.updatedAt, players: info.players, phase: info.phase, names: info.names || [] };
+    }));
+    return ok({ rooms: rooms.filter(Boolean) });
   }
 
   if (method === 'GET' && (m = path.match(/^\/api\/rooms\/([A-Za-z]{4})$/))) {
@@ -49,7 +67,7 @@ export async function handleApi(req, deps) {
     if (!ROOM_CODE_RE.test(code)) return bad('bad code');
     const info = await deps.rooms.info(code);
     if (!info) return bad('No room with that code. Check the TV!', 404);
-    const { connectedIds, ...pub } = info;
+    const { connectedIds, names, ...pub } = info;
     return ok(pub);
   }
 

@@ -53,11 +53,20 @@ export default {
             if (existing) return { code: existing, joinUrl: d.joinUrl(existing), resumed: true };
           }
           let code;
-          do code = makeRoomCode(); while (await d.store.roomCodeTaken(code, since));
+          do code = makeRoomCode(); while (await d.store.roomCodeTaken(code));
           await d.store.saveRoom(code, hostId, {});
           const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
           await stub.fetch('https://room/init', { method: 'POST', body: JSON.stringify({ code, crewId: hostId }) });
           return { code, joinUrl: d.joinUrl(code), resumed: false };
+        },
+        async reopen(hostId, code) {
+          const row = await d.store.getRoom(code);
+          if (!row || row.crewId !== hostId) return null;
+          const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+          const res = await stub.fetch('https://room/info');
+          if (!res.ok) return null; // no snapshot left
+          await d.store.reopenRoom(code);
+          return { code, joinUrl: d.joinUrl(code), resumed: true };
         },
         async info(code) {
           if (!ROOM_CODE_RE.test(code)) return null;

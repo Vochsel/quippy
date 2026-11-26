@@ -68,13 +68,15 @@ async function boot() {
   const params = new URLSearchParams(location.search);
   let room;
   try {
-    room = await api('/api/rooms', { hostId: HOST_ID, fresh: params.has('new') });
+    const want = (params.get('room') || '').toUpperCase();
+    if (/^[A-Z]{4}$/.test(want)) room = await api('/api/rooms', { hostId: HOST_ID, code: want }).catch(() => null);
+    room ||= await api('/api/rooms', { hostId: HOST_ID, fresh: params.has('new') });
   } catch (e) {
     mountInto(stage, h('div.card.pop-in', { style: { maxWidth: '40rem', margin: '6rem auto', fontSize: '1.6rem' } },
       h('h2', 'Can’t reach the game server'), h('p', String(e.message || e)), h('button.btn', { onClick: () => location.reload() }, 'Try again')));
     return;
   }
-  if (params.has('new')) history.replaceState(null, '', location.pathname);
+  if (params.has('new') || params.has('room')) history.replaceState(null, '', location.pathname);
   live = new LiveRoom(room.code, {
     hello: () => ({ t: 'hello', role: 'host', hostId: HOST_ID }),
     onMessage,
@@ -370,6 +372,34 @@ function tickTimer() {
 }
 
 // ---------------------------------------------------------------- settings
+// This TV's rooms: the current one plus any earlier ones, to hop between.
+function ago(ms) {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const hr = Math.round(m / 60);
+  if (hr < 48) return `${hr} hr ago`;
+  return `${Math.round(hr / 24)} days ago`;
+}
+
+async function showRooms() {
+  const box = $('#room-list');
+  mountInto(box, h('p.small', 'Loading your rooms…'));
+  let rooms = [];
+  try { rooms = (await api('/api/rooms/mine', { hostId: HOST_ID })).rooms || []; } catch { /* offline */ }
+  const current = view?.room?.code;
+  if (!rooms.length) { mountInto(box, h('p.small', 'No other rooms yet.')); return; }
+  mountInto(box, rooms.map((r) => {
+    const here = r.code === current;
+    const who = r.names.length ? r.names.slice(0, 4).join(', ') + (r.players > 4 ? ` +${r.players - 4}` : '') : 'nobody yet';
+    return h('div.room-item' + (here ? '.here' : ''),
+      h('b.room-code', r.code),
+      h('span.room-meta', h('span', who), h('span.small', `${r.phase === 'game' ? '🎮 mid-game' : 'lobby'} · ${ago(r.updatedAt)}`)),
+      here ? h('span.room-here', 'On screen')
+        : h('button.btn.white.mini', { onClick: () => location.replace(`/host?room=${r.code}`) }, 'Switch ▶'));
+  }));
+}
+
 function setupSettings() {
   const dlg = $('#settings');
   $('#settings-btn').addEventListener('click', () => {
@@ -394,6 +424,7 @@ function setupSettings() {
     }[voice.provider] || 'Using this browser’s built-in voices. Run a local voice model (e.g. Kokoro on :8880) or set ElevenLabs keys on the server for a custom voice.';
     $('#set-rate').value = voice.rate;
     $('#set-pitch').value = voice.pitch;
+    showRooms();
     $('#set-music').value = audio.musicLevel;
     $('#set-sfx').value = audio.sfxLevel;
     dlg.showModal();

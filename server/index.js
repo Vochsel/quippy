@@ -130,7 +130,7 @@ async function createRoom(hostId, { fresh } = {}) {
     if (existing && (await getRoom(existing))) return { code: existing, joinUrl: joinUrl(existing), resumed: true };
   }
   let code;
-  do code = makeRoomCode(); while (rooms.has(code) || (await store.roomCodeTaken(code, since)));
+  do code = makeRoomCode(); while (rooms.has(code) || (await store.roomCodeTaken(code)));
   const room = new Room({ code, crewId: hostId, deps: deps() });
   await room.init();
   rooms.set(code, room);
@@ -139,12 +139,22 @@ async function createRoom(hostId, { fresh } = {}) {
   return { code, joinUrl: joinUrl(code), resumed: false };
 }
 
+// Reopen one of this crew's earlier rooms (any age): it becomes the TV's current room.
+async function reopenRoom(hostId, code) {
+  const row = await store.getRoom(code);
+  if (!row || row.crewId !== hostId || !row.state?.code) return null;
+  await store.reopenRoom(code);
+  if (!(await getRoom(code))) return null;
+  return { code, joinUrl: joinUrl(code), resumed: true };
+}
+
 async function roomInfo(code) {
   const room = await getRoom(code);
   if (!room) return null;
   const humans = room.publicPlayers().filter((p) => !p.isBot);
   return {
     code, players: humans.length, phase: room.game ? 'game' : 'lobby',
+    names: humans.map((p) => p.name).slice(0, 8), // internal; stripped from the public API
     connectedIds: humans.filter((p) => p.connected).map((p) => p.id), // internal; stripped from the public API
   };
 }
@@ -168,7 +178,7 @@ app.use('/api', async (req, res) => {
   try {
     const out = await handleApi(
       { method: req.method, path: `/api${req.path}`, body: req.body, query: req.query },
-      { store, config, llm, content, tts, media, rooms: { create: createRoom, info: roomInfo } },
+      { store, config, llm, content, tts, media, rooms: { create: createRoom, info: roomInfo, reopen: reopenRoom } },
     );
     if (!out) return res.status(404).json({ error: 'not found' });
     if (out.headers) res.set(out.headers);
