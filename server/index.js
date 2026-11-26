@@ -15,6 +15,7 @@ import { config, ROOT } from './config.js';
 import { handleApi } from '../core/api.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
+import { Tts } from '../core/tts.js';
 import { Room } from '../core/room.js';
 import { SqlStore } from '../core/sqlstore.js';
 import { makeRoomCode, ROOM_CODE_RE, uid } from '../core/util.js';
@@ -53,6 +54,7 @@ const ttsCache = {
 };
 
 const llm = new LLM(config.llm);
+const tts = new Tts(config.voice, ttsCache);
 const content = new ContentLibrary(PACKS, config.defaultLocale);
 
 // --------------------------------------------------------------- join URLs
@@ -148,7 +150,7 @@ app.use('/api', async (req, res) => {
   try {
     const out = await handleApi(
       { method: req.method, path: `/api${req.path}`, body: req.body },
-      { store, config, llm, content, ttsCache, rooms: { create: createRoom, info: roomInfo } },
+      { store, config, llm, content, tts, rooms: { create: createRoom, info: roomInfo } },
     );
     if (!out) return res.status(404).json({ error: 'not found' });
     if (out.headers) res.set(out.headers);
@@ -231,4 +233,5 @@ server.listen(config.port, () => {
     const st = llm.status();
     log(st.available ? `  AI brain:          ${st.label} · ${st.model}` : `  AI brain:          built-in templates${st.lastError ? ` (${st.lastError})` : ''}`);
   });
+  tts.status().then((v) => log(`  Host voice:        ${v.label}${v.voice ? ` · ${v.voice}` : ''}`));
 });

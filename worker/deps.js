@@ -3,6 +3,7 @@
 import { buildConfig } from '../core/config.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
+import { Tts } from '../core/tts.js';
 import { SqlStore } from '../core/sqlstore.js';
 import { PACKS } from '../content/index.js';
 
@@ -27,7 +28,7 @@ export function workerDeps(env) {
     content: new ContentLibrary(PACKS, config.defaultLocale),
     joinUrl: (code) => `${base}/${code}`,
     log: (...args) => console.log(...args),
-    ttsCache: env.MEDIA
+    tts: new Tts(config.voice, env.MEDIA
       ? {
         get: async (key) => {
           const obj = await env.MEDIA.get(key);
@@ -35,7 +36,7 @@ export function workerDeps(env) {
         },
         put: async (key, bytes) => { await env.MEDIA.put(key, bytes, { httpMetadata: { contentType: 'audio/mpeg' } }); },
       }
-      : { get: async () => null, put: async () => {} },
+      : { get: async () => null, put: async () => {} }),
   };
   cached = { env, deps };
   return deps;

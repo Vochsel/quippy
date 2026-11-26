@@ -15,8 +15,11 @@ QUIPPY_LOCALE = "en-AU"
 # AI_GATEWAY_API_KEY secret). Model ids use the gateway's "creator/model" form.
 LLM_PROVIDER = "vercel"
 # LLM_MODEL = "anthropic/claude-opus-5.5"
-# Voice: set ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID secrets to use ElevenLabs,
-# otherwise the TV uses its browser's speech voices.
+# Voice: a Worker can't reach a model on your laptop, so production routes to
+# ElevenLabs (set ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID secrets) and otherwise
+# the TV's browser voices. To use your local voice model in production, expose it
+# (e.g. a Cloudflare Tunnel) and set TTS_PROVIDER = "local,elevenlabs" + TTS_LOCAL_URL.
+TTS_PROVIDER = "elevenlabs"
 
 # Secrets (wrangler secret put <NAME>):
 #   AI_GATEWAY_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID
@@ -24,7 +27,7 @@ LLM_PROVIDER = "vercel"
 [[d1_databases]]
 binding = "DB"
 database_name = "quippy"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "6ec97ba8-577d-48dc-872e-03a4d66916e0"
 
 [[r2_buckets]]
 binding = "MEDIA"

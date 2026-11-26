@@ -36,7 +36,10 @@ async function boot() {
   $('#app').classList.remove('hidden');
   let cfg = { voice: { provider: 'browser' }, speechLang: 'en-AU', llm: {} };
   try { cfg = await api('/api/config'); } catch { /* offline-ish; carry on */ }
-  voice = new Voice(audio, { provider: cfg.voice?.provider, lang: cfg.speechLang, onCaption: showCaption });
+  voice = new Voice(audio, {
+    provider: cfg.voice?.provider, lang: cfg.speechLang, onCaption: showCaption,
+    serverVoices: cfg.voice?.voices || [], serverVoice: cfg.voice?.voice,
+  });
   const params = new URLSearchParams(location.search);
   let room;
   try {
@@ -323,13 +326,18 @@ function setupSettings() {
   const dlg = $('#settings');
   $('#settings-btn').addEventListener('click', () => {
     $('#set-voice-on').checked = voice.enabled;
-    const voices = voice.browserVoices();
-    const current = voice.pickVoice()?.name;
-    mountInto($('#set-voice'), voices.map((v) => h('option', { value: v.name, selected: v.name === current }, `${v.name} (${v.lang})`)));
-    $('#voice-pick-row').classList.toggle('hidden', voice.provider === 'elevenlabs');
-    $('#voice-note').textContent = voice.provider === 'elevenlabs'
-      ? 'Voice-over is coming from your ElevenLabs voice (set on the server).'
-      : 'Using this browser’s built-in voices. Set ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID on the server for a custom voice.';
+    const local = voice.provider === 'local';
+    const current = local ? voice.serverVoice : voice.pickVoice()?.name;
+    const options = local
+      ? voice.serverVoices.map((v) => h('option', { value: v, selected: v === current }, v))
+      : voice.browserVoices().map((v) => h('option', { value: v.name, selected: v.name === current }, `${v.name} (${v.lang})`));
+    mountInto($('#set-voice'), options);
+    $('#voice-pick-row').classList.toggle('hidden', voice.provider === 'elevenlabs' || !options.length);
+    ['#set-rate', '#set-pitch'].forEach((id) => $(id).closest('.row').classList.toggle('hidden', voice.usesServer()));
+    $('#voice-note').textContent = {
+      local: 'Voice-over comes from your local voice model (TTS_LOCAL_URL). ElevenLabs takes over if it stops answering, then browser voices.',
+      elevenlabs: 'Voice-over comes from your ElevenLabs voice (set on the server).',
+    }[voice.provider] || 'Using this browser’s built-in voices. Run a local voice model (e.g. Kokoro on :8880) or set ElevenLabs keys on the server for a custom voice.';
     $('#set-rate').value = voice.rate;
     $('#set-pitch').value = voice.pitch;
     $('#set-music').value = audio.musicLevel;
@@ -337,7 +345,7 @@ function setupSettings() {
     dlg.showModal();
   });
   $('#set-voice-on').addEventListener('change', (e) => voice.setEnabled(e.target.checked));
-  $('#set-voice').addEventListener('change', (e) => voice.setVoice(e.target.value));
+  $('#set-voice').addEventListener('change', (e) => (voice.provider === 'local' ? voice.setServerVoice(e.target.value) : voice.setVoice(e.target.value)));
   $('#set-rate').addEventListener('input', (e) => { voice.rate = Number(e.target.value); save('quippy.voiceRate', e.target.value); });
   $('#set-pitch').addEventListener('input', (e) => { voice.pitch = Number(e.target.value); save('quippy.voicePitch', e.target.value); });
   $('#set-music').addEventListener('input', (e) => audio.setMusicLevel(Number(e.target.value)));

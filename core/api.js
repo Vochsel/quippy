@@ -4,14 +4,14 @@
 import { GAMES } from '../games/registry.js';
 import { identify, publicProfile } from './profiles.js';
 import { loreSummary } from './lore.js';
-import { synthesize, ttsEnabled } from './tts.js';
+
 import { ROOM_CODE_RE } from './util.js';
 
 const ID_RE = /^[\w-]{6,64}$/;
 const ok = (json) => ({ status: 200, json });
 const bad = (message, status = 400) => ({ status, json: { error: message } });
 
-// deps: { store, config, llm, content, ttsCache, rooms: { create(hostId), info(code) } }
+// deps: { store, config, llm, content, tts (Tts router), rooms: { create(hostId), info(code) } }
 export async function handleApi(req, deps) {
   const { method, path } = req;
   const body = req.body || {};
@@ -21,7 +21,7 @@ export async function handleApi(req, deps) {
   if (method === 'GET' && path === '/api/config') {
     await llm.init();
     return ok({
-      voice: { provider: ttsEnabled(config.voice) ? 'elevenlabs' : 'browser' },
+      voice: await deps.tts.status(),
       llm: llm.status(),
       locales: content.locales(),
       defaultLocale: config.defaultLocale,
@@ -74,15 +74,17 @@ export async function handleApi(req, deps) {
     });
   }
 
+  if (method === 'GET' && path === '/api/tts') {
+    return ok(await deps.tts.status());
+  }
+
   if (method === 'POST' && path === '/api/tts') {
-    if (!ttsEnabled(config.voice)) return { status: 204, body: null };
-    try {
-      const bytes = await synthesize(config.voice, body.text, deps.ttsCache);
-      if (!bytes) return { status: 204, body: null };
-      return { status: 200, body: bytes, headers: { 'content-type': 'audio/mpeg', 'cache-control': 'public, max-age=31536000' } };
-    } catch (e) {
-      return bad(String(e.message || e), 502);
-    }
+    const out = await deps.tts.speak(body.text, { voice: body.voice }).catch(() => null);
+    if (!out) return { status: 204, body: null };
+    return {
+      status: 200, body: out.bytes,
+      headers: { 'content-type': out.type, 'cache-control': 'public, max-age=31536000', 'x-tts-provider': out.provider },
+    };
   }
 
   return null;

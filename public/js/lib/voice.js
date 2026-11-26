@@ -1,7 +1,8 @@
 // The host's voice-over. Lines are queued and spoken one at a time while the
-// music ducks underneath. With ElevenLabs configured on the server, lines are
-// rendered in your chosen voice; otherwise the TV browser's own speech voices
-// are used (pick one in the lobby's ⚙️ settings).
+// music ducks underneath. The server routes each line to a local voice model
+// (e.g. Kokoro) or ElevenLabs; if neither answers, the TV browser's own speech
+// voices are used. Audio is fetched the moment a line is queued, so it's
+// usually ready by the time the previous line finishes.
 import { LIVE } from './net.js';
 
 const PREFERRED = [
@@ -12,9 +13,11 @@ const PREFERRED = [
 ];
 
 export class Voice {
-  constructor(audio, { provider = 'browser', lang = 'en-AU', onCaption } = {}) {
+  constructor(audio, { provider = 'browser', lang = 'en-AU', onCaption, serverVoices = [], serverVoice = null } = {}) {
     this.audio = audio;
-    this.provider = provider;
+    this.provider = provider; // local | elevenlabs | browser
+    this.serverVoices = serverVoices;
+    this.serverVoice = localStorage.getItem('quippy.serverVoice') || serverVoice;
     this.lang = lang;
     this.onCaption = onCaption || (() => {});
     this.queue = [];
@@ -52,6 +55,8 @@ export class Voice {
   }
 
   setVoice(name) { this.voiceName = name; localStorage.setItem('quippy.voiceName', name); }
+  setServerVoice(name) { this.serverVoice = name; localStorage.setItem('quippy.serverVoice', name); }
+  usesServer() { return this.provider !== 'browser'; }
   setEnabled(on) { this.enabled = on; localStorage.setItem('quippy.voiceOn', on ? '1' : '0'); if (!on) this.stop(); }
 
   say(text) {
@@ -60,7 +65,7 @@ export class Voice {
     if (!this.enabled) return;
     // Don't let a backlog build up: the room moves fast.
     if (this.queue.length >= 3) this.queue.shift();
-    this.queue.push(text);
+    this.queue.push({ text, audio: this.usesServer() ? this.#fetchAudio(text) : null });
     this.#next();
   }
 
@@ -73,15 +78,12 @@ export class Voice {
   async #next() {
     if (this.busy || !this.queue.length) return;
     this.busy = true;
-    const text = this.queue.shift();
+    const { text, audio } = this.queue.shift();
     this.audio.duck(true);
     try {
-      if (this.provider === 'elevenlabs') {
-        const ok = await this.#playServer(text);
-        if (!ok) await this.#speakBrowser(text);
-      } else {
-        await this.#speakBrowser(text);
-      }
+      const url = audio ? await audio : null;
+      if (url) await this.#playUrl(url);
+      else await this.#speakBrowser(text);
     } catch {
       /* keep the show going */
     } finally {
@@ -91,26 +93,29 @@ export class Voice {
     }
   }
 
-  async #playServer(text) {
+  async #fetchAudio(text) {
     try {
       const res = await fetch(`${LIVE}/api/tts`, {
-        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }),
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text, voice: this.provider === 'local' ? this.serverVoice : undefined }),
       });
-      if (res.status !== 200) return false;
-      const url = URL.createObjectURL(await res.blob());
-      const el = new Audio(url);
-      this.el = el;
-      await new Promise((resolve) => {
-        el.onended = resolve;
-        el.onerror = resolve;
-        el.play().catch(resolve);
-        setTimeout(resolve, 20000);
-      });
-      URL.revokeObjectURL(url);
-      return true;
+      if (res.status !== 200) return null;
+      return URL.createObjectURL(await res.blob());
     } catch {
-      return false;
+      return null;
     }
+  }
+
+  async #playUrl(url) {
+    const el = new Audio(url);
+    this.el = el;
+    await new Promise((resolve) => {
+      el.onended = resolve;
+      el.onerror = resolve;
+      el.play().catch(resolve);
+      setTimeout(resolve, 25000);
+    });
+    URL.revokeObjectURL(url);
   }
 
   #speakBrowser(text) {

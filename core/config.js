@@ -31,10 +31,24 @@ export function buildConfig(env = {}) {
       temperature: env.LLM_TEMPERATURE === undefined || env.LLM_TEMPERATURE === '' ? null : num(env.LLM_TEMPERATURE, null),
     },
 
-    // Host voice-over: "browser" = the TV browser's speech voices;
-    // "elevenlabs" = a voice of your choosing via ElevenLabs (cached).
+    // Host voice-over, tried in order until one works:
+    //   local      -> a local voice model with an OpenAI-style /audio/speech
+    //                 endpoint (Kokoro-FastAPI, openedai-speech, ...)
+    //   elevenlabs -> ElevenLabs with ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID
+    //   browser    -> the TV browser's built-in speech voices (always last)
+    // TTS_PROVIDER: auto (= local,elevenlabs) | local | elevenlabs | browser,
+    // or an explicit route such as "elevenlabs,local".
     voice: {
-      provider: (env.TTS_PROVIDER || (env.ELEVENLABS_API_KEY ? 'elevenlabs' : 'browser')).toLowerCase(),
+      route: (() => {
+        const p = (env.TTS_PROVIDER || 'auto').toLowerCase();
+        const list = p === 'auto' ? ['local', 'elevenlabs'] : p.split(',').map((s) => s.trim());
+        return list.filter((x) => ['local', 'elevenlabs'].includes(x));
+      })(),
+      localUrl: trimSlash(env.TTS_LOCAL_URL || 'http://localhost:8880/v1'),
+      localVoice: env.TTS_LOCAL_VOICE || 'bm_george',
+      localModel: env.TTS_LOCAL_MODEL || '',
+      localSpeed: num(env.TTS_LOCAL_SPEED, 0.95),
+      localKey: env.TTS_LOCAL_API_KEY || '',
       elevenLabsKey: env.ELEVENLABS_API_KEY || '',
       elevenLabsVoiceId: env.ELEVENLABS_VOICE_ID || '',
       elevenLabsModel: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',
