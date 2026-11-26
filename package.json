@@ -18,6 +18,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@ai-sdk/gateway": "^4.0.156",
+    "ai": "^7.0.183",
     "express": "^4.22.3",
     "qrcode-generator": "^2.0.4",
     "ws": "^8.23.0"

@@ -332,10 +332,11 @@ function setupSettings() {
       ? voice.serverVoices.map((v) => h('option', { value: v, selected: v === current }, v))
       : voice.browserVoices().map((v) => h('option', { value: v.name, selected: v.name === current }, `${v.name} (${v.lang})`));
     mountInto($('#set-voice'), options);
-    $('#voice-pick-row').classList.toggle('hidden', voice.provider === 'elevenlabs' || !options.length);
+    $('#voice-pick-row').classList.toggle('hidden', !['local', 'browser'].includes(voice.provider) || !options.length);
     ['#set-rate', '#set-pitch'].forEach((id) => $(id).closest('.row').classList.toggle('hidden', voice.usesServer()));
     $('#voice-note').textContent = {
       local: 'Voice-over comes from your local voice model (TTS_LOCAL_URL). ElevenLabs takes over if it stops answering, then browser voices.',
+      gateway: 'Voice-over comes from a speech model on the Vercel AI Gateway (TTS_GATEWAY_MODEL / TTS_GATEWAY_VOICE on the server).',
       elevenlabs: 'Voice-over comes from your ElevenLabs voice (set on the server).',
     }[voice.provider] || 'Using this browser’s built-in voices. Run a local voice model (e.g. Kokoro on :8880) or set ElevenLabs keys on the server for a custom voice.';
     $('#set-rate').value = voice.rate;

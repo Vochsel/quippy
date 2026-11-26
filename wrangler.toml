@@ -15,11 +15,12 @@ QUIPPY_LOCALE = "en-AU"
 # AI_GATEWAY_API_KEY secret). Model ids use the gateway's "creator/model" form.
 LLM_PROVIDER = "vercel"
 # LLM_MODEL = "anthropic/claude-opus-5.5"
-# Voice: a Worker can't reach a model on your laptop, so production routes to
+# Voice: production speaks through Gemini TTS on the AI Gateway (same key),
+# then ElevenLabs if configured. A Worker can't reach a model on your laptop, so
 # ElevenLabs (set ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID secrets) and otherwise
 # the TV's browser voices. To use your local voice model in production, expose it
 # (e.g. a Cloudflare Tunnel) and set TTS_PROVIDER = "local,elevenlabs" + TTS_LOCAL_URL.
-TTS_PROVIDER = "elevenlabs"
+TTS_PROVIDER = "gateway,elevenlabs"
 
 # Secrets (wrangler secret put <NAME>):
 #   AI_GATEWAY_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID

@@ -34,21 +34,28 @@ export function buildConfig(env = {}) {
     // Host voice-over, tried in order until one works:
     //   local      -> a local voice model with an OpenAI-style /audio/speech
     //                 endpoint (Kokoro-FastAPI, openedai-speech, ...)
+    //   gateway    -> a speech model on the Vercel AI Gateway (AI SDK), using
+    //                 AI_GATEWAY_API_KEY. Default: Gemini Flash TTS, cheap + steerable
     //   elevenlabs -> ElevenLabs with ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID
     //   browser    -> the TV browser's built-in speech voices (always last)
-    // TTS_PROVIDER: auto (= local,elevenlabs) | local | elevenlabs | browser,
+    // TTS_PROVIDER: auto (= local,gateway,elevenlabs) | local | gateway | elevenlabs | browser,
     // or an explicit route such as "elevenlabs,local".
     voice: {
       route: (() => {
         const p = (env.TTS_PROVIDER || 'auto').toLowerCase();
-        const list = p === 'auto' ? ['local', 'elevenlabs'] : p.split(',').map((s) => s.trim());
-        return list.filter((x) => ['local', 'elevenlabs'].includes(x));
+        const list = p === 'auto' ? ['local', 'gateway', 'elevenlabs'] : p.split(',').map((s) => s.trim());
+        return list.filter((x) => ['local', 'gateway', 'elevenlabs'].includes(x));
       })(),
       localUrl: trimSlash(env.TTS_LOCAL_URL || 'http://localhost:8880/v1'),
       localVoice: env.TTS_LOCAL_VOICE || 'bm_george',
       localModel: env.TTS_LOCAL_MODEL || '',
       localSpeed: num(env.TTS_LOCAL_SPEED, 0.95),
       localKey: env.TTS_LOCAL_API_KEY || '',
+      gatewayKey: env.AI_GATEWAY_API_KEY || '',
+      gatewayModel: env.TTS_GATEWAY_MODEL || 'google/gemini-3.8-flash-tts',
+      gatewayVoice: env.TTS_GATEWAY_VOICE || 'Charon',
+      gatewayInstructions: env.TTS_GATEWAY_INSTRUCTIONS
+        || 'You are Monty, a game-show host: dry, deadpan, faintly world-weary, quietly amused. Australian accent. Brisk pace, crisp comic timing, a slight pause before punchlines. Never shouty.',
       elevenLabsKey: env.ELEVENLABS_API_KEY || '',
       elevenLabsVoiceId: env.ELEVENLABS_VOICE_ID || '',
       elevenLabsModel: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2',

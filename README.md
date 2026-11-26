@@ -20,7 +20,7 @@ Make your own with `npm run new-game` — see [docs/MAKING_GAMES.md](docs/MAKING
   - **Per night**: session standings, "line of the night", last game's podium.
   - **Per crew** (one TV = one crew): the **Lore Book** of running jokes and comedic taste (written by the AI, or by a heuristic without one), a Hall of Fame of the greatest answers, and an all-time leaderboard. Callback Club reads the Lore Book back to you, session after session.
 - **Big, localised prompt bank**: content packs live in `content/locales/<locale>/`. The default is Australian English (`en-AU`), with 652 prompts, 88 final-round prompts, 129 personalised "{player}" prompts, 167 panic answers, and the host's lines. A crew won't see a prompt twice until it has seen most of the bank. There's a family-friendly toggle.
-- **Host voice-over**: Monty, an original dry, deadpan, faintly world-weary host. He reads the prompts and answers and reacts to results, with captions on screen while the music ducks under him. He uses a local voice model (e.g. Kokoro) when one is running, ElevenLabs if configured, and the TV browser's speech voices otherwise.
+- **Host voice-over**: Monty, an original dry, deadpan, faintly world-weary host. He reads the prompts and answers and reacts to results, with captions on screen while the music ducks under him. He uses a local voice model (e.g. Kokoro) when one is running, otherwise Gemini TTS through the Vercel AI Gateway, ElevenLabs if configured, and the TV browser's speech voices as a last resort.
 - **Music and sound**: a procedural Web Audio soundtrack with a band per phase (lounge-funk lobby, ticking "thinking" music, suspense for voting, a results groove, a victory fanfare) plus sound effects, all synthesised with no audio files.
 - **Configurable answers**: answers can be up to 200 characters by default (80–280 per room, or `QUIPPY_ANSWER_CHARS`). Long answers shrink to fit on the TV and scroll themselves when they still don't fit; the phone text box grows as you type.
 
@@ -50,8 +50,9 @@ The chip in the top-right of the TV shows which brain is active. All options are
 Monty's voice is routed on the server, first answer wins:
 
 1. **Local voice model** (default): any OpenAI-style speech server. [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) on `localhost:8880` is found automatically; pick the voice in the TV's ⚙️ settings or with `TTS_LOCAL_VOICE` (default `bm_george`).
-2. **ElevenLabs** (optional): set `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`.
-3. **Browser voices**: the TV's own speech voices, always the last resort.
+2. **Vercel AI Gateway speech** (production default): Gemini Flash TTS via the AI SDK, using the same `AI_GATEWAY_API_KEY`. Cheap, and steered into Monty's dry delivery by `TTS_GATEWAY_INSTRUCTIONS`; change model/voice with `TTS_GATEWAY_MODEL` / `TTS_GATEWAY_VOICE` (default `Charon`).
+3. **ElevenLabs** (optional): set `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`.
+4. **Browser voices**: the TV's own speech voices, always the last resort.
 
 Change the order with `TTS_PROVIDER` (e.g. `elevenlabs,local`). Lines are cached (on disk locally, in R2 in production), so each unique line is synthesised once, and the TV fetches each line as soon as it's queued. Only use a voice you have the rights to; Quippy doesn't clone real people's voices.
 

@@ -7,6 +7,9 @@
 //   local       any OpenAI-style speech server: POST {TTS_LOCAL_URL}/audio/speech
 //               {input, voice, speed, response_format}. Kokoro-FastAPI on
 //               :8880 is the default. Runs on your machine, free, offline.
+//   gateway     a speech model on the Vercel AI Gateway via the AI SDK
+//               (default google/gemini-3.8-flash-tts, delivery steered by
+//               TTS_GATEWAY_INSTRUCTIONS). Works in production (Workers).
 //   elevenlabs  ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID (a voice you have rights to).
 //
 // Audio is cached (disk locally, R2 in production) so each unique line is
@@ -32,6 +35,10 @@ export class Tts {
     this.localState = { checkedAt: 0, up: false, voices: [] };
     this.lastError = null;
     this.lastProvider = null;
+  }
+
+  gatewayReady() {
+    return !!this.cfg.gatewayKey;
   }
 
   elevenReady() {
@@ -70,6 +77,9 @@ export class Tts {
       if (p === 'local' && (await this.localUp())) {
         return { provider: 'local', label: 'Local voice model', voice: this.cfg.localVoice, voices: this.localState.voices };
       }
+      if (p === 'gateway' && this.gatewayReady()) {
+        return { provider: 'gateway', label: `AI Gateway · ${this.cfg.gatewayModel}`, voice: this.cfg.gatewayVoice, voices: [] };
+      }
       if (p === 'elevenlabs' && this.elevenReady()) return { provider: 'elevenlabs', label: 'ElevenLabs', voice: null, voices: [] };
     }
     return { provider: 'browser', label: 'Browser voices', voice: null, voices: [] };
@@ -94,6 +104,24 @@ export class Tts {
       });
       if (!res.ok) throw new Error(`local voice HTTP ${res.status}`);
       return new Uint8Array(await res.arrayBuffer());
+    });
+  }
+
+  async #gateway(text) {
+    const c = this.cfg;
+    const key = `tts/gw-${(await sha256Hex(`${c.gatewayModel}|${c.gatewayVoice}|${c.gatewayInstructions}|${text}`)).slice(0, 40)}`;
+    return this.#cached(key, async () => {
+      // Loaded lazily so local-only setups never pay for it.
+      const [{ generateSpeech }, { createGateway }] = await Promise.all([import('ai'), import('@ai-sdk/gateway')]);
+      const gateway = createGateway({ apiKey: c.gatewayKey });
+      const result = await generateSpeech({
+        model: gateway.speechModel(c.gatewayModel),
+        text,
+        voice: c.gatewayVoice,
+        instructions: c.gatewayInstructions,
+        abortSignal: AbortSignal.timeout(30000),
+      });
+      return result.audio.uint8Array;
     });
   }
 
@@ -123,6 +151,7 @@ export class Tts {
       try {
         let bytes = null;
         if (p === 'local' && (await this.localUp())) bytes = await this.#local(clean, voice);
+        else if (p === 'gateway' && this.gatewayReady()) bytes = await this.#gateway(clean);
         else if (p === 'elevenlabs' && this.elevenReady()) bytes = await this.#eleven(clean);
         if (bytes?.length) {
           this.lastProvider = p;
