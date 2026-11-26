@@ -44,6 +44,7 @@ export class Room {
       locale: deps.config.defaultLocale,
       family: false,
       answerSeconds: deps.config.timing.answer,
+      answerChars: deps.config.answerChars,
       ...(s.settings || {}),
     };
     this.selectedGame = gameById(s.selectedGame) ? s.selectedGame : GAMES[0].id;
@@ -58,11 +59,14 @@ export class Room {
   }
 
   async init() {
+    // Detect the AI brain before any game asks for it (Durable Objects get a
+    // fresh client per isolate).
+    await this.deps.llm.init?.();
     this.crew = await this.deps.store.ensureCrew(this.crewId);
     if (!this.hadSnapshot && this.crew?.settings) {
-      const { locale, family, answerSeconds } = this.crew.settings;
+      const { locale, family, answerSeconds, answerChars } = this.crew.settings;
       Object.assign(this.settings, Object.fromEntries(
-        Object.entries({ locale, family, answerSeconds }).filter(([, v]) => v !== undefined)));
+        Object.entries({ locale, family, answerSeconds, answerChars }).filter(([, v]) => v !== undefined)));
     }
     await this.refreshHall();
     if (this.restoreState && this.gameMeta) {
@@ -252,6 +256,8 @@ export class Room {
     if (locales.includes(next.locale)) this.settings.locale = next.locale;
     if (typeof next.family === 'boolean') this.settings.family = next.family;
     if ([45, 60, 90, 120, 150].includes(Number(next.answerSeconds))) this.settings.answerSeconds = Number(next.answerSeconds);
+    const chars = Number(next.answerChars);
+    if (Number.isInteger(chars) && chars >= 40 && chars <= 400) this.settings.answerChars = chars;
     await this.deps.store.saveCrewSettings(this.crewId, { ...this.settings });
   }
 
@@ -331,6 +337,8 @@ export class Room {
       timerDeadline: (name) => room.timers.get(name)?.deadline || null,
       later: (ms, fn) => room.later(ms, fn),
       update: () => room.dirty(),
+      // Persist right now (phase changes), rather than on the debounced timer.
+      checkpoint: () => room.saveNow().catch((e) => room.log('checkpoint failed', e)),
       say: (text) => room.say(text),
       line: (key, vars) => room.content().line(key, vars),
       sayLine: (key, vars) => room.say(room.content().line(key, vars)),
@@ -517,6 +525,7 @@ export class Room {
       })),
       minPlayers: def.minPlayers,
       settings: this.settings,
+      answerCharOptions: [...new Set([80, 120, 200, 280, this.deps.config.answerChars])].sort((a, b) => a - b),
       locales: this.deps.content.locales(),
       session: {
         startedAt: this.session.startedAt, games: this.session.games,
@@ -547,6 +556,7 @@ export class Room {
       room: {
         code: room.code, phase: room.phase, players: room.players, vipId: room.vipId, selectedGame: room.selectedGame,
         games: room.games, minPlayers: room.minPlayers, settings: room.settings, locales: room.locales,
+        answerCharOptions: room.answerCharOptions,
         session: room.session, lastResults: room.lastResults, gameType: room.gameType, hostName: room.hostName,
         llm: { available: room.llm.available, label: room.llm.label },
       },
@@ -576,15 +586,17 @@ export class Room {
 
   save() {
     if (this.saveHandle) return;
-    this.saveHandle = setTimeout(async () => {
+    this.saveHandle = setTimeout(() => {
       this.saveHandle = null;
-      try { await this.deps.persist(this.snapshot()); } catch (e) { this.log(`room ${this.code}: save failed`, e); }
+      this.saveNow().catch((e) => this.log(`room ${this.code}: save failed`, e));
     }, 250);
   }
 
   async saveNow() {
     if (this.saveHandle) { clearTimeout(this.saveHandle); this.saveHandle = null; }
-    await this.deps.persist(this.snapshot());
+    // Chain saves so an older snapshot can never land after a newer one.
+    this.saving = (this.saving || Promise.resolve()).then(() => this.deps.persist(this.snapshot()));
+    return this.saving;
   }
 
   randomBotName() { return pick(BOT_NAMES); }

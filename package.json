@@ -8,9 +8,10 @@
     "start": "node --no-warnings=ExperimentalWarning server/index.js",
     "dev": "QUIPPY_DEV=1 node --no-warnings=ExperimentalWarning --watch server/index.js",
     "build": "node scripts/build.js",
-    "test": "node --no-warnings=ExperimentalWarning --test test/",
-    "cf:dev": "wrangler dev",
-    "cf:deploy": "wrangler deploy"
+    "test": "node --no-warnings=ExperimentalWarning --test test/*.test.js",
+    "cf:dev": "npx wrangler@4 dev",
+    "cf:deploy": "npx wrangler@4 deploy",
+    "new-game": "node scripts/new-game.js"
   },
   "engines": {
     "node": ">=22.13"

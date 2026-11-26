@@ -123,7 +123,7 @@ function renderLobby(room) {
     root = h('div.lobby',
       h('div.join-col', h('div.card.join-card.tilt-l.pop-in', { id: 'join-card' })),
       h('div.center-col', h('div', { id: 'players-box' }), h('div', { id: 'games-box' }), h('div', { id: 'start-box' })),
-      h('div.side', h('div.tabs', { id: 'tabs' }), h('div', { id: 'side-box' })));
+      h('div.side', h('div.tabs', { id: 'tabs' }), h('div', { id: 'side-box' }), h('div', { id: 'settings-box' })));
     mountInto(stage, root);
   }
 
@@ -162,7 +162,8 @@ function renderLobby(room) {
   });
 
   remember('games', { games: room.games, sel: room.selectedGame, owner: isOwner, llm: room.llm.available }, () => {
-    mountInto($('#games-box'), h('div.games', room.games.map((g, i) => h(`div.card.game-card${g.id === room.selectedGame ? '.sel' : ''}${i % 2 ? '.tilt-r' : '.tilt-l'}`,
+    const n = room.games.length;
+    mountInto($('#games-box'), h(`div.games${n > 2 ? '.many' : ''}${n > 4 ? '.lots' : ''}`, room.games.map((g, i) => h(`div.card.game-card${g.id === room.selectedGame ? '.sel' : ''}${i % 2 ? '.tilt-r' : '.tilt-l'}`,
       { onClick: () => isOwner && live.action('selectGame', { game: g.id }) },
       h('span.stripe', { style: { background: g.accent || 'var(--pink)' } }),
       g.usesAi ? h('span.chip.teal.tag', room.llm.available ? '🧠 AI' : '🧠 AI-lite') : null,
@@ -170,21 +171,25 @@ function renderLobby(room) {
   });
 
   const enough = players.filter((p) => p.connected).length >= room.minPlayers;
-  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, n: players.length, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name }, (d) => {
+  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: players.length, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name }, (d) => {
     const vip = d.vip;
     mountInto($('#start-box'),
       h('div.start-row',
         isOwner ? h('button.btn.big.pink', { disabled: !d.enough, onClick: () => live.action('start') }, '▶ Start game') : null,
         h('span.hint', d.enough
           ? (vip ? `…or ${vip} 👑 can start it from their phone.` : 'Ready when you are.')
-          : `Need at least ${d.min} players. ${d.n ? `${d.min - d.n} more!` : ''}`)),
-      isOwner ? h('div.settings-row', { style: { marginTop: '1rem' } },
-        h('button.btn.white.mini', { onClick: () => live.action('addBot'), title: 'Add a bot player (great for testing)' }, '+ Bot'),
+          : `Need at least ${d.min} players. ${d.n ? `${d.min - d.n} more!` : ''}`),
+        isOwner ? h('button.btn.white.mini', { onClick: () => live.action('addBot'), title: 'Add a bot player (great for testing)' }, '+ Bot') : null));
+    mountInto($('#settings-box'),
+      isOwner ? h('div.card.room-settings.tilt-l',
+        h('h3', 'Room settings'),
         h('label', 'Prompts:', h('select', { onChange: (e) => live.action('settings', { settings: { locale: e.target.value } }) },
           d.locales.map((l) => h('option', { value: l.id, selected: l.id === d.settings.locale }, `${l.flag} ${l.label} (${l.prompts})`)))),
-        h('label', h('input', { type: 'checkbox', checked: !!d.settings.family, onChange: (e) => live.action('settings', { settings: { family: e.target.checked } }) }), 'Family friendly'),
+        h('label', 'Family friendly:', h('input', { type: 'checkbox', checked: !!d.settings.family, onChange: (e) => live.action('settings', { settings: { family: e.target.checked } }) })),
         h('label', 'Answer time:', h('select', { onChange: (e) => live.action('settings', { settings: { answerSeconds: Number(e.target.value) } }) },
-          [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === d.settings.answerSeconds }, `${s}s`))))) : null);
+          [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === d.settings.answerSeconds }, `${s}s`)))),
+        h('label', 'Max answer:', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },
+          (d.charOpts || [200]).map((c) => h('option', { value: c, selected: c === d.settings.answerChars }, `${c} chars`))))) : null);
   });
 
   renderSide(room);

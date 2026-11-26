@@ -102,3 +102,19 @@
 .ph-watch p { font-size: 1.35rem; margin: 0; }
 .ph-gained { font-family: var(--head); font-size: 2rem; color: var(--lime); }
 .ph-rank { font-family: var(--head); font-size: 5rem; color: var(--yellow); text-shadow: 4px 4px 0 var(--ink); line-height: 1; }
+
+/* Long answers: shrink, then auto-scroll inside the card if still too tall. */
+.fit { position: relative; overflow: hidden; max-height: var(--fit-h, 13rem); }
+.fit-inner { overflow-wrap: anywhere; }
+.fit.len-m { font-size: .82em; }
+.fit.len-l { font-size: .68em; }
+.fit.len-xl { font-size: .58em; }
+.fit.scrolling { -webkit-mask-image: linear-gradient(transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(transparent, #000 10%, #000 90%, transparent); }
+.fit.scrolling .fit-inner { animation: autoscroll var(--dur, 8s) ease-in-out 1.2s infinite alternate; padding: .4em 0; }
+@keyframes autoscroll { 0%, 12% { transform: translateY(0); } 88%, 100% { transform: translateY(var(--scroll)); } }
+.q-final-ans .fit { --fit-h: 9rem; }
+.q-final-text .fit { --fit-h: 4.6rem; }
+.q-final-text { display: flex; align-items: center; gap: .6rem; min-width: 0; }
+.q-final-text .fit { flex: 1; }
+.ph-answer textarea { max-height: 42vh; overflow-y: auto; }
+.ph-chars.near { color: var(--red); }

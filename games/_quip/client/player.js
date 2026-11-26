@@ -25,8 +25,8 @@ export function mount(root, api) {
     },
 
     answer(g) {
-      const ta = h('textarea', { maxLength: g.maxLength || 80, placeholder: 'Be funny. No pressure.', rows: 3, autocomplete: 'off', enterKeyHint: 'send' });
-      const chars = h('div.ph-chars', `0 / ${g.maxLength || 80}`);
+      const ta = h('textarea', { maxLength: g.maxLength || 200, placeholder: 'Be funny. No pressure.', rows: 3, autocomplete: 'off', enterKeyHint: 'send' });
+      const chars = h('div.ph-chars', `0 / ${g.maxLength || 200}`);
       const submit = h('button.btn.pink', { disabled: true }, 'Send it ✓');
       const send = () => {
         const text = ta.value.trim();
@@ -35,9 +35,14 @@ export function mount(root, api) {
         api.send({ type: 'answer', matchupId: g.matchupId, text });
         api.vibrate(30);
       };
+      // Grow with the answer, then scroll inside the box once it hits the cap.
+      const grow = () => { ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight + 6}px`; };
       ta.addEventListener('input', () => {
-        chars.textContent = `${ta.value.length} / ${g.maxLength || 80}`;
+        const max = g.maxLength || 200;
+        chars.textContent = `${ta.value.length} / ${max}`;
+        chars.classList.toggle('near', ta.value.length > max * 0.9);
         submit.disabled = !ta.value.trim();
+        grow();
       });
       ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
       submit.addEventListener('click', send);

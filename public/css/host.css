@@ -108,7 +108,7 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .tabs { display: flex; gap: .5rem; }
 .tabs button { flex: 1; font-family: var(--head); font-size: 1.15rem; padding: .4rem; border-radius: 14px; border: 3px solid var(--ink); background: rgba(255, 255, 255, .2); color: #fff; cursor: pointer; }
 .tabs button.on { background: var(--yellow); color: var(--ink); }
-.side .card { font-size: 1.15rem; max-height: 62vh; overflow: hidden; }
+.side .card { font-size: 1.15rem; max-height: 50vh; overflow: hidden; }
 .side h3 { font-size: 1.7rem; }
 .rowlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
 .rowlist li { display: flex; align-items: center; gap: .7rem; }
@@ -126,3 +126,21 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .podium-mini .p { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
 .podium-mini .blk { background: var(--ink); color: var(--yellow); font-family: var(--head); width: 4.6rem; display: grid; place-items: center; border-radius: 10px 10px 0 0; }
 .podium-mini .avatar { width: 3.4rem; height: 3.4rem; }
+
+.start-row .btn.mini { font-size: 1.1rem; padding: .35rem .9rem; border-width: 3px; }
+.room-settings { font-size: 1.05rem; padding: .9rem 1.2rem; }
+.room-settings h3 { font-size: 1.4rem; margin-bottom: .5rem; }
+.room-settings label { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin: .35rem 0; }
+.room-settings select { width: auto; padding: .2rem .5rem; border-width: 3px; font-size: 1rem; }
+.room-settings input[type=checkbox] { width: 1.3rem; height: 1.3rem; }
+.side .card.room-settings { max-height: none; overflow: visible; }
+
+/* More games installed -> smaller picker cards so Start stays on screen. */
+.games.many { grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+.games.many .game-card { padding: .8rem 1rem; }
+.games.many .game-card h3 { font-size: 1.6rem; }
+.games.many .game-card p { font-size: .95rem; }
+.games.lots { grid-template-columns: repeat(4, 1fr); }
+.games.lots .game-card p { display: none; }
+.games.lots .game-card.sel p { display: block; }
+.games.many .game-card .tag { font-size: .8rem; top: -1.3rem; right: .4rem; padding: .1rem .5rem; }

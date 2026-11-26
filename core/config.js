@@ -48,6 +48,9 @@ export function buildConfig(env = {}) {
       finalVote: num(env.QUIPPY_FINAL_VOTE_SECONDS, 30),
     },
 
+    // Longest answer a player can write (rooms can change it in the lobby).
+    answerChars: num(env.QUIPPY_ANSWER_CHARS, 200),
+
     roomTtlHours: num(env.QUIPPY_ROOM_TTL_HOURS, 24),
   };
 }

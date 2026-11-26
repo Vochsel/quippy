@@ -8,6 +8,32 @@ function ensureCss(href) {
   }
 }
 
+// Long answers: shrink by length, then (if still too tall) scroll slowly up and
+// down inside their card so every word gets read.
+function fitText(text) {
+  const t = String(text ?? '');
+  const size = t.length > 150 ? 'len-xl' : t.length > 100 ? 'len-l' : t.length > 55 ? 'len-m' : 'len-s';
+  const inner = document.createElement('div');
+  inner.className = 'fit-inner';
+  inner.textContent = t;
+  const box = document.createElement('div');
+  box.className = `fit ${size}`;
+  box.append(inner);
+  return box;
+}
+
+function autoScroll(root) {
+  for (const box of root.querySelectorAll('.fit')) {
+    const inner = box.firstElementChild;
+    const overflow = inner.scrollHeight - box.clientHeight;
+    box.classList.toggle('scrolling', overflow > 4);
+    if (overflow > 4) {
+      box.style.setProperty('--scroll', `${-overflow}px`);
+      box.style.setProperty('--dur', `${Math.max(5, overflow / 18)}s`);
+    }
+  }
+}
+
 export function mount(root, api) {
   ensureCss('/games/_quip/client/quip.css');
   const { h, avatar, fmt } = api;
@@ -72,7 +98,7 @@ export function mount(root, api) {
         promptCard(g),
         h('div.q-versus',
           g.answers.map((a, i) => h(`div.card.q-ans.pop-in${i ? '.tilt-r' : '.tilt-l'}`, { style: { animationDelay: `${0.6 + i * 0.5}s` } },
-            h('span.q-letter', a.key), h('div.q-ans-text', a.text))),
+            h('span.q-letter', a.key), h('div.q-ans-text', fitText(a.text)))),
           h('div.q-vs.pop-in', { style: { animationDelay: '0.9s' } }, 'VS')),
         h('div.q-progress', h('span', { 'data-live': 'votes' }, `${g.votersDone} / ${g.votersTotal}`), ' votes in · vote on your phone'));
     },
@@ -86,7 +112,7 @@ export function mount(root, api) {
           g.answers.map((a, i) => h(`div.card.q-ans${i ? '.tilt-r' : '.tilt-l'}${a.winner ? '.win' : ''}`,
             a.winner ? h('span.q-crown.pop-in', { style: { animationDelay: '1.6s' } }, '👑') : null,
             a.winner && g.kind === 'shutout' ? h('div.q-sticker.slam', { style: { animationDelay: '1.5s' } }, 'SHUTOUT!') : null,
-            h('div.q-ans-text', a.text || '(no answer)'),
+            h('div.q-ans-text', fitText(a.text || '(no answer)')),
             a.panic ? h('span.chip.pink.q-panic', '🆘 panic button') : null,
             h('div.q-author.slide-up', { style: { animationDelay: '0.4s' } }, avatar(a.author, '3.6rem'), h('b', a.author.name)),
             h('div.q-voters', a.voters.map((v, j) => h('span.pop-in', { style: { animationDelay: `${0.8 + j * 0.12}s` } }, avatar(v, '2.4rem')))),
@@ -111,7 +137,7 @@ export function mount(root, api) {
       return h('div.q-final',
         promptCard(g),
         h('div.q-final-grid', g.answers.map((a, i) => h('div.card.q-final-ans.pop-in', { style: { animationDelay: `${0.4 + i * 0.2}s` } },
-          h('span.q-letter', `${i + 1}`), a.text))),
+          h('span.q-letter', `${i + 1}`), fitText(a.text)))),
         h('div.q-progress', h('span', { 'data-live': 'votes' }, `${g.votersDone} / ${g.votersTotal}`),
           ` voted · pick ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`));
     },
@@ -121,7 +147,7 @@ export function mount(root, api) {
       return h('div.q-final',
         promptCard(g, false),
         h('div.q-final-list', g.answers.map((a, i) => h(`div.card.q-final-row${a.winner ? '.win' : ''}`, { style: { animationDelay: `${i * step + 0.5}s` } },
-          h('div.q-final-text', a.text, a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
+          h('div.q-final-text', fitText(a.text), a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
           h('div.q-author', avatar(a.author, '3rem', { crown: a.winner }), h('b', a.author.name)),
           h('div.q-final-votes', h('span', '★'.repeat(Math.min(a.votes, 12)) || '—'), h('span.q-pts', `+${fmt(a.points)}`))))));
     },
@@ -158,6 +184,10 @@ export function mount(root, api) {
         key = k;
         const fn = screens[g.phase];
         mountInto(root, fn ? fn(g) : h('div'));
+        // Measure after layout (and again once fonts and pop-in animations settle).
+        requestAnimationFrame(() => autoScroll(root));
+        setTimeout(() => autoScroll(root), 1600);
+        document.fonts?.ready.then(() => autoScroll(root));
         if (g.phase === 'reveal' && g.kind === 'shutout') setTimeout(() => api.confetti({ count: 90, duration: 2500 }), 1500);
       } else {
         patch(g);

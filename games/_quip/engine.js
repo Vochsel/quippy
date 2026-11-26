@@ -126,6 +126,7 @@ export class QuipGame {
     this.s.deadline = ms ? this.ctx.setTimer(timerName, ms) : null;
     this.s.timerMs = ms || null;
     this.ctx.update();
+    this.ctx.checkpoint?.();
     return this.epoch;
   }
 
@@ -194,6 +195,10 @@ export class QuipGame {
     this.#botsAnswer();
   }
 
+  #maxChars() {
+    return this.ctx.settings.answerChars || 200;
+  }
+
   #myMatchups(pid) {
     return this.s.matchups.filter((m) => m.authors.includes(pid));
   }
@@ -201,7 +206,7 @@ export class QuipGame {
   #submitAnswer(pid, matchupId, text, panic) {
     const m = this.s.matchups.find((x) => x.id === matchupId);
     if (!m || !m.authors.includes(pid) || m.answers[pid]) return;
-    const t = cleanText(text, 80);
+    const t = cleanText(text, this.#maxChars());
     if (!t) return;
     m.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
@@ -380,7 +385,7 @@ export class QuipGame {
   #submitFinal(pid, text, panic) {
     const f = this.s.final;
     if (!f || !this.s.roster.includes(pid) || f.answers[pid]) return;
-    const t = cleanText(text, 80);
+    const t = cleanText(text, this.#maxChars());
     if (!t) return;
     f.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
@@ -726,13 +731,13 @@ export class QuipGame {
         if (!next) return watch('phoneAnswered');
         return {
           ...base, screen: 'answer', matchupId: next.id, prompt: next.prompt.text,
-          index: mine.indexOf(next) + 1, total: mine.length, maxLength: 80,
+          index: mine.indexOf(next) + 1, total: mine.length, maxLength: this.#maxChars(),
         };
       }
       case 'finalAnswer': {
         if (!inGame) return watch('phoneAudienceWriting');
         if (s.final.answers[pid]) return watch('phoneAnswered');
-        return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: 80, final: true };
+        return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true };
       }
       case 'vote': {
         const m = s.matchups[s.matchIdx];

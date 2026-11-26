@@ -264,7 +264,9 @@ function renderLobby(me, room) {
         h('div.vip-settings',
           h('label', h('input', { type: 'checkbox', checked: !!room.settings.family, onChange: (e) => live.action('settings', { settings: { family: e.target.checked } }) }), 'Family friendly'),
           h('label', 'Time', h('select', { onChange: (e) => live.action('settings', { settings: { answerSeconds: Number(e.target.value) } }) },
-            [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === room.settings.answerSeconds }, `${s}s`))))),
+            [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === room.settings.answerSeconds }, `${s}s`)))),
+          h('label', 'Max', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },
+            (room.answerCharOptions || [200]).map((c) => h('option', { value: c, selected: c === room.settings.answerChars }, `${c} chars`))))),
         h('button.btn.pink.block.big', {
           style: { marginTop: '1rem' }, disabled: players.length < room.minPlayers, onClick: () => live.action('start'),
         }, players.length < room.minPlayers ? `Need ${room.minPlayers - players.length} more` : `Start ${sel?.name || ''} ▶`))
