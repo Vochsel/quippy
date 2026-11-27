@@ -71,7 +71,7 @@ export class QuipGame {
     const epoch = this.epoch;
     await this.ctx.voiceReady?.([intro], 5000);
     if (epoch !== this.epoch) return;
-    this.#phase('intro', 10000, 'intro');
+    this.#phase('intro', this.#fit(10000, intro), 'intro');
     this.ctx.say(intro);
   }
 
@@ -158,6 +158,13 @@ export class QuipGame {
       default:
         break;
     }
+  }
+
+  // Long enough to show the screen for `min` ms and say `text` in full (tones
+  // with slower, wordier lines get more time) plus a beat for the animation.
+  #fit(min, text, lead = 0) {
+    const talk = this.ctx.speechMs?.(text) || 0;
+    return Math.max(min, lead + talk + 1200);
   }
 
   #phase(name, ms = 0, timerName = name) {
@@ -251,11 +258,13 @@ export class QuipGame {
     s.loadingText = this.p.loadingText?.(r) || '';
     const epoch = this.#phase('loading');
     this.ctx.music(r === 3 ? 'final' : 'writing');
-    this.ctx.sayLine(r === 3 ? 'finalRoundIntro' : r === 2 ? 'round2Intro' : 'round1Intro', {});
+    const introLine = this.ctx.line(r === 3 ? 'finalRoundIntro' : r === 2 ? 'round2Intro' : 'round1Intro', {});
+    this.ctx.say(introLine);
     this.prefetch(r);
     const [prompts] = await Promise.all([
       withTimeout(this.pending[r], this.ctx.llm?.available() ? 28000 : 8000).catch(() => null),
-      sleep(r === 1 ? 1500 : 4000), // let the round card breathe
+      // Let the round card breathe, and let Monty finish the intro.
+      sleep(Math.max(r === 1 ? 1500 : 4000, (this.ctx.speechMs?.(introLine) || 0) + 300)),
     ]);
     if (epoch !== this.epoch) return undefined;
     delete this.pending[r];
@@ -496,23 +505,29 @@ export class QuipGame {
       s.scoresLine = this.#scoresLine();
       this.ctx.prewarm?.([s.scoresLine]);
     }
-    const epoch = this.#phase('reveal', REVEAL_MS);
-    // The TV times the shutout fanfare to its own animation.
-    this.ctx.sfx('reveal');
-
     const loser = winner && m.authors.find((x) => x !== winner);
     const vars = { name: winner ? this.ctx.playerName(winner) : '', other: loser ? this.ctx.playerName(loser) : '' };
     const lineKey = { shutout: 'shutout', forfeit: 'forfeit', tie: 'tie', win: 'win', noVotes: 'noVotes', noContest: 'noContest' }[kind];
     const pre = m.lines && (kind === 'win' || kind === 'shutout' ? m.lines[kind]?.[winner] : m.lines[kind]);
     const fallback = pre || this.ctx.line(lineKey, vars);
+    // The result line is spoken once the cards have flipped (~3.5s in); an AI
+    // quip can run to ~22 words, so budget for whichever is longer.
+    const longest = this.quips[m.id] && fallback.split(/\s+/).length < 22 ? `${fallback} ${'word '.repeat(22 - fallback.split(/\s+/).length)}` : fallback;
+    const epoch = this.#phase('reveal', this.#fit(REVEAL_MS, longest, 3500));
+    // The TV times the shutout fanfare to its own animation.
+    this.ctx.sfx('reveal');
+
     const quip = this.quips[m.id];
     delete this.quips[m.id];
+    // Speak as the TV reveals who wrote what (authors ~2.4s, winner ~3.1s), so
+    // Monty never announces the winner before the card shows it.
+    const REVEAL_SPEAK_MS = 2400;
     if (!quip) {
-      this.ctx.say(fallback);
+      this.ctx.later(REVEAL_SPEAK_MS, () => { if (epoch === this.epoch) this.ctx.say(fallback); });
       return;
     }
     // Give the model a moment; if its line isn't ready, use a stock one.
-    withTimeout(quip, 2500).catch(() => null).then((line) => {
+    Promise.all([withTimeout(quip, 2500).catch(() => null), sleep(REVEAL_SPEAK_MS)]).then(([line]) => {
       if (epoch !== this.epoch) return;
       const text = typeof line === 'string' && line.trim() ? cleanText(line, 200) : null;
       if (text) {
@@ -536,9 +551,11 @@ export class QuipGame {
     const s = this.s;
     s.history.push(...s.matchups);
     s.matchups = [];
-    this.#phase('scores', SCORES_MS);
+    const line = s.scoresLine || this.#scoresLine();
+    // The board animates for ~2.5s before settling; the line plays over it.
+    this.#phase('scores', this.#fit(SCORES_MS, line, 1500));
     this.ctx.music('results');
-    this.ctx.say(s.scoresLine || this.#scoresLine());
+    this.ctx.say(line);
     s.scoresLine = null;
   }
 

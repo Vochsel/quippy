@@ -28,6 +28,33 @@ function topAnswers(game, n = 8) {
   return rows.sort((x, y) => y.votes - x.votes || (y.won - x.won)).slice(0, n);
 }
 
+// Tonight's answers as callback material: a spread, not just the top few
+// (winners, near misses, odd ones, each player), labelled #1, #2... so the
+// model can be told to use a different source for every callback.
+function callbackPool(game, n = 14) {
+  const all = topAnswers(game, 200);
+  const picked = [];
+  const take = (a) => { if (a && !picked.includes(a) && picked.length < n) picked.push(a); };
+  all.slice(0, 4).forEach(take); // the big moments
+  const byPlayer = new Map();
+  for (const a of all) if (!byPlayer.has(a.id)) byPlayer.set(a.id, a);
+  shuffle([...byPlayer.values()]).forEach(take); // everyone's best
+  shuffle(all.filter((a) => !a.won && a.votes > 0)).slice(0, 3).forEach(take); // gallant losers
+  shuffle(all).forEach(take); // anything else, for variety
+  return shuffle(picked);
+}
+
+// Ways to bring an old answer back; a fresh handful is suggested each time.
+const CALLBACK_FORMS = [
+  'a sequel', 'a prequel / origin story', 'what happened ten years later', 'a court case', 'a product launch or TV ad',
+  'a newspaper headline', 'a nature-documentary narration', 'the point of view of an object in it', 'a wedding speech',
+  'a one-star review', 'a museum exhibit', 'a support group', 'a cooking show', 'a conspiracy theory', 'an apology letter',
+  'a reality TV show', 'a self-help book title', 'a tourism slogan', 'a horoscope', 'a warning label', 'a eulogy',
+  'a press conference', 'a theme-park ride', 'a children\'s picture book', 'a historical event', 'a text message from it',
+  'a job interview', 'a Bunnings safety briefing', 'a true-crime podcast', 'a royal commission', 'a Year 9 school excursion',
+  'a dating profile', 'a fire drill', 'a footy club fundraiser', 'a sequel nobody asked for', 'a crossover with another answer',
+];
+
 // Normalise for comparing prompts ("same joke again?").
 const norm = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -73,11 +100,17 @@ function adaptiveNotes(sig) {
 
 async function aiRoundPrompts(ctx, game, round, count) {
   const names = rosterNames(game);
-  const tonight = topAnswers(game, 10)
-    .map((a) => `- ${a.name} answered "${a.prompt}" with "${a.answer}" (${a.votes}/${a.total} votes${a.won ? ', won' : ''})`).join('\n');
+  const tonight = callbackPool(game)
+    .map((a, i) => `#${i + 1} ${a.name} answered "${a.prompt}" with "${a.answer}" (${a.votes}/${a.total} votes${a.won ? ', won' : ''})`).join('\n');
+  const forms = shuffle(CALLBACK_FORMS).slice(0, 8).join('; ');
   const strategy = round === 1
     ? `Round 1 ("Tailor-made"): write ${count} prompts made for THIS group. About half should name one of the players (use their exact name). The rest should riff on the Lore Book's running jokes if there are any; otherwise invent prompts that suit the crew's taste. Make each one different in structure.`
-    : `Round 2 ("Callbacks", double points): write ${count} prompts. At least ${Math.ceil(count / 2)} must call back to tonight's answers — quote or reference them so the room remembers (e.g. a sequel, a consequence, a product launch, a court case). Prefer callbacks to the answers that got the most votes. The rest can name players or use the Lore Book.`;
+    : [
+      `Round 2 ("Callbacks", double points): write ${count} prompts. At least ${Math.ceil(count / 2)} must call back to tonight's answers, quoting or naming them so the room remembers.`,
+      'VARIETY RULES: every callback uses a DIFFERENT source answer (#n) and a DIFFERENT form, spread across different players, and not just the biggest winner: near misses and odd little answers make great callbacks. Mix in at most one Lore Book callback from past sessions.',
+      `Forms to pick from this time (or invent your own): ${forms}.`,
+      'Vary the prompt shapes too: questions, "The worst...", "A ... for ...", "What X says when...", incomplete headlines. The rest of the prompts can name players or be fresh.',
+    ].join('\n');
   const out = await ctx.llm.json({
     system: systemPrompt(ctx),
     user: [
@@ -86,7 +119,7 @@ async function aiRoundPrompts(ctx, game, round, count) {
       'Lore Book (running jokes from previous sessions):',
       loreForPrompt(ctx.lore()),
       '',
-      round > 1 ? `Tonight so far:\n${tonight || '(nothing yet)'}` : '',
+      round > 1 ? `Tonight's answers you can call back to:\n${tonight || '(nothing yet)'}` : '',
       `How the room is going: ${adaptiveNotes(game.signals())}`,
       '',
       strategy,
@@ -104,15 +137,17 @@ async function aiRoundPrompts(ctx, game, round, count) {
 }
 
 async function aiFinalPrompt(ctx, game) {
-  const tonight = topAnswers(game, 12)
+  const tonight = callbackPool(game, 12)
     .map((a) => `- ${a.name}: "${a.answer}" (to "${a.prompt}", ${a.votes} votes)`).join('\n');
+  const forms = shuffle(CALLBACK_FORMS).slice(0, 5).join('; ');
   const out = await ctx.llm.json({
     system: systemPrompt(ctx),
     user: [
       `Players: ${rosterNames(game).join(', ')}`,
       'Lore Book:', loreForPrompt(ctx.lore(), 6), '',
       `Tonight's best answers:\n${tonight || '(none)'}`, '',
-      'Write the prompt for "The Grand Callback", the final round where EVERY player answers the same prompt. It should tie back to the biggest running joke of the night (quote it briefly) and be wide open so everyone can take it somewhere different.',
+      'Write the prompt for "The Grand Callback", the final round where EVERY player answers the same prompt. Tie back to one (or a mash-up of two) of tonight\'s memorable answers, not necessarily the top-voted one, quoting it briefly, and make it wide open so everyone can take it somewhere different.',
+      `Pick a form that hasn't been used tonight, e.g. ${forms}.`,
       'JSON shape: {"text":"the prompt","callback":"what it calls back to"}',
     ].join('\n'),
     maxTokens: 2500,

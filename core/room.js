@@ -8,7 +8,7 @@
 //   - call attach(conn) / detach(conn) / onMessage(conn, msg) for sockets
 //     where conn = { id, send(obj), close() }
 import { noAnalytics } from './analytics.js';
-import { effectiveTone, TONES, TONE_IDS } from './tones.js';
+import { effectiveTone, speechMs, TONES, TONE_IDS } from './tones.js';
 import { GAMES, gameById } from '../games/registry.js';
 import { applyGameResult, pickFreeColor, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
@@ -474,6 +474,8 @@ export class Room {
         ? Promise.race([room.prewarm(texts), new Promise((r) => setTimeout(r, maxMs))])
         : Promise.resolve()),
       line: (key, vars) => room.content().line(key, vars),
+      // How long Monty needs to say this in the room's tone (ms), for pacing screens.
+      speechMs: (text) => speechMs(text, room.tone()),
       sayLine: (key, vars) => room.say(room.content().line(key, vars)),
       // Say this right now, cutting off anything else (countdown numbers).
       sayNow: (text) => text && room.fx({ say: text, ts: Date.now(), now: true, scene: room.game?.sceneKey?.() }),
