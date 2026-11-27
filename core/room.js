@@ -700,6 +700,8 @@ export class Room {
         usesAi: !!g.usesAi, accent: g.accent, client: g.client || g.id,
       })),
       minPlayers: def.minPlayers,
+      // Who would be dealt in if the game started now (same rule as startGame).
+      readyCount: Math.min(this.#members().length, Math.min(def.maxPlayers, MAX_PLAYERS_HARD)),
       maxPlayers: Math.min(def.maxPlayers, MAX_PLAYERS_HARD),
       settings: this.settings,
       answerCharOptions: [...new Set([80, 120, 200, 280, this.deps.config.answerChars])].sort((a, b) => a - b),

@@ -156,6 +156,7 @@ function joinScreen({ editing = false } = {}) {
       const res = await api('/api/photo', { deviceId: did, image });
       draft.photo = res.photo;
       paint();
+      pushLook();
       toast('Looking good ✓', 1400);
       track('profile_photo_uploaded', { room: code || null });
     } catch (e) {
@@ -164,11 +165,21 @@ function joinScreen({ editing = false } = {}) {
     }
     file.value = '';
   });
+  // Editing inside a room: a new photo shows on the TV and this phone straight
+  // away, no Save needed (name/colour/face still wait for Save).
+  const pushLook = () => {
+    if (!editing || !live) return;
+    const me = view?.me;
+    live.action('profile', { name: me?.name || draft.name, color: me?.color ?? draft.color, face: me?.face ?? draft.face, photo: draft.photo ?? null });
+    if (me) me.photo = draft.photo ?? null;
+    renderTop.key = '';
+    renderTop(me, view.room);
+  };
   const paint = () => {
     mountInto(preview, avatar(draft, '6rem'));
     mountInto(photoBtns,
       h('button.btn.white', { onClick: () => file.click() }, draft.photo ? '📷 Change photo' : '📷 Use a photo'),
-      draft.photo ? h('button.btn.white', { onClick: () => { draft.photo = null; paint(); } }, '🙂 Use a character') : null);
+      draft.photo ? h('button.btn.white', { onClick: () => { draft.photo = null; paint(); pushLook(); } }, '🙂 Use a character') : null);
     mountInto(sw, COLORS.map((c) => h(`button.swatch${c === draft.color ? '.on' : ''}`, {
       style: { background: c }, 'aria-label': c, onClick: () => { draft.color = c; paint(); },
     })));
@@ -294,7 +305,7 @@ function renderView() {
 function renderTop(me, room) {
   if (!me) return;
   const g = view.game;
-  const key = JSON.stringify([me.name, me.color, me.face, me.vip, room.code, g?.score, g?.roundTitle, room.phase]);
+  const key = JSON.stringify([me.name, me.color, me.face, me.photo || null, me.vip, room.code, g?.score, g?.roundTitle, room.phase]);
   if (key === renderTop.key) return;
   renderTop.key = key;
   mountInto(top,
@@ -306,8 +317,9 @@ function renderTop(me, room) {
 function renderLobby(me, room) {
   const sel = room.games.find((g) => g.id === room.selectedGame);
   const players = room.players.filter((p) => !p.audience && p.connected);
+  const ready = room.readyCount ?? players.length; // includes phones that are just asleep
   const vip = room.players.find((p) => p.vip);
-  const key = JSON.stringify([me, room.selectedGame, players.length, room.settings, vip?.id, lobbyTab, myStats, room.session, room.lastResults]);
+  const key = JSON.stringify([me, room.selectedGame, players.length, ready, room.settings, vip?.id, lobbyTab, myStats, room.session, room.lastResults]);
   if (key === lastKey) return;
   lastKey = key;
   if (lobbyTab === 'me' && Date.now() - statsFetchedAt > 15000) fetchStats();
@@ -331,8 +343,8 @@ function renderLobby(me, room) {
           h('label', 'Max', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },
             (room.answerCharOptions || [200]).map((c) => h('option', { value: c, selected: c === room.settings.answerChars }, `${c} chars`))))),
         h('button.btn.pink.block.big', {
-          style: { marginTop: '1rem' }, disabled: players.length < room.minPlayers, onClick: () => live.action('start'),
-        }, players.length < room.minPlayers ? `Need ${room.minPlayers - players.length} more` : `Start ${sel?.name || ''} ▶`))
+          style: { marginTop: '1rem' }, disabled: ready < room.minPlayers, onClick: () => live.action('start'),
+        }, ready < room.minPlayers ? `Need ${room.minPlayers - ready} more` : `Start ${sel?.name || ''} ▶`))
       : h('div.card.waiting', `${sel?.name || 'Game'} is up next. Waiting for ${vip ? vip.name : 'the VIP'} 👑 to start…`),
     me.audience
       ? h('button.btn.lime.block', { onClick: () => live.action('toggleAudience') }, '🎮 I want to play')

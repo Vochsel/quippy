@@ -218,9 +218,10 @@ function renderLobby(room) {
       h('div.inner', h('h3', g.name), h('p', g.tagline))))));
   });
 
-  const enough = players.filter((p) => p.connected).length >= room.minPlayers;
+  const ready = room.readyCount ?? players.filter((p) => p.connected).length;
+  const enough = ready >= room.minPlayers;
   const bots = players.filter((p) => p.isBot).length;
-  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: players.length, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available }, (d) => {
+  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: ready, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available }, (d) => {
     const vip = d.vip;
     mountInto($('#start-box'),
       h('div.start-row',
