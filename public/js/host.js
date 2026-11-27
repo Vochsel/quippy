@@ -7,6 +7,7 @@ import { $, clear, fmt, h, mountInto } from './lib/dom.js';
 import { hostId, load, save } from './lib/identity.js';
 import { identify, initAnalytics, track, trackError } from './lib/analytics.js';
 import { api, LiveRoom } from './lib/net.js';
+import { openStatsShow } from './stats-show.js';
 import { Voice } from './lib/voice.js';
 import qrcode from '/vendor/qrcode.mjs';
 
@@ -92,6 +93,7 @@ async function boot() {
   });
   live.connect();
   setupSettings();
+  $('#stats-btn').addEventListener('click', () => { track('stats_opened', { room: room.code }); openStatsShow(room.code); });
   requestAnimationFrame(tickTimer);
 }
 
@@ -142,6 +144,7 @@ function render() {
   renderTop(room);
   // The lobby scrolls when it doesn't fit (small screens, lots of players/settings).
   stage.classList.toggle('scrolls', room.phase === 'lobby');
+  $('#stats-btn').classList.toggle('hidden', room.phase !== 'lobby');
   if (room.phase === 'lobby') {
     destroyGame();
     renderLobby(room);

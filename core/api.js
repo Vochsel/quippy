@@ -59,6 +59,15 @@ export async function handleApi(req, deps) {
     return ok(made);
   }
 
+  // The crew stats page (TV lobby): everything this room's crew has played.
+  // The room code is enough: it's what's on the TV for everyone to see.
+  if (method === 'GET' && (m = path.match(/^\/api\/rooms\/([A-Za-z]{4})\/stats$/))) {
+    const code = m[1].toUpperCase();
+    const row = ROOM_CODE_RE.test(code) ? await store.getRoom(code) : null;
+    if (!row?.crewId) return bad('No room with that code.', 404);
+    return ok(await store.crewStats(row.crewId));
+  }
+
   // Restart a room on a fresh process, keeping its code, players and tonight's
   // scores (seed = the TV's current lobby view). TV owner only.
   if (method === 'POST' && path === '/api/rooms/restart') {

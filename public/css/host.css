@@ -174,3 +174,47 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .room-settings .bot-tools { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; margin-top: .6rem; font-size: 1.05rem; }
 .room-settings .bot-tools span { margin-right: auto; }
 .room-settings .bot-tools .btn.mini { font-size: .95rem; padding: .2rem .7rem; border-width: 3px; }
+
+/* ------------------------------------------------------------ stats show */
+.stats-btn { font-family: var(--head); font-size: 1.3rem; padding: .3rem 1rem; border-radius: 999px; border: 3px solid var(--ink); background: var(--yellow); color: var(--ink); box-shadow: var(--shadow-sm); cursor: pointer; }
+.stats-btn:hover { transform: translateY(-2px); }
+.ss-root { position: fixed; inset: 0; z-index: 50; background: radial-gradient(ellipse at 30% 20%, #4a1d8a, #1a0f2e 70%); color: #fff; display: grid; grid-template-rows: 1fr auto; padding: 3rem 4rem 2rem; overflow: hidden; }
+.ss-loading { place-self: center; font-family: var(--head); font-size: 3rem; animation: pulse 1.2s infinite; }
+.ss-stage { display: grid; place-items: center; min-height: 0; cursor: pointer; }
+.ss-slide { width: min(110rem, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 1.4rem; }
+.ss-intro { align-items: center; text-align: center; }
+.ss-title { font-family: var(--head); font-weight: 400; font-size: 6rem; margin: 0; color: var(--yellow); text-shadow: 6px 6px 0 var(--ink); }
+.ss-head { font-family: var(--head); font-weight: 400; font-size: 3.6rem; margin: 0; text-shadow: 4px 4px 0 var(--ink); }
+.ss-sub { font-size: 1.6rem; opacity: .85; margin: 0; }
+.ss-empty { font-size: 2rem; opacity: .85; margin: 3rem 0; }
+.ss-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; width: min(80rem, 100%); margin-top: 1.5rem; }
+.ss-tile { background: #fff; color: var(--ink); border: 4px solid var(--ink); border-radius: 22px; box-shadow: var(--shadow); padding: 1.4rem; display: grid; }
+.ss-tile b { font-family: var(--head); font-weight: 400; font-size: 4.4rem; color: var(--pink); line-height: 1; }
+.ss-tile span { font-size: 1.4rem; font-weight: 800; }
+.ss-bars { display: grid; gap: .9rem; }
+.ss-bar { display: grid; grid-template-columns: 3rem 12rem 1fr 14rem; align-items: center; gap: 1.1rem; font-size: 1.6rem; animation: slideUp .5s both; }
+.ss-name { font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-track { height: 1.9rem; background: rgba(255, 255, 255, .12); border-radius: 999px; overflow: hidden; border: 3px solid var(--ink); }
+.ss-fill { height: 100%; width: 0; border-radius: 999px; transition: width 1.3s cubic-bezier(.2, 1, .3, 1); }
+.ss-val { font-family: var(--head); font-size: 1.5rem; }
+.ss-awards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2rem; }
+.ss-award { background: #fff; color: var(--ink); border: 4px solid var(--ink); border-radius: 20px; box-shadow: var(--shadow-sm); padding: 1rem .8rem; display: grid; justify-items: center; gap: .35rem; text-align: center; }
+.ss-emoji { font-size: 2.6rem; line-height: 1; }
+.ss-award b { font-family: var(--head); font-weight: 400; font-size: 1.45rem; color: var(--pink); }
+.ss-who { font-weight: 900; font-size: 1.2rem; }
+.ss-why { font-size: .95rem; color: var(--muted); font-weight: 800; }
+.flip-in { animation: ssFlip .7s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes ssFlip { from { opacity: 0; transform: perspective(600px) rotateY(80deg) scale(.8); } to { opacity: 1; transform: none; } }
+.ss-best { display: grid; gap: 1rem; }
+.ss-quote { background: #fff; color: var(--ink); border: 4px solid var(--ink); border-radius: 20px; box-shadow: var(--shadow-sm); padding: 1rem 1.4rem; display: grid; gap: .2rem; }
+.ss-prompt { font-size: 1.1rem; color: var(--muted); font-weight: 800; }
+.ss-answer { font-family: var(--head); font-weight: 400; font-size: 2rem; text-transform: uppercase; }
+.ss-by { font-size: 1rem; font-weight: 800; }
+.ss-progress { display: flex; gap: .6rem; }
+.ss-progress span { flex: 1; height: .45rem; border-radius: 999px; background: rgba(255, 255, 255, .2); overflow: hidden; }
+.ss-progress span i { display: block; height: 100%; width: 0; background: var(--yellow); }
+.ss-progress span.done i { width: 100%; }
+.ss-progress span.now i { animation: ssProgress linear both; }
+@keyframes ssProgress { from { width: 0; } to { width: 100%; } }
+.ss-close { position: absolute; top: 1.2rem; right: 1.6rem; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; opacity: .7; }
+.ss-close:hover { opacity: 1; }

@@ -167,6 +167,19 @@ export class QuipGame {
     return Math.max(min, lead + talk + 1200);
   }
 
+  // Reply-time stats (for the crew stats page): how long into the current
+  // timed phase this is, and whether it's a last-gasp (final 5 seconds).
+  #timing(tally, kind) {
+    const s = this.s;
+    if (!tally || !s.deadline || !s.timerMs) return;
+    const left = s.deadline - Date.now();
+    const took = Math.max(0, s.timerMs - left);
+    tally[`${kind}Ms`] = (tally[`${kind}Ms`] || 0) + took;
+    tally[`${kind}Timed`] = (tally[`${kind}Timed`] || 0) + 1;
+    if (kind === 'answer' && left < 5000) tally.lastGasps = (tally.lastGasps || 0) + 1;
+    if (kind === 'answer') tally.chars = (tally.chars || 0) + (tally.lastLen || 0);
+  }
+
   #phase(name, ms = 0, timerName = name) {
     this.epoch += 1;
     for (const cancel of this.countdown || []) cancel();
@@ -339,7 +352,8 @@ export class QuipGame {
     if (!t) return;
     m.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
-    if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; }
+    if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; tally.lastLen = t.length; }
+    if (!this.ctx.isBot(pid)) this.#timing(tally, 'answer');
     this.ctx.sfx('submit');
     const done = this.s.matchups.every((x) => x.authors.every((a) => x.answers[a]));
     if (done) this.endAnswering();
@@ -445,6 +459,7 @@ export class QuipGame {
     if (!target || !m.answers[target]) return;
     m.votes[pid] = target;
     if (this.s.tallies[pid]) this.s.tallies[pid].votesCast += 1;
+    if (!this.ctx.isBot(pid)) this.#timing(this.s.tallies[pid], 'vote');
     this.ctx.sfx('vote');
     const voters = this.#eligibleVoters(m);
     if (voters.every((id) => m.votes[id])) this.reveal();
@@ -600,7 +615,8 @@ export class QuipGame {
     if (!t) return;
     f.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
-    if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; }
+    if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; tally.lastLen = t.length; }
+    if (!this.ctx.isBot(pid)) this.#timing(tally, 'answer');
     this.ctx.sfx('submit');
     if (this.s.roster.every((id) => f.answers[id])) this.endFinalAnswering();
     else this.ctx.update();

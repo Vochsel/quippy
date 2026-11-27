@@ -210,6 +210,44 @@ export class SqlStore {
        WHERE crew_id = ? ORDER BY created_at DESC LIMIT ?`, [crewId, limit]);
   }
 
+  // Everything the crew stats page shows: per-player totals across every game
+  // this crew has played (humans only), plus answer lengths and best answers.
+  async crewStats(crewId) {
+    const rows = await this.all('SELECT game_type, started_at, ended_at, results FROM games WHERE crew_id = ? ORDER BY ended_at DESC LIMIT 1000', [crewId]);
+    const players = new Map();
+    const byType = {};
+    let first = null; let minutes = 0;
+    for (const r of rows) {
+      const res = parse(r.results, null);
+      if (!res?.players) continue;
+      byType[r.game_type] = (byType[r.game_type] || 0) + 1;
+      first = Math.min(first ?? r.started_at, r.started_at || first);
+      minutes += Math.max(0, ((r.ended_at || 0) - (r.started_at || 0)) / 60000);
+      for (const p of res.players) {
+        if (p.isBot) continue;
+        const t = players.get(p.id) || { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, games: 0, wins: 0, points: 0, c: {} };
+        Object.assign(t, { name: p.name, color: p.color, face: p.face, photo: p.photo || t.photo });
+        t.games += 1;
+        t.points += p.score || 0;
+        if (res.winnerIds?.includes(p.id)) t.wins += 1;
+        for (const [k, v] of Object.entries(p.counters || {})) if (typeof v === 'number' && k !== 'lastLen') t.c[k] = (t.c[k] || 0) + v;
+        players.set(p.id, t);
+      }
+    }
+    const lengths = await this.all(
+      `SELECT profile_id AS id, AVG(LENGTH(answer)) AS avgLen, COUNT(*) AS n, SUM(panic) AS panics
+       FROM answers WHERE crew_id = ? GROUP BY profile_id`, [crewId]);
+    for (const l of lengths) {
+      const t = players.get(l.id);
+      if (t) { t.avgLen = Math.round(l.avgLen || 0); t.answers = l.n; }
+    }
+    return {
+      games: rows.length, byType, since: first, minutes: Math.round(minutes),
+      players: [...players.values()].sort((a, b) => b.wins - a.wins || b.points - a.points),
+      best: await this.hallOfFame(crewId, 5),
+    };
+  }
+
   async crewLeaderboard(crewId, limit = 10) {
     const rows = await this.all('SELECT results FROM games WHERE crew_id = ? ORDER BY ended_at DESC LIMIT 500', [crewId]);
     const table = new Map();
