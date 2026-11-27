@@ -2,7 +2,7 @@
 import { avatar, avatarSvg, COLORS, FACES } from './lib/avatar.js';
 import { $, fmt, h, mountInto } from './lib/dom.js';
 import { deviceId, fingerprint, lastRoom, load, save, setDeviceId, setLastRoom } from './lib/identity.js';
-import { identify, initAnalytics, track, trackError } from './lib/analytics.js';
+import { identify as identifyUser, initAnalytics, track, trackError } from './lib/analytics.js';
 import { api, LiveRoom } from './lib/net.js';
 
 const app = $('#app');
@@ -14,7 +14,7 @@ let code = (location.pathname.match(/^\/([A-Za-z]{4})\/?$/)?.[1] || new URLSearc
 if (!CODE_RE.test(code)) code = '';
 let did = deviceId();
 initAnalytics('phone');
-identify(did, { role: 'player' });
+identifyUser(did, { role: 'player' });
 let fp = null;
 let profile = null; // public profile from the server
 let draft = { name: load('quippy.name', ''), color: load('quippy.color', COLORS[Math.floor(Math.random() * COLORS.length)]), face: Number(load('quippy.face', Math.floor(Math.random() * FACES))) };
@@ -104,7 +104,7 @@ function welcomeBackScreen(s) {
         onClick: () => {
           did = s.id;
           setDeviceId(did);
-          identify(did, { role: 'player' }); // merges this phone into the returning player
+          identifyUser(did, { role: 'player' }); // merges this phone into the returning player
           track('welcome_back_accepted');
           profile = s;
           draft = { name: s.name, color: s.color, face: s.face, photo: s.photo || null };
