@@ -38,6 +38,8 @@ export class SqlStore {
       for (const stmt of SCHEMA) await this.d.run(stmt, []);
       // Added later: profile photos. Ignore "duplicate column" on existing DBs.
       await this.d.run('ALTER TABLE profiles ADD COLUMN photo TEXT', []).catch(() => {});
+      // Added later: a room's restart count (Cloudflare: which Durable Object hosts it).
+      await this.d.run('ALTER TABLE rooms ADD COLUMN gen INTEGER DEFAULT 0', []).catch(() => {});
     })();
     return this.ready;
   }
@@ -115,6 +117,15 @@ export class SqlStore {
 
   async touchRoom(code) {
     await this.run('UPDATE rooms SET updated_at = ? WHERE code = ?', [Date.now(), code]);
+  }
+
+  async roomGen(code) {
+    return Number((await this.get('SELECT gen FROM rooms WHERE code = ?', [code]))?.gen) || 0;
+  }
+
+  async bumpRoomGen(code) {
+    await this.run('UPDATE rooms SET gen = COALESCE(gen, 0) + 1, updated_at = ?, closed = 0 WHERE code = ?', [Date.now(), code]);
+    return this.roomGen(code);
   }
 
   async reopenRoom(code) {

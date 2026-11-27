@@ -27,6 +27,13 @@ function cors(request, env) {
   };
 }
 
+// Which Durable Object hosts a room: restarting a room (keeping its code)
+// moves it to a fresh object, "CODE~gen".
+async function roomStub(env, store, code) {
+  const gen = await store.roomGen(code).catch(() => 0);
+  return env.ROOMS.get(env.ROOMS.idFromName(gen ? `${code}~${gen}` : code));
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -37,8 +44,10 @@ export default {
     const ws = url.pathname.match(/^\/ws\/([A-Za-z]{4})$/);
     if (ws) {
       const code = ws[1].toUpperCase();
-      const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
-      return stub.fetch(new Request(`https://room/ws?code=${code}`, request));
+      const stub = await roomStub(env, workerDeps(env).store, code);
+      const fwd = new Request(`https://room/ws?code=${code}`, request);
+      if (env.QUIPPY_VERSION) fwd.headers.set('x-quippy-version', env.QUIPPY_VERSION);
+      return stub.fetch(fwd);
     }
 
     if (url.pathname.startsWith('/api/')) {
@@ -62,17 +71,29 @@ export default {
         async reopen(hostId, code) {
           const row = await d.store.getRoom(code);
           if (!row || row.crewId !== hostId) return null;
-          const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+          const stub = await roomStub(env, d.store, code);
           const res = await stub.fetch('https://room/info');
           if (!res.ok) return null; // no snapshot left
           await d.store.reopenRoom(code);
           return { code, joinUrl: d.joinUrl(code), resumed: true };
         },
+        // Same code, fresh room process, seeded from the old room's lobby view.
+        async restart(hostId, code, seed) {
+          const row = await d.store.getRoom(code);
+          if (!row || row.crewId !== hostId) return null;
+          const old = await roomStub(env, d.store, code);
+          const gen = await d.store.bumpRoomGen(code);
+          const stub = env.ROOMS.get(env.ROOMS.idFromName(`${code}~${gen}`));
+          await stub.fetch('https://room/init', { method: 'POST', body: JSON.stringify({ code, crewId: hostId, seed }) });
+          // Newer room processes hand their screens over; older ones ignore this.
+          ctx.waitUntil(old.fetch('https://room/retire', { method: 'POST' }).catch(() => {}));
+          return { code, joinUrl: d.joinUrl(code), restarted: true };
+        },
         async info(code) {
           if (!ROOM_CODE_RE.test(code)) return null;
           const row = await d.store.getRoom(code);
           if (!row || row.closed) return null;
-          const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+          const stub = await roomStub(env, d.store, code);
           const res = await stub.fetch('https://room/info');
           return res.ok ? res.json() : null;
         },

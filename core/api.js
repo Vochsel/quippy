@@ -59,6 +59,18 @@ export async function handleApi(req, deps) {
     return ok(made);
   }
 
+  // Restart a room on a fresh process, keeping its code, players and tonight's
+  // scores (seed = the TV's current lobby view). TV owner only.
+  if (method === 'POST' && path === '/api/rooms/restart') {
+    const code = typeof body.code === 'string' ? body.code.toUpperCase() : '';
+    if (!ID_RE.test(body.hostId || '') || !ROOM_CODE_RE.test(code)) return bad('hostId and code required');
+    if (!deps.rooms.restart) return bad('not supported here', 400);
+    const out = await deps.rooms.restart(body.hostId, code, body.seed || {});
+    if (!out) return bad('That room isn’t one of this TV’s rooms.', 404);
+    track(body.hostId, 'room_restarted', { room: code });
+    return ok(out);
+  }
+
   // The rooms this TV has made, to switch between.
   if (method === 'POST' && path === '/api/rooms/mine') {
     if (!ID_RE.test(body.hostId || '')) return bad('hostId required');

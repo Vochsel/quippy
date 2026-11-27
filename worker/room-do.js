@@ -39,14 +39,41 @@ export class RoomDO {
     }
   }
 
+  #retire() {
+    const room = this.room;
+    this.room = null;
+    if (room) {
+      room.saveNow?.().catch(() => {});
+      for (const c of [...(room.conns || [])]) c.close?.(1012, 'room restarted');
+    }
+    try { this.state.abort?.('retired'); } catch { /* shutting down */ }
+  }
+
   async fetch(request) {
     const url = new URL(request.url);
 
     if (url.pathname === '/init' && request.method === 'POST') {
       const init = await request.json();
+      // A restart: start from the old room's players/scores/settings.
+      if (init.seed && !this.room) await this.state.storage.put('room', Room.seedSnapshot(init.code, init.crewId, init.seed));
       const room = await this.getRoom(init);
       await room.saveNow();
       return Response.json({ ok: true });
+    }
+
+    // This room moved to a fresh process (or newer code): hang up on every
+    // screen so they reconnect to it, then shut down.
+    if (url.pathname === '/retire') {
+      this.#retire();
+      return Response.json({ ok: true });
+    }
+
+    // Running older code than the Worker in front of it (a deploy happened while
+    // screens were connected): save, hang up, restart on the new code.
+    const sent = request.headers.get('x-quippy-version');
+    if (sent && this.env.QUIPPY_VERSION && sent !== this.env.QUIPPY_VERSION) {
+      this.#retire();
+      return new Response('restarting', { status: 503 });
     }
 
     if (url.pathname === '/info') {
@@ -73,7 +100,7 @@ export class RoomDO {
         id: crypto.randomUUID(),
         send: (obj) => { try { server.send(JSON.stringify(obj)); } catch { /* closed */ } },
         sendRaw: (str) => { try { server.send(str); } catch { /* closed */ } },
-        close: () => { try { server.close(); } catch { /* closed */ } },
+        close: (code, reason) => { try { server.close(code || 1000, reason || ''); } catch { /* closed */ } },
       };
       room.attach(conn);
       server.addEventListener('message', (ev) => {

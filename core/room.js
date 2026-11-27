@@ -336,6 +336,28 @@ export class Room {
   }
 
   // ------------------------------------------------------------------ games
+  // A fresh room process seeded from an old one's lobby view: same code,
+  // players, tonight's scores, settings and last results; no game in progress.
+  static seedSnapshot(code, crewId, seed = {}) {
+    const clean = (o) => (o && typeof o === 'object' ? JSON.parse(JSON.stringify(o)) : null);
+    const now = Date.now();
+    const players = (Array.isArray(seed.players) ? seed.players : []).slice(0, 40)
+      .filter((p) => p && typeof p.id === 'string' && !p.isBot)
+      .map((p) => ({
+        id: p.id, name: String(p.name || 'Someone').slice(0, 24), color: p.color, face: Number(p.face) || 0,
+        photo: typeof p.photo === 'string' ? p.photo : null, isBot: false, audience: !!p.audience,
+        joinedAt: Number(p.joinedAt) || now, lastSeen: now,
+      }));
+    return {
+      code, crewId, createdAt: now, players,
+      settings: clean(seed.settings) || undefined,
+      selectedGame: typeof seed.selectedGame === 'string' ? seed.selectedGame : undefined,
+      session: clean(seed.session) || undefined,
+      lastResults: clean(seed.lastResults),
+      vipId: null, music: 'lobby', game: null, gameMeta: null,
+    };
+  }
+
   // The host persona in use (spicy tones are off in family-friendly mode).
   tone() { return effectiveTone(this.settings.hostTone, this.settings.family).id; }
 
