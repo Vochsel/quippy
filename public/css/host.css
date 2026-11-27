@@ -29,6 +29,9 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .icon-btn { background: none; border: none; font-size: 2rem; cursor: pointer; opacity: .8; }
 .icon-btn:hover { opacity: 1; transform: rotate(30deg); }
 .stage { position: relative; padding: 0 2.4rem 2rem; min-height: 0; overflow: hidden; }
+/* Lobby: scroll when it overflows, with room to scroll past Monty's caption. */
+.stage.scrolls { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .35) transparent; }
+.stage.scrolls .lobby { height: auto; min-height: 100%; padding-bottom: 9rem; }
 
 /* Host caption bubble */
 .caption {

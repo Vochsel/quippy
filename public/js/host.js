@@ -140,6 +140,8 @@ function render() {
   $('#paused').classList.toggle('hidden', !room.paused);
   audio.music(room.music);
   renderTop(room);
+  // The lobby scrolls when it doesn't fit (small screens, lots of players/settings).
+  stage.classList.toggle('scrolls', room.phase === 'lobby');
   if (room.phase === 'lobby') {
     destroyGame();
     renderLobby(room);
