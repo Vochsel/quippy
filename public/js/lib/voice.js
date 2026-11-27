@@ -59,6 +59,15 @@ export class Voice {
   setVoice(name) { this.voiceName = name; localStorage.setItem('quippy.voiceName', name); }
   setServerVoice(name) { this.serverVoice = name; localStorage.setItem('quippy.serverVoice', name); }
   usesServer() { return this.provider !== 'browser'; }
+
+  // The room's chosen voice + host tone (lobby settings). Returns true if it
+  // changed, so the caller can re-fetch preloaded clips.
+  setStyle(style) {
+    const next = { voice: style?.voice || '', tone: style?.tone || 'normal' };
+    const changed = next.voice !== this.style?.voice || next.tone !== this.style?.tone;
+    this.style = next;
+    return changed;
+  }
   setEnabled(on) { this.enabled = on; localStorage.setItem('quippy.voiceOn', on ? '1' : '0'); if (!on) this.stop(); }
 
   // ts = when the server said it; scene = which screen it belongs to.
@@ -185,7 +194,10 @@ export class Voice {
     try {
       // A plain GET so the browser (and the edge in production) can cache it.
       const q = new URLSearchParams({ t: text });
-      if (this.provider === 'local' && this.serverVoice) q.set('v', this.serverVoice);
+      // The room's voice wins; on a local voice model the TV's own pick is the fallback.
+      const v = this.style?.voice || (this.provider === 'local' ? this.serverVoice : '');
+      if (v) q.set('v', v);
+      if (this.style?.tone && this.style.tone !== 'normal') q.set('s', this.style.tone);
       const res = await fetch(`${LIVE}/api/tts?${q}`);
       if (res.status !== 200) return null;
       return URL.createObjectURL(await res.blob());

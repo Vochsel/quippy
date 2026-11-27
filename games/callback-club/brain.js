@@ -5,6 +5,7 @@
 // Uses the configured language model (local Ollama / LM Studio, or the Vercel
 // AI Gateway). If none is available, or a call fails, a template brain built
 // from the locale's callback templates takes over, so the game always runs.
+import { toneById } from '../../core/tones.js';
 import { loreForPrompt } from '../../core/lore.js';
 import { cleanText, fill, pick, shuffle } from '../../core/util.js';
 import { bankProvider } from '../_quip/bank.js';
@@ -126,6 +127,8 @@ async function aiQuip(ctx, game, m) {
   const out = await ctx.llm.json({
     system: [
       `You are ${ctx.content.meta.hostName || 'Monty'}, host of a party comedy game: dry, deadpan, faintly world-weary, secretly fond of everyone. ${ctx.content.meta.llmHint || ''}`,
+      // The room's host persona (core/tones.js), if not the usual Monty.
+      toneById(ctx.content.tone).brief ? `Tonight's persona, which overrides the above: ${toneById(ctx.content.tone).brief}` : '',
       'Write ONE spoken line (max 22 words) reacting to this head-to-head matchup. It is read aloud after the votes are revealed, so it must work whoever wins. You may mention the players by first name. Never be cruel about appearance, race, religion, sexuality, disability or health.',
       'JSON shape: {"line":"..."}',
     ].join('\n'),

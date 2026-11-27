@@ -8,6 +8,7 @@
 //   - call attach(conn) / detach(conn) / onMessage(conn, msg) for sockets
 //     where conn = { id, send(obj), close() }
 import { noAnalytics } from './analytics.js';
+import { effectiveTone, TONES, TONE_IDS } from './tones.js';
 import { GAMES, gameById } from '../games/registry.js';
 import { applyGameResult, pickFreeColor, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
@@ -53,6 +54,8 @@ export class Room {
       family: false,
       answerSeconds: deps.config.timing.answer,
       answerChars: deps.config.answerChars,
+      hostTone: 'normal', // see core/tones.js
+      hostVoice: '', // '' = the server's default voice
       ...(s.settings || {}),
     };
     this.selectedGame = gameById(s.selectedGame) ? s.selectedGame : GAMES[0].id;
@@ -73,9 +76,9 @@ export class Room {
     await this.deps.llm.init?.();
     this.crew = await this.deps.store.ensureCrew(this.crewId);
     if (!this.hadSnapshot && this.crew?.settings) {
-      const { locale, family, answerSeconds, answerChars } = this.crew.settings;
+      const { locale, family, answerSeconds, answerChars, hostTone, hostVoice } = this.crew.settings;
       Object.assign(this.settings, Object.fromEntries(
-        Object.entries({ locale, family, answerSeconds, answerChars }).filter(([, v]) => v !== undefined)));
+        Object.entries({ locale, family, answerSeconds, answerChars, hostTone, hostVoice }).filter(([, v]) => v !== undefined)));
     }
     await this.refreshHall();
     this.#prewarmStockLines();
@@ -237,7 +240,10 @@ export class Room {
         if (!this.game) await this.startGame(msg.game || this.selectedGame);
         break;
       case 'settings':
-        if (!this.game) await this.#updateSettings(msg.settings || {});
+        if (!this.game) {
+          await this.#updateSettings(msg.settings || {});
+          this.#prewarmStockLines(); // a new tone or voice: warm its lines
+        }
         break;
       // The TV can remove anyone, any time. Mid-game they're hidden and dropped
       // (the game just stops waiting for them) and forgotten when it ends.
@@ -295,6 +301,11 @@ export class Room {
     if (locales.includes(next.locale)) this.settings.locale = next.locale;
     if (typeof next.family === 'boolean') this.settings.family = next.family;
     if ([45, 60, 90, 120, 150].includes(Number(next.answerSeconds))) this.settings.answerSeconds = Number(next.answerSeconds);
+    const style = JSON.stringify(this.voiceStyle());
+    if (TONE_IDS.includes(next.hostTone)) this.settings.hostTone = next.hostTone;
+    if (typeof next.hostVoice === 'string' && /^[\w.-]{0,64}$/.test(next.hostVoice)) this.settings.hostVoice = next.hostVoice;
+    // A new tone or voice: let Monty show it off straight away.
+    if (JSON.stringify(this.voiceStyle()) !== style) setTimeout(() => this.say(this.content().line('lobbyWelcome')), 300);
     const chars = Number(next.answerChars);
     if (Number.isInteger(chars) && chars >= 40 && chars <= 400) this.settings.answerChars = chars;
     await this.deps.store.saveCrewSettings(this.crewId, { ...this.settings });
@@ -325,8 +336,14 @@ export class Room {
   }
 
   // ------------------------------------------------------------------ games
+  // The host persona in use (spicy tones are off in family-friendly mode).
+  tone() { return effectiveTone(this.settings.hostTone, this.settings.family).id; }
+
+  // How the TV should voice lines: { voice, tone } (also used to pre-generate).
+  voiceStyle() { return { voice: this.settings.hostVoice || '', tone: this.tone() }; }
+
   content() {
-    return this.deps.content.forRoom({ locale: this.settings.locale, family: this.settings.family });
+    return this.deps.content.forRoom({ locale: this.settings.locale, family: this.settings.family, tone: this.tone() });
   }
 
   async startGame(type) {
@@ -617,12 +634,13 @@ export class Room {
   // Host lines with no {placeholders} are the same for everyone: generate
   // them once per server process (then they live in the cache for good).
   #prewarmStockLines() {
-    const pack = this.content().pack;
-    const key = `${pack.id}`;
+    const content = this.content();
+    const { voice, tone } = this.voiceStyle();
+    const key = `${content.pack.id}|${voice}|${tone}`;
     Room.warmed ||= new Set();
     if (Room.warmed.has(key) || !this.deps.tts) return;
     Room.warmed.add(key);
-    const stock = Object.entries(pack.host)
+    const stock = Object.entries({ ...content.pack.host, ...(content.toneLines || {}) })
       .filter(([k]) => !k.startsWith('phone') && !k.startsWith('award_') && !/Title/.test(k))
       .flatMap(([, v]) => v).filter((t) => !t.includes('{'));
     this.prewarm(stock);
@@ -636,7 +654,7 @@ export class Room {
     const worker = async () => {
       while (i < list.length) {
         const t = list[i++];
-        await tts.speak(t).catch(() => null);
+        await tts.speak(t, this.voiceStyle()).catch(() => null);
       }
     };
     // A few at a time: plenty of headroom before each line is needed.
@@ -704,6 +722,8 @@ export class Room {
         usesAi: !!g.usesAi, accent: g.accent, client: g.client || g.id,
       })),
       minPlayers: def.minPlayers,
+      hostTones: TONES.map(({ id, label, emoji, spicy }) => ({ id, label, emoji, spicy })),
+      voiceStyle: this.voiceStyle(),
       // Who would be dealt in if the game started now (same rule as startGame).
       readyCount: Math.min(this.#members().length, Math.min(def.maxPlayers, MAX_PLAYERS_HARD)),
       maxPlayers: Math.min(def.maxPlayers, MAX_PLAYERS_HARD),

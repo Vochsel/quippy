@@ -15,6 +15,7 @@
 // Audio is cached (disk locally, R2 in production) so each unique line is
 // synthesised once.
 import { sha256Hex } from './util.js';
+import { deliveryFor, GATEWAY_VOICE_IDS, GATEWAY_VOICES, TONE_IDS } from './tones.js';
 
 const ELEVEN_SETTINGS = { stability: 0.38, similarity_boost: 0.8, style: 0.55, use_speaker_boost: true };
 const VOICE_RE = /^[\w.-]{1,64}$/;
@@ -78,7 +79,7 @@ export class Tts {
         return { provider: 'local', label: 'Local voice model', voice: this.cfg.localVoice, voices: this.localState.voices };
       }
       if (p === 'gateway' && this.gatewayReady()) {
-        return { provider: 'gateway', label: `AI Gateway · ${this.cfg.gatewayModel}`, voice: this.cfg.gatewayVoice, voices: [] };
+        return { provider: 'gateway', label: `AI Gateway · ${this.cfg.gatewayModel}`, voice: this.cfg.gatewayVoice, voices: GATEWAY_VOICES };
       }
       if (p === 'elevenlabs' && this.elevenReady()) return { provider: 'elevenlabs', label: 'ElevenLabs', voice: null, voices: [] };
     }
@@ -107,9 +108,14 @@ export class Tts {
     });
   }
 
-  async #gateway(text) {
+  // voice: one of GATEWAY_VOICES; tone: a host persona (changes the delivery).
+  // The default voice + normal tone keep the configured instructions, so
+  // existing cached audio still matches.
+  async #gateway(text, voice, tone) {
     const c = this.cfg;
-    const key = `tts/gw-${(await sha256Hex(`${c.gatewayModel}|${c.gatewayVoice}|${c.gatewayInstructions}|${text}`)).slice(0, 40)}`;
+    const v = GATEWAY_VOICE_IDS.includes(voice) ? voice : c.gatewayVoice;
+    const instructions = TONE_IDS.includes(tone) && tone !== 'normal' ? deliveryFor(tone) : c.gatewayInstructions;
+    const key = `tts/gw-${(await sha256Hex(`${c.gatewayModel}|${v}|${instructions}|${text}`)).slice(0, 40)}`;
     return this.#cached(key, async () => {
       // Loaded lazily so local-only setups never pay for it.
       const [{ generateSpeech }, { createGateway }] = await Promise.all([import('ai'), import('@ai-sdk/gateway')]);
@@ -117,8 +123,8 @@ export class Tts {
       const result = await generateSpeech({
         model: gateway.speechModel(c.gatewayModel),
         text,
-        voice: c.gatewayVoice,
-        instructions: c.gatewayInstructions,
+        voice: v,
+        instructions,
         abortSignal: AbortSignal.timeout(30000),
       });
       return result.audio.uint8Array;
@@ -146,23 +152,23 @@ export class Tts {
   // Returns { bytes, type, provider } or null (= let the browser speak).
   // Concurrent requests for the same line (e.g. the TV plus a spectator
   // screen) share one synthesis, so each line is only ever paid for once.
-  speak(text, { voice } = {}) {
+  speak(text, { voice, tone } = {}) {
     const clean = String(text || '').trim().slice(0, 500);
     if (!clean) return Promise.resolve(null);
-    const id = `${voice || ''}|${clean}`;
+    const id = `${voice || ''}|${tone || ''}|${clean}`;
     this.inflight ||= new Map();
     if (!this.inflight.has(id)) {
-      this.inflight.set(id, this.#speak(clean, voice).finally(() => this.inflight.delete(id)));
+      this.inflight.set(id, this.#speak(clean, voice, tone).finally(() => this.inflight.delete(id)));
     }
     return this.inflight.get(id);
   }
 
-  async #speak(clean, voice) {
+  async #speak(clean, voice, tone) {
     for (const p of this.cfg.route) {
       try {
         let bytes = null;
         if (p === 'local' && (await this.localUp())) bytes = await this.#local(clean, voice);
-        else if (p === 'gateway' && this.gatewayReady()) bytes = await this.#gateway(clean);
+        else if (p === 'gateway' && this.gatewayReady()) bytes = await this.#gateway(clean, voice, tone);
         else if (p === 'elevenlabs' && this.elevenReady()) bytes = await this.#eleven(clean);
         if (bytes?.length) {
           this.lastProvider = p;

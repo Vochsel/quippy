@@ -345,3 +345,26 @@ test('browser modules parse', async () => {
   }
   assert.deepEqual(bad, []);
 });
+
+test('host tones: lines switch with the tone, spicy tones are off in family mode', async () => {
+  const { effectiveTone, TONES } = await import('../core/tones.js');
+  const lib = new ContentLibrary(PACKS, 'en-AU');
+  const base = new Set(lib.pack('en-AU').host.win);
+  for (const t of TONES.filter((x) => x.id !== 'normal')) {
+    const lines = lib.pack('en-AU').tones[t.id];
+    assert.ok(lines && Object.keys(lines).length > 40, `${t.id} pack loaded`);
+    const said = lib.forRoom({ locale: 'en-AU', tone: t.id }).line('win', { name: 'Ann', other: 'Bob' });
+    assert.ok(said && !said.includes('{'), `${t.id} fills placeholders`);
+    // Every toned line uses only placeholders its event already had.
+    const host = lib.pack('en-AU').host;
+    for (const [k, list] of Object.entries(lines)) {
+      const allowed = new Set((host[k] || []).flatMap((x) => x.match(/\{\w+\}/g) || []));
+      for (const line of list) for (const hole of line.match(/\{\w+\}/g) || []) assert.ok(allowed.has(hole), `${t.id}.${k}: ${hole}`);
+    }
+  }
+  assert.ok(!base.has(lib.forRoom({ locale: 'en-AU', tone: 'therapist' }).line('win', { name: 'A', other: 'B' })));
+  assert.equal(effectiveTone('sexy', true).id, 'normal');
+  assert.equal(effectiveTone('chaplain', true).id, 'normal');
+  assert.equal(effectiveTone('therapist', true).id, 'therapist');
+  assert.equal(effectiveTone('nonsense', false).id, 'normal');
+});

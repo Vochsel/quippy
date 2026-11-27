@@ -63,19 +63,23 @@ export class ContentLibrary {
       panic: get('panic').data?.answers || [],
       callbacks: get('callbacks').data || { templates: [] },
       host: get('host').data?.lines || {},
+      // tone id -> { event: [lines] }; events a tone lacks use `host`.
+      tones: Object.fromEntries(Object.entries(get('tones').data || {}).map(([k, v]) => [k, v?.lines || {}])),
     };
     this.cache.set(id, pack);
     return pack;
   }
 
-  forRoom({ locale, family }) {
-    return new RoomContent(this.pack(locale), !!family);
+  forRoom({ locale, family, tone }) {
+    return new RoomContent(this.pack(locale), !!family, tone);
   }
 }
 
 export class RoomContent {
-  constructor(pack, family) {
+  constructor(pack, family, tone = 'normal') {
     this.pack = pack;
+    this.tone = tone;
+    this.toneLines = pack.tones?.[tone] || null;
     this.meta = pack.meta;
     this.family = family;
     const ok = (p) => !(family && p.tags.includes('spicy'));
@@ -122,7 +126,8 @@ export class RoomContent {
   // A host line for an event, with {placeholders} filled. Returns '' if the
   // pack has nothing for that event.
   line(key, vars = {}) {
-    const options = this.pack.host[key];
+    const toned = this.toneLines?.[key];
+    const options = toned?.length ? toned : this.pack.host[key];
     if (!options?.length) return '';
     return fill(pick(options), vars);
   }

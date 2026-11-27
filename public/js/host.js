@@ -97,7 +97,13 @@ async function boot() {
 
 function onMessage(msg) {
   if (msg.t === 'welcome') { isOwner = !!msg.owner; return; }
-  if (msg.t === 'view') { view = msg.view; render(); return; }
+  if (msg.t === 'view') {
+    view = msg.view;
+    // New host voice or tone: the countdown clips must be re-made in it.
+    if (voice?.setStyle(view.room?.voiceStyle)) voice.preloadCountdown(voice.countTexts);
+    render();
+    return;
+  }
   if (msg.t === 'fx') handleFx(msg.fx);
 }
 
@@ -221,7 +227,8 @@ function renderLobby(room) {
   const ready = room.readyCount ?? players.filter((p) => p.connected).length;
   const enough = ready >= room.minPlayers;
   const bots = players.filter((p) => p.isBot).length;
-  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: ready, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available }, (d) => {
+  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: ready, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available,
+    tones: room.hostTones, voices: hostVoiceOptions(), defaultVoice: voice?.provider === 'gateway' ? voice.serverVoice : null }, (d) => {
     const vip = d.vip;
     mountInto($('#start-box'),
       h('div.start-row',
@@ -239,6 +246,13 @@ function renderLobby(room) {
           [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === d.settings.answerSeconds }, `${s}s`)))),
         h('label', 'Max answer:', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },
           (d.charOpts || [200]).map((c) => h('option', { value: c, selected: c === d.settings.answerChars }, `${c} chars`)))),
+        // Host persona: changes Monty's wording and delivery.
+        h('label', 'Host tone:', h('select', { onChange: (e) => live.action('settings', { settings: { hostTone: e.target.value } }) },
+          (d.tones || []).map((t) => h('option', { value: t.id, selected: t.id === (d.settings.hostTone || 'normal'), disabled: t.spicy && d.settings.family },
+            `${t.emoji} ${t.label}${t.spicy && d.settings.family ? ' (not in family mode)' : ''}`)))),
+        d.voices.length ? h('label', 'Host voice:', h('select', { onChange: (e) => live.action('settings', { settings: { hostVoice: e.target.value } }) },
+          h('option', { value: '', selected: !d.settings.hostVoice }, `Default${d.defaultVoice ? ` (${d.defaultVoice})` : ''}`),
+          d.voices.map((v) => h('option', { value: v.id, selected: v.id === d.settings.hostVoice }, v.hint ? `${v.id} · ${v.hint}` : v.id)))) : null,
         // Debug / solo mode: play a whole game alone against bots.
         h('div.bot-tools', h('span', 'Test / solo:'),
           h('button.btn.white.mini', {
@@ -387,6 +401,13 @@ function tickTimer() {
     if (waiting && lastTick !== null) voice?.countdown(secs);
   }
   lastTick = secs;
+}
+
+// Voices the server can speak in (AI Gateway: Gemini voices; local: the
+// model's voices). Browser speech has no server voices, so no picker.
+function hostVoiceOptions() {
+  if (!voice?.usesServer() || voice.provider === 'elevenlabs') return [];
+  return (voice.serverVoices || []).map((v) => (typeof v === 'string' ? { id: v } : v));
 }
 
 // ---------------------------------------------------------------- settings

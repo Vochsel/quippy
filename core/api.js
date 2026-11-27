@@ -165,14 +165,15 @@ export async function handleApi(req, deps) {
     return ok(await deps.tts.status());
   }
 
-  // GET /api/tts?t=<text>&v=<voice> is a plain cacheable URL: the TV's
+  // GET /api/tts?t=<text>&v=<voice>&s=<tone> is a plain cacheable URL: the TV's
   // browser and (in production) Cloudflare's edge cache keep the audio, so a
   // repeated line costs no synthesis and usually not even an R2 read.
   if ((method === 'GET' || method === 'POST') && path === '/api/tts') {
     const q = req.query || {};
     const text = method === 'GET' ? q.t : body.text;
     const voice = method === 'GET' ? q.v : body.voice;
-    const out = await deps.tts.speak(text, { voice }).catch(() => null);
+    const tone = method === 'GET' ? q.s : body.tone;
+    const out = await deps.tts.speak(text, { voice, tone }).catch(() => null);
     if (!out) return { status: 204, body: null, headers: { 'cache-control': 'no-store' } };
     return {
       status: 200, body: out.bytes,
