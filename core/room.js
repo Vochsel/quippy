@@ -251,8 +251,17 @@ export class Room {
       case 'addBot':
         if (!this.game && isOwnerHost) this.addBot();
         break;
+      // Debug / solo mode: swap any bots for a fresh table of (AI) bots, so one
+      // person can play a whole game.
+      case 'soloBots':
+        if (!this.game && isOwnerHost) {
+          for (const p of [...this.players.values()]) if (p.isBot) this.players.delete(p.id);
+          const n = Math.max(2, Math.min(7, Number(msg.count) || 4));
+          for (let i = 0; i < n; i++) this.addBot();
+        }
+        break;
       case 'removeBots':
-        if (!this.game) for (const p of [...this.players.values()]) if (p.isBot) this.players.delete(p.id);
+        if (!this.game && isOwnerHost) for (const p of [...this.players.values()]) if (p.isBot) this.players.delete(p.id);
         break;
       case 'continue':
         this.game?.onContinue?.();

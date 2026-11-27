@@ -214,15 +214,15 @@ function renderLobby(room) {
   });
 
   const enough = players.filter((p) => p.connected).length >= room.minPlayers;
-  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: players.length, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name }, (d) => {
+  const bots = players.filter((p) => p.isBot).length;
+  remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: players.length, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available }, (d) => {
     const vip = d.vip;
     mountInto($('#start-box'),
       h('div.start-row',
         isOwner ? h('button.btn.big.pink', { disabled: !d.enough, onClick: () => live.action('start') }, '▶ Start game') : null,
         h('span.hint', d.enough
           ? (vip ? `…or ${vip} 👑 can start it from their phone.` : 'Ready when you are.')
-          : `Need at least ${d.min} players. ${d.n ? `${d.min - d.n} more!` : ''}`),
-        isOwner ? h('button.btn.white.mini', { onClick: () => live.action('addBot'), title: 'Add a bot player (great for testing)' }, '+ Bot') : null));
+          : `Need at least ${d.min} players. ${d.n ? `${d.min - d.n} more!` : ''}`)));
     mountInto($('#settings-box'),
       isOwner ? h('div.card.room-settings.tilt-l',
         h('h3', 'Room settings'),
@@ -232,7 +232,15 @@ function renderLobby(room) {
         h('label', 'Answer time:', h('select', { onChange: (e) => live.action('settings', { settings: { answerSeconds: Number(e.target.value) } }) },
           [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === d.settings.answerSeconds }, `${s}s`)))),
         h('label', 'Max answer:', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },
-          (d.charOpts || [200]).map((c) => h('option', { value: c, selected: c === d.settings.answerChars }, `${c} chars`))))) : null);
+          (d.charOpts || [200]).map((c) => h('option', { value: c, selected: c === d.settings.answerChars }, `${c} chars`)))),
+        // Debug / solo mode: play a whole game alone against bots.
+        h('div.bot-tools', h('span', 'Test / solo:'),
+          h('button.btn.white.mini', {
+            onClick: () => live.action('soloBots', { count: 4 }),
+            title: 'Fill the table with 4 bots so you can play a whole game on your own',
+          }, d.ai ? '🧪 Play vs AI bots' : '🧪 Play vs bots'),
+          h('button.btn.white.mini', { onClick: () => live.action('addBot'), title: d.ai ? 'Add a bot that writes its own jokes with AI' : 'Add a bot player' }, '+ Bot'),
+          d.bots ? h('button.btn.white.mini', { onClick: () => live.action('removeBots'), title: 'Remove all bots' }, `✖ ${d.bots}`) : null)) : null);
   });
 
   renderSide(room);

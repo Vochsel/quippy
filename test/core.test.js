@@ -141,6 +141,41 @@ test('a 13-player crowd answers one prompt each, so rounds stay short', async (t
   assert.equal(room.lastResults.players.length, 13);
 });
 
+test('solo mode: AI bots write their own answers and vote with the judge', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const deps = makeDeps(store, {});
+  const calls = [];
+  deps.llm = {
+    available: () => true, status: () => ({ available: true }), label: 'fake', model: 'fake',
+    async json({ system, user }) {
+      const items = JSON.parse(user);
+      if (system.includes('answers for bot players')) {
+        calls.push('answers');
+        return { answers: Object.fromEntries(items.map((i) => [i.key, `AI ${i.style.split(' ')[0]}`])) };
+      }
+      if (system.includes('You judge')) {
+        calls.push('judge');
+        return { rankings: Object.fromEntries(items.map((i) => [i.key, i.options.map((_, n) => n).reverse()])) };
+      }
+      throw new Error('not used here');
+    },
+  };
+  const room = new Room({ code: 'SOLO', crewId: 'h_testcrew01', deps });
+  await room.init();
+  for (let i = 0; i < 4; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  const voting = await advance(room, (r) => r.game?.s?.phase === 'vote' && r.game.s.botPicks);
+  assert.ok(voting, 'judge picked before voting ended');
+  const answers = room.game.s.matchups.flatMap((m) => Object.values(m.answers).map((a) => a.text));
+  assert.ok(answers.length >= 4 && answers.every((a) => a.startsWith('AI ')), `AI answers: ${answers}`);
+  const done = await advance(room, (r) => !r.game && r.lastResults);
+  assert.ok(done, 'game finished');
+  assert.ok(calls.includes('answers') && calls.includes('judge'));
+  assert.ok(calls.filter((c) => c === 'answers').length <= 3, 'one answer call per round');
+});
+
 test('a game snapshot resumes mid-round in a fresh Room (restart survival)', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());

@@ -9,6 +9,7 @@
 // earlier answers...) is decided by a "provider", so Zinger Duel and Callback
 // Club share this engine. All state lives in `this.s` (plain JSON) so the game
 // can be snapshotted and resumed after a restart.
+import { botAnswers, botJudge } from '../../core/botbrain.js';
 import { cleanText, fill, pick, shuffle, sleep, withTimeout } from '../../core/util.js';
 
 // Every round is worth more: round 1 x1, round 2 x2, the final x3.
@@ -357,6 +358,7 @@ export class QuipGame {
       warm.push(m.prompt.text, m.readA, m.readB);
     }
     this.ctx.prewarm?.(warm);
+    this.#botsJudgeRound();
     s.matchIdx = 0;
     const first = s.matchups.find((m) => m.readA);
     const epoch = this.epoch;
@@ -605,6 +607,7 @@ export class QuipGame {
       return this.ctx.line('readFinalAnswer', { a }) || `"${a}".`;
     });
     f.voteLine = this.ctx.line('finalVoteStart', { n: f.votesPer });
+    this.#botsJudgeFinal();
     this.ctx.prewarm?.([f.prompt.text, ...f.reads, f.voteLine]);
     this.ctx.update();
     this.ctx.checkpoint?.();
@@ -833,15 +836,59 @@ export class QuipGame {
   #botLine() { return this.ctx.content.panic(); }
   #rand(min, max) { return min + Math.random() * (max - min); }
 
+  // Bots with a language model write real answers (one call per batch) and
+  // vote with a judge's taste; without one they panic and flip coins.
+  #botIds() { return this.s.roster.filter((x) => this.ctx.isBot(x)); }
+  #aiBots() { return this.ctx.llm?.available() && this.#botIds().length > 0; }
+
+  // Run a bot model call once per key (resume() may ask again).
+  #botJob(key, fn) {
+    this.botJobs ||= {};
+    if (this.botJobs[key]) return this.botJobs[key];
+    // Callers re-check the phase before acting on the result.
+    this.botJobs[key] = fn().catch((e) => { this.ctx.log?.('bot brain', String(e?.message || e)); return {}; });
+    return this.botJobs[key];
+  }
+
   #botsAnswer() {
-    for (const id of this.s.roster.filter((x) => this.ctx.isBot(x))) {
-      for (const m of this.#myMatchups(id)) {
-        if (m.answers[id]) continue;
-        this.ctx.later(this.#rand(2500, 9000), () => {
-          if (this.s.phase === 'answer') this.#submitAnswer(id, m.id, this.#botLine(), false);
-        });
-      }
+    const jobs = [];
+    for (const id of this.#botIds()) {
+      for (const m of this.#myMatchups(id)) if (!m.answers[id]) jobs.push({ id, m, key: `${m.id}.${id}` });
     }
+    if (!jobs.length) return;
+    const submit = (job, text) => {
+      if (this.s.phase === 'answer' && !this.s.answersClosed) this.#submitAnswer(job.id, job.m.id, text || this.#botLine(), false);
+    };
+    if (!this.#aiBots()) {
+      for (const job of jobs) this.ctx.later(this.#rand(2500, 9000), () => submit(job));
+      return;
+    }
+    const items = jobs.map((j) => ({ key: j.key, prompt: j.m.prompt.text, name: this.ctx.playerName(j.id) }));
+    this.#botJob(`answer-${this.s.round}`, () => botAnswers(this.ctx, items, this.#maxChars())).then((written) => {
+      if (!written) return;
+      for (const job of jobs) this.ctx.later(this.#rand(300, 5000), () => submit(job, written[job.key]));
+    });
+  }
+
+  // Once answers are in, a judge ranks each matchup; bots mostly follow it.
+  #botsJudgeRound() {
+    if (!this.#aiBots()) return;
+    const s = this.s;
+    const items = s.matchups.filter((m) => m.order?.length === 2)
+      .map((m) => ({ key: m.id, prompt: m.prompt.text, options: m.order.map((id) => m.answers[id].text) }));
+    this.#botJob(`judge-${s.round}`, () => botJudge(this.ctx, items)).then((ranked) => {
+      if (!ranked) return;
+      s.botPicks = Object.fromEntries(Object.entries(ranked).map(([k, r]) => [k, r[0] === 0 ? 'A' : 'B']));
+    });
+  }
+
+  #botsJudgeFinal() {
+    if (!this.#aiBots()) return;
+    const f = this.s.final;
+    const items = [{ key: 'final', prompt: f.prompt.text, options: f.order.map((id) => f.answers[id].text) }];
+    this.#botJob('judge-final', () => botJudge(this.ctx, items)).then((ranked) => {
+      if (ranked?.final) f.botRank = ranked.final;
+    });
   }
 
   #botsVote() {
@@ -849,17 +896,29 @@ export class QuipGame {
     if (!m) return;
     for (const id of this.#eligibleVoters(m).filter((x) => this.ctx.isBot(x))) {
       this.ctx.later(this.#rand(2000, 6000), () => {
-        if (this.s.phase === 'vote' && this.s.matchups[this.s.matchIdx]?.id === m.id) this.#vote(id, m.id, pick(['A', 'B']));
+        if (this.s.phase !== 'vote' || this.s.matchups[this.s.matchIdx]?.id !== m.id) return;
+        const judged = this.s.botPicks?.[m.id];
+        // Mostly agree with the judge, with the odd contrarian.
+        const choice = judged && Math.random() < 0.8 ? judged : pick(['A', 'B']);
+        this.#vote(id, m.id, choice);
       });
     }
   }
 
   #botsFinalAnswer() {
-    for (const id of this.s.roster.filter((x) => this.ctx.isBot(x))) {
-      this.ctx.later(this.#rand(3000, 10000), () => {
-        if (this.s.phase === 'finalAnswer') this.#submitFinal(id, this.#botLine(), false);
-      });
+    const bots = this.#botIds().filter((id) => !this.s.final?.answers[id]);
+    if (!bots.length) return;
+    const submit = (id, text) => { if (this.s.phase === 'finalAnswer') this.#submitFinal(id, text || this.#botLine(), false); };
+    if (!this.#aiBots()) {
+      for (const id of bots) this.ctx.later(this.#rand(3000, 10000), () => submit(id));
+      return;
     }
+    const prompt = this.s.final.prompt.text;
+    const items = bots.map((id) => ({ key: id, prompt, name: this.ctx.playerName(id) }));
+    this.#botJob('answer-final', () => botAnswers(this.ctx, items, this.#maxChars())).then((written) => {
+      if (!written) return;
+      for (const id of bots) this.ctx.later(this.#rand(300, 5000), () => submit(id, written[id]));
+    });
   }
 
   #botsFinalVote() {
@@ -867,8 +926,11 @@ export class QuipGame {
     for (const id of this.#finalVoters().filter((x) => this.ctx.isBot(x))) {
       this.ctx.later(this.#rand(2500, 7000), () => {
         if (this.s.phase !== 'finalVote' || f.reading) return;
-        const options = f.order.map((a, i) => (a === id ? null : `f${i}`)).filter(Boolean);
-        this.#finalVote(id, shuffle(options).slice(0, f.votesPer));
+        const mine = f.order.indexOf(id);
+        // Judge's ranking with a little shuffle so bots don't all vote the same.
+        const ranked = (f.botRank || shuffle(f.order.map((_, i) => i))).filter((i) => i !== mine);
+        const jiggled = ranked.map((i, n) => ({ i, k: n + Math.random() * 2.5 })).sort((a, b) => a.k - b.k).map((x) => x.i);
+        this.#finalVote(id, jiggled.slice(0, f.votesPer).map((i) => `f${i}`));
       });
     }
   }

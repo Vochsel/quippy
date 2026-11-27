@@ -168,3 +168,6 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .paused-overlay { position: fixed; inset: 0; z-index: 35; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4rem;
   background: rgba(20, 8, 40, .78); backdrop-filter: blur(6px); font-size: 1.6rem; }
 .paused-card { font-family: var(--head); font-size: 7rem; color: var(--yellow); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; text-shadow: 8px 8px 0 var(--ink); }
+.room-settings .bot-tools { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; margin-top: .6rem; font-size: 1.05rem; }
+.room-settings .bot-tools span { margin-right: auto; }
+.room-settings .bot-tools .btn.mini { font-size: .95rem; padding: .2rem .7rem; border-width: 3px; }
