@@ -302,3 +302,26 @@ test('pausing freezes the game; resuming carries on to the end', async (t) => {
   room.unpause();
   assert.ok(await advance(room, (r) => !r.game && r.lastResults), 'finished after resuming');
 });
+
+// Browser code never runs under node:test, so at least make sure every client
+// module parses (a duplicate declaration blanks the whole page).
+test('browser modules parse', async () => {
+  const { readdirSync, readFileSync, writeFileSync, mkdtempSync } = await import('node:fs');
+  const { spawnSync } = await import('node:child_process');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dirs = ['public/js', 'public/js/lib', ...readdirSync('games').map((g) => `games/${g}/client`)];
+  const tmp = mkdtempSync(join(tmpdir(), 'quippy-parse-'));
+  const bad = [];
+  for (const dir of dirs) {
+    let files = [];
+    try { files = readdirSync(dir).filter((f) => f.endsWith('.js')); } catch { continue; }
+    for (const f of files) {
+      const copy = join(tmp, 'm.mjs');
+      writeFileSync(copy, readFileSync(join(dir, f)));
+      const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
+      if (r.status !== 0) bad.push(`${dir}/${f}: ${(r.stderr.match(/SyntaxError.*/) || [r.stderr])[0]}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
