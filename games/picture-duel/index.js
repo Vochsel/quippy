@@ -35,7 +35,7 @@ const meta = {
   name: 'Picture Duel',
   tagline: 'Describe a picture, the robot paints it, the room picks the winner.',
   minPlayers: 3,
-  maxPlayers: 8,
+  maxPlayers: 16,
   accent: '#3fd0c9',
   client: 'picture-duel',
   usesAi: true,

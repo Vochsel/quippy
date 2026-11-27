@@ -217,7 +217,7 @@ export class QuipGame {
   // ---------------------------------------------------------------- prompts
   prefetch(round) {
     if (this.pending[round] || round > 3) return;
-    const gen = round === 3 ? this.p.finalPrompt(this) : this.p.roundPrompts(this, round, this.s.roster.length);
+    const gen = round === 3 ? this.p.finalPrompt(this) : this.p.roundPrompts(this, round, this.s.roster.length <= 8 ? this.s.roster.length : Math.ceil(this.s.roster.length / 2));
     this.pending[round] = Promise.resolve(gen).catch((e) => {
       this.ctx.log(`${this.meta.id}: prompt generation failed for round ${round}:`, e?.message || e);
       return null;
@@ -228,7 +228,7 @@ export class QuipGame {
   // the start of the next round, with a fresh score.
   #syncRoster() {
     const s = this.s;
-    const add = this.ctx.newcomers?.(this.meta.maxPlayers || 8) || [];
+    const add = this.ctx.newcomers?.(this.meta.maxPlayers || 16) || [];
     for (const id of add) {
       if (s.roster.includes(id)) continue;
       s.roster.push(id);
@@ -282,11 +282,17 @@ export class QuipGame {
     const s = this.s;
     const roster = shuffle(s.roster);
     const n = roster.length;
+    // Up to 8 players: everyone answers two prompts (a ring of n matchups).
+    // A bigger crowd answers one each (pairs), so a round never runs past ~8
+    // head-to-heads; an odd player out pairs with someone who answers twice.
+    const ring = n <= 8;
+    const count = ring ? n : Math.ceil(n / 2);
+    const authorsOf = (i) => (ring ? [roster[i], roster[(i + 1) % n]] : [roster[2 * i], roster[2 * i + 1] ?? roster[0]]);
     let list = (Array.isArray(generated) ? generated : []).map((p) => this.#normalise(p)).filter(Boolean);
-    if (list.length < n) list = [...list, ...this.ctx.content.pickPrompts(n - list.length, this.ctx.usedPrompts)];
-    list = list.slice(0, n);
+    if (list.length < count) list = [...list, ...this.ctx.content.pickPrompts(count - list.length, this.ctx.usedPrompts)];
+    list = list.slice(0, count);
     s.matchups = list.map((prompt, i) => {
-      const authors = [roster[i], roster[(i + 1) % n]];
+      const authors = authorsOf(i);
       return { id: `r${s.round}m${i}`, round: s.round, prompt: this.#personalise(prompt, authors), authors, answers: {}, votes: {}, order: [], result: null };
     });
     this.ctx.markPromptsUsed(list.map((p) => p.key).filter(Boolean));
@@ -701,7 +707,8 @@ export class QuipGame {
       ascending: [...f.order].sort((x, y) => votes[x] - votes[y]),
       winners: top > 0 ? f.order.filter((id) => votes[id] === top) : [],
     };
-    this.#phase('finalReveal', 2600 * f.order.length + 6000);
+    // Reveal pace matches the TV: quicker per card when the grid is big.
+    this.#phase('finalReveal', (f.order.length > 8 ? 1600 : 2600) * f.order.length + 6000);
     this.ctx.music('results');
     this.ctx.sfx('reveal');
     this.ctx.sayLine('finalReveal', {});

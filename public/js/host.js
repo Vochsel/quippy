@@ -183,8 +183,12 @@ function renderLobby(room) {
 
   const players = room.players.filter((p) => !p.audience);
   const audience = room.players.filter((p) => p.audience && p.connected);
-  remember('players', { players, audience: audience.length, owner: isOwner }, () => {
-    const max = Math.max(8, players.length);
+  remember('players', { players, audience: audience.length, owner: isOwner, cap: room.maxPlayers }, () => {
+    // Start with 8 seats; as they fill, open more (up to the game's max),
+    // squeezing the seats so the grid keeps roughly the same height.
+    const cap = room.maxPlayers || 16;
+    const max = Math.max(players.length, Math.min(cap, Math.max(8, Math.ceil((players.length + 1) / 4) * 4)));
+    const cols = max <= 8 ? 4 : max <= 12 ? 6 : 'x';
     const slots = [];
     for (let i = 0; i < max; i++) {
       const p = players[i];
@@ -196,8 +200,8 @@ function renderLobby(room) {
     }
     mountInto($('#players-box'),
       h('div.players-title', h('h2', players.length ? 'Who’s playing' : 'Waiting for players…'),
-        h('span', `${players.length} / 8${audience.length ? ` · ${audience.length} in the audience` : ''}`)),
-      h('div.players', slots));
+        h('span', `${players.length} / ${cap}${audience.length ? ` · ${audience.length} in the audience` : ''}`)),
+      h(`div.players.cols-${cols}`, slots));
   });
 
   remember('games', { games: room.games, sel: room.selectedGame, owner: isOwner, llm: room.llm.available }, () => {

@@ -182,6 +182,9 @@
 .q-board.anim .q-delta { opacity: 0; transform: scale(.4); transition: all .4s cubic-bezier(.2, 1.8, .4, 1); }
 .q-board.anim .q-row.gaining .q-delta { opacity: 1; transform: none; }
 .q-board.anim .q-row.up { z-index: 2; }
+.q-scores.two { max-width: 112rem; }
+.q-board.anim.tight .q-row { right: auto; width: 49%; height: 3.8rem; grid-template-columns: 2.4rem 3.6rem 11rem 1fr 5.5rem 5rem; gap: .7rem; font-size: 1.45rem; transition: top .9s cubic-bezier(.2, 1.3, .4, 1), left .9s cubic-bezier(.2, 1.3, .4, 1); }
+.q-board.anim.tight .q-row.up::after { left: -1.8rem; }
 .q-board.anim .q-row.up .q-name { color: var(--lime); }
 .q-board.anim .q-row.up::after { content: '▲'; position: absolute; left: -2.4rem; top: 1.1rem; color: var(--lime); font-size: 1.6rem; animation: popIn .4s both; }
 

@@ -20,7 +20,7 @@ const memoryMedia = () => {
 };
 
 const BOT_NAMES = ['Bazza', 'Shazza', 'Davo', 'Kylie', 'Robbo', 'Tezza', 'Macca', 'Jonno', 'Steph', 'Gazza'];
-const MAX_PLAYERS_HARD = 12;
+const MAX_PLAYERS_HARD = 16;
 
 function newSession() {
   return { id: uid('s_'), startedAt: Date.now(), games: 0, standings: {}, highlights: [] };
@@ -665,6 +665,7 @@ export class Room {
         usesAi: !!g.usesAi, accent: g.accent, client: g.client || g.id,
       })),
       minPlayers: def.minPlayers,
+      maxPlayers: Math.min(def.maxPlayers, MAX_PLAYERS_HARD),
       settings: this.settings,
       answerCharOptions: [...new Set([80, 120, 200, 280, this.deps.config.answerChars])].sort((a, b) => a - b),
       locales: this.deps.content.locales(),

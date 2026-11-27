@@ -12,7 +12,7 @@ export default defineQuipGame(
     name: 'Callback Club',
     tagline: 'Prompts written live about YOU, your running jokes and tonight’s answers.',
     minPlayers: 3,
-    maxPlayers: 8,
+    maxPlayers: 16,
     accent: '#3fd0c9',
     usesAi: true,
     client: 'callback-club',

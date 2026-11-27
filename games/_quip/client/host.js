@@ -2,6 +2,12 @@
 // mount(root, api) -> { update(gameView, roomView), destroy() }
 import { mountInto } from '/js/lib/dom.js';
 
+// Final-round grid width: 2-4 columns up to 8 answers, 5-6 for a big crowd.
+function finalCols(n) {
+  if (n <= 8) return Math.min(4, Math.max(2, Math.ceil(n / 2)));
+  return n <= 10 ? 5 : 6;
+}
+
 function ensureCss(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href }));
@@ -264,20 +270,28 @@ export function mount(root, api) {
     // Rows start in the previous order with old scores, then points count up
     // and everyone slides to their new place.
     scores(g) {
-      const ROW = 5.2; // rem
+      // A big crowd splits into two columns (ranks 1-8 left, the rest right).
+      const tight = g.scoreboard.length > 10;
+      const per = tight ? Math.ceil(g.scoreboard.length / 2) : g.scoreboard.length;
+      const ROW = tight ? 4.3 : 5.2; // rem
+      const place = (el, i) => {
+        el.style.top = `${(i % per) * ROW}rem`;
+        if (tight) el.style.left = i < per ? '0%' : '51%';
+      };
       const rows = g.scoreboard.map((p) => ({ ...p, prev: p.score - (p.delta || 0) }));
       const before = [...rows].sort((a, b) => b.prev - a.prev);
       const max = Math.max(1, ...rows.map((p) => p.score));
-      const board = h('div.q-board.anim', { style: { height: `${rows.length * ROW}rem` } });
+      const board = h(`div.q-board.anim${tight ? '.tight' : ''}`, { style: { height: `${per * ROW}rem` } });
       const els = new Map();
       before.forEach((p, i) => {
         const score = h('span.q-score', fmt(p.prev));
         const fill = h('div.q-fill', { style: { width: `${(p.prev / max) * 100}%`, background: p.color } });
         const rank = h('span.q-rank', `${i + 1}`);
-        const el = h('div.q-row', { style: { top: `${i * ROW}rem`, animationDelay: `${0.08 * i}s` } },
+        const el = h('div.q-row', { style: { animationDelay: `${0.08 * i}s` } },
           rank, avatar(p, '3.6rem'), h('span.q-name', p.name),
           h('div.q-bar', fill), score,
           p.delta ? h('span.q-delta', `+${fmt(p.delta)}`) : h('span.q-delta'));
+        place(el, i);
         els.set(p.id, { el, score, fill, rank, p });
         board.append(el);
       });
@@ -292,19 +306,19 @@ export function mount(root, api) {
         g.scoreboard.forEach((p, i) => {
           const r = els.get(p.id);
           const moved = before.findIndex((x) => x.id === p.id) - i;
-          r.el.style.top = `${i * ROW}rem`;
+          place(r.el, i);
           r.rank.textContent = `${p.rank}`;
           if (moved > 0) r.el.classList.add('up');
           if (p.rank === 1) r.el.querySelector('.avatar')?.append(h('span.crown.pop-in', '👑'));
         });
       }, 2300);
-      return h('div.q-scores', h('h2.q-heading.slide-up', g.roundTitle ? `Scores after ${g.roundTitle.split(' ·')[0]}` : 'Scores'), board);
+      return h(`div.q-scores${tight ? '.two' : ''}`, h('h2.q-heading.slide-up', g.roundTitle ? `Scores after ${g.roundTitle.split(' ·')[0]}` : 'Scores'), board);
     },
 
     // While Monty reads them out the grid holds empty slots; answers arrive
     // one by one via the centre stage (see showSolo/land above).
     finalVote(g) {
-      const cols = Math.min(4, Math.max(2, Math.ceil(g.answers.length / 2)));
+      const cols = finalCols(g.answers.length);
       return h(`div.q-final${g.reading ? '.reading' : ''}`,
         promptCard(g),
         h('div.q-final-grid', { style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } },
@@ -317,8 +331,8 @@ export function mount(root, api) {
 
     // Same grid as the vote, revealed from fewest votes to most.
     finalReveal(g) {
-      const step = 2.6;
-      const cols = Math.min(4, Math.max(2, Math.ceil(g.answers.length / 2)));
+      const step = g.answers.length > 8 ? 1.6 : 2.6;
+      const cols = finalCols(g.answers.length);
       return h('div.q-final',
         promptCard(g, false),
         h('div.q-final-grid.reveal', { style: { gridTemplateColumns: `repeat(${cols}, 1fr)` } },

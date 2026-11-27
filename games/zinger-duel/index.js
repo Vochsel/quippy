@@ -9,7 +9,7 @@ export default defineQuipGame(
     name: 'Zinger Duel',
     tagline: 'Two players. One prompt. The room picks the funnier answer.',
     minPlayers: 3,
-    maxPlayers: 8,
+    maxPlayers: 16,
     accent: '#ff5d8f',
     client: 'zinger-duel', // folder under games/ holding client/host.js + client/player.js
   },

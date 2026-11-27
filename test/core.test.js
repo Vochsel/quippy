@@ -121,6 +121,26 @@ for (const { id: gameType, minPlayers } of GAMES) {
   });
 }
 
+test('a 13-player crowd answers one prompt each, so rounds stay short', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const room = new Room({ code: 'BIGG', crewId: 'h_testcrew01', deps: makeDeps(store, {}) });
+  await room.init();
+  for (let i = 0; i < 13; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  const started = await advance(room, (r) => r.game?.s?.matchups?.length);
+  assert.ok(started, 'round 1 dealt');
+  const { matchups, roster } = room.game.s;
+  assert.equal(roster.length, 13);
+  assert.equal(matchups.length, 7, 'ceil(13 / 2) matchups');
+  for (const id of roster) assert.ok(matchups.some((m) => m.authors.includes(id)), 'everyone has a prompt');
+  for (const m of matchups) assert.notEqual(m.authors[0], m.authors[1]);
+  const done = await advance(room, (r) => !r.game && r.lastResults);
+  assert.ok(done, 'game finished');
+  assert.equal(room.lastResults.players.length, 13);
+});
+
 test('a game snapshot resumes mid-round in a fresh Room (restart survival)', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());

@@ -92,6 +92,13 @@ html.tv { font-size: clamp(11px, 1vw, 40px); }
 .pslot .avatar { width: 5.4rem; height: 5.4rem; }
 .pslot .nm { font-size: 1.35rem; background: var(--ink); padding: .1rem .8rem; border-radius: 999px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pslot.off { opacity: .4; }
+.players.cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.2rem .6rem; }
+.players.cols-x { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 1.1rem .4rem; }
+.players.cols-6 .avatar, .players.cols-6 .ghost { width: 4.6rem !important; height: 4.6rem !important; }
+.players.cols-x .avatar, .players.cols-x .ghost { width: 3.5rem !important; height: 3.5rem !important; }
+.players.cols-6 .nm { font-size: 1.15rem; padding: .1rem .55rem; }
+.players.cols-x .nm { font-size: .95rem; padding: .05rem .4rem; }
+.players.cols-x .pslot { gap: .25rem; }
 .pslot.empty .ghost { width: 5.4rem; height: 5.4rem; border: 4px dashed rgba(255, 255, 255, .35); border-radius: 50%; display: grid; place-items: center; font-size: 2rem; opacity: .6; }
 .pslot .kick { font-size: .9rem; background: none; border: none; color: #fff; opacity: 0; cursor: pointer; }
 .pslot:hover .kick { opacity: .7; }
