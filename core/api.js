@@ -18,6 +18,11 @@ export async function handleApi(req, deps) {
   const body = req.body || {};
   const { store, config, llm, content } = deps;
   let m;
+  // Analytics (PostHog): fire and forget, kept alive by waitUntil on Cloudflare.
+  const track = (id, event, props) => {
+    const p = deps.analytics?.capture(id, event, props);
+    if (p) deps.waitUntil ? deps.waitUntil(p) : p.catch(() => {});
+  };
 
   if (method === 'GET' && path === '/api/tts' && !(req.query || {}).t) {
     return ok(await deps.tts.status());
@@ -46,9 +51,12 @@ export async function handleApi(req, deps) {
       if (!ROOM_CODE_RE.test(code)) return bad('bad code');
       const reopened = await deps.rooms.reopen(body.hostId, code);
       if (!reopened) return bad('That room isn’t one of this TV’s rooms.', 404);
+      track(body.hostId, 'room_reopened', { room: code });
       return ok(reopened);
     }
-    return ok(await deps.rooms.create(body.hostId, { fresh: !!body.fresh }));
+    const made = await deps.rooms.create(body.hostId, { fresh: !!body.fresh });
+    track(body.hostId, made.resumed ? 'room_resumed' : 'room_created', { room: made.code, fresh: !!body.fresh });
+    return ok(made);
   }
 
   // The rooms this TV has made, to switch between.

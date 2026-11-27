@@ -88,7 +88,8 @@ export default {
       if (request.method === 'POST') body = await request.json().catch(() => ({}));
       try {
         const out = await handleApi(
-          { method: request.method, path: url.pathname, body, query: Object.fromEntries(url.searchParams) }, { ...d, rooms });
+          { method: request.method, path: url.pathname, body, query: Object.fromEntries(url.searchParams) },
+          { ...d, rooms, waitUntil: (p) => ctx.waitUntil(p) });
         if (!out) return Response.json({ error: 'not found' }, { status: 404, headers });
         if (out.json !== undefined) return Response.json(out.json, { status: out.status, headers });
         const res = new Response(out.body, { status: out.status, headers: { ...headers, ...(out.headers || {}) } });
@@ -96,6 +97,7 @@ export default {
         return res;
       } catch (e) {
         console.error('api error', e);
+        ctx.waitUntil(d.analytics.captureException(null, e, { path: url.pathname, method: request.method }));
         return Response.json({ error: 'server error' }, { status: 500, headers });
       }
     }

@@ -15,6 +15,7 @@ import { config, ROOT } from './config.js';
 import { gitVersion } from '../scripts/version.js';
 import { handleApi } from '../core/api.js';
 import { ContentLibrary } from '../core/content.js';
+import { Analytics } from '../core/analytics.js';
 import { LLM } from '../core/llm.js';
 import { Tts } from '../core/tts.js';
 import { ImageGen } from '../core/images.js';
@@ -74,6 +75,7 @@ const llm = new LLM(config.llm);
 const tts = new Tts(config.voice, ttsCache);
 const images = new ImageGen(config.image);
 const content = new ContentLibrary(PACKS, config.defaultLocale);
+const analytics = new Analytics({ ...config.posthog, dev: config.dev, version: config.version, runtime: 'node' });
 
 // --------------------------------------------------------------- join URLs
 function lanAddress() {
@@ -98,7 +100,7 @@ const ttlMs = config.roomTtlHours * 3600 * 1000;
 
 function deps() {
   return {
-    store, llm, config, content, joinUrl, log, tts, media, images,
+    store, llm, config, content, joinUrl, log, tts, media, images, analytics,
     persist: async (snapshot) => {
       await store.saveRoom(snapshot.code, snapshot.crewId, snapshot);
       if (process.env.QUIPPY_DEBUG) log(`saved ${snapshot.code} game=${snapshot.game?.phase || '-'}`);
@@ -178,7 +180,7 @@ app.use('/api', async (req, res) => {
   try {
     const out = await handleApi(
       { method: req.method, path: `/api${req.path}`, body: req.body, query: req.query },
-      { store, config, llm, content, tts, media, rooms: { create: createRoom, info: roomInfo, reopen: reopenRoom } },
+      { store, config, llm, content, tts, media, analytics, rooms: { create: createRoom, info: roomInfo, reopen: reopenRoom } },
     );
     if (!out) return res.status(404).json({ error: 'not found' });
     if (out.headers) res.set(out.headers);
@@ -186,12 +188,15 @@ app.use('/api', async (req, res) => {
     return res.status(out.status).send(out.body ? Buffer.from(out.body) : undefined);
   } catch (e) {
     log('api error', e);
+    analytics.captureException(null, e, { path: req.path, method: req.method });
     return res.status(500).json({ error: 'server error' });
   }
 });
 
 const pub = path.join(ROOT, 'public');
-app.get('/env.js', (req, res) => res.type('js').send(`window.QUIPPY = ${JSON.stringify({ live: '', version: config.version })};`));
+app.get('/env.js', (req, res) => res.type('js').send(`window.QUIPPY = ${JSON.stringify({ live: '', version: config.version, dev: config.dev, posthog: config.posthog.key ? config.posthog : null })};`));
+// The PostHog browser SDK, served from node_modules (the Vercel build copies it into dist/vendor).
+app.get('/vendor/posthog.js', (req, res) => res.type('js').sendFile(path.join(ROOT, 'node_modules/posthog-js/dist/array.js')));
 app.get('/host', (req, res) => res.sendFile(path.join(pub, 'host.html')));
 app.get('/play', (req, res) => res.sendFile(path.join(pub, 'play.html')));
 app.get(/^\/[A-Za-z]{4}\/?$/, (req, res) => res.sendFile(path.join(pub, 'play.html')));

@@ -7,6 +7,7 @@
 //   - construct a Room with deps, call init()
 //   - call attach(conn) / detach(conn) / onMessage(conn, msg) for sockets
 //     where conn = { id, send(obj), close() }
+import { noAnalytics } from './analytics.js';
 import { GAMES, gameById } from '../games/registry.js';
 import { applyGameResult, pickFreeColor, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
@@ -165,6 +166,7 @@ export class Room {
       p = { id, name, color, face, photo: profile.photo || null, isBot: false, audience: !!this.game || full, autoAudience: !!this.game && !full, joinedAt: Date.now() };
       this.players.set(id, p);
       this.fx({ sfx: 'join' });
+      this.track(id, 'player_joined', { mid_game: !!this.game, audience: p.audience, room_full: full, has_photo: !!profile.photo });
       if (Date.now() - this.lastJoinLineAt > 2500) {
         this.lastJoinLineAt = Date.now();
         this.say(this.content().line(p.audience ? 'audienceJoin' : 'join', { name }));
@@ -258,6 +260,7 @@ export class Room {
           for (const p of [...this.players.values()]) if (p.isBot) this.players.delete(p.id);
           const n = Math.max(2, Math.min(7, Number(msg.count) || 4));
           for (let i = 0; i < n; i++) this.addBot();
+          this.track(this.crewId, 'solo_mode_started', { bots: n, ai_brain: !!this.deps.llm?.available?.() });
         }
         break;
       case 'removeBots':
@@ -292,6 +295,18 @@ export class Room {
     const chars = Number(next.answerChars);
     if (Number.isInteger(chars) && chars >= 40 && chars <= 400) this.settings.answerChars = chars;
     await this.deps.store.saveCrewSettings(this.crewId, { ...this.settings });
+  }
+
+  // Product analytics (PostHog); a no-op without a key.
+  track(distinctId, event, props = {}) {
+    const a = this.deps.analytics || noAnalytics;
+    return a.capture(distinctId, event, { room: this.code, crew_id: this.crewId, ...props });
+  }
+
+  #headcount() {
+    const roster = this.gameMeta?.roster || [];
+    const bots = roster.filter((id) => this.players.get(id)?.isBot).length;
+    return { players: roster.length, humans: roster.length - bots, bots };
   }
 
   addBot() {
@@ -329,6 +344,8 @@ export class Room {
     this.lastResults = null;
     this.game = def.create(this.makeCtx(def));
     this.game.start();
+    const hc = this.#headcount();
+    this.track(this.crewId, 'game_started', { game: type, ...hc, solo: hc.humans <= 1 && hc.bots > 0, ai_brain: !!this.deps.llm?.available?.(), family: !!this.settings.family, answer_seconds: this.settings.answerSeconds });
     this.dirty();
   }
 
@@ -502,6 +519,15 @@ export class Room {
 
   async #endGame(results) {
     const meta = this.gameMeta;
+    if (meta) {
+      const hc = this.#headcount();
+      const winner = results?.winnerIds?.[0] ? this.players.get(results.winnerIds[0]) : null;
+      this.track(this.crewId, results ? 'game_finished' : 'game_ended_early', {
+        game: meta.type, ...hc, solo: hc.humans <= 1 && hc.bots > 0,
+        duration_s: Math.round((Date.now() - meta.startedAt) / 1000),
+        ...(results ? { bot_won: !!winner?.isBot } : {}),
+      });
+    }
     this.#clearGameTimers();
     this.game = null;
     this.gameMeta = null;

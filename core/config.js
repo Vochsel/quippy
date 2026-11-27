@@ -12,6 +12,10 @@ export function buildConfig(env = {}) {
     dev: env.QUIPPY_DEV === '1' || env.QUIPPY_DEV === 'true',
     version: env.QUIPPY_VERSION || 'dev',
 
+    // Product analytics (PostHog). The project token is public (it also ships
+    // to browsers); leave it blank to turn analytics off.
+    posthog: { key: env.POSTHOG_KEY || '', host: trimSlash(env.POSTHOG_HOST) || 'https://us.i.posthog.com' },
+
     // Language model for AI-flavoured games. Every provider is spoken to over
     // the OpenAI-compatible chat-completions protocol.
     //   auto     -> Vercel AI Gateway if AI_GATEWAY_API_KEY is set, otherwise a

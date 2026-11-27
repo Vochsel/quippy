@@ -5,12 +5,15 @@ import { avatar } from './lib/avatar.js';
 import { confetti } from './lib/confetti.js';
 import { $, clear, fmt, h, mountInto } from './lib/dom.js';
 import { hostId, load, save } from './lib/identity.js';
+import { identify, initAnalytics, track, trackError } from './lib/analytics.js';
 import { api, LiveRoom } from './lib/net.js';
 import { Voice } from './lib/voice.js';
 import qrcode from '/vendor/qrcode.mjs';
 
 const audio = new AudioEngine();
 const HOST_ID = hostId();
+initAnalytics('tv');
+identify(HOST_ID, { role: 'tv' });
 let voice;
 let live;
 let view = null;
@@ -71,7 +74,9 @@ async function boot() {
     const want = (params.get('room') || '').toUpperCase();
     if (/^[A-Z]{4}$/.test(want)) room = await api('/api/rooms', { hostId: HOST_ID, code: want }).catch(() => null);
     room ||= await api('/api/rooms', { hostId: HOST_ID, fresh: params.has('new') });
+    track('tv_started', { room: room.code, resumed: !!room.resumed, switched: !!want });
   } catch (e) {
+    trackError(e, { where: 'tv room create' });
     mountInto(stage, h('div.card.pop-in', { style: { maxWidth: '40rem', margin: '6rem auto', fontSize: '1.6rem' } },
       h('h2', 'Can’t reach the game server'), h('p', String(e.message || e)), h('button.btn', { onClick: () => location.reload() }, 'Try again')));
     return;
@@ -408,7 +413,7 @@ async function showRooms() {
       h('b.room-code', r.code),
       h('span.room-meta', h('span', who), h('span.small', `${r.phase === 'game' ? '🎮 mid-game' : 'lobby'} · ${ago(r.updatedAt)}`)),
       here ? h('span.room-here', 'On screen')
-        : h('button.btn.white.mini', { onClick: () => location.replace(`/host?room=${r.code}`) }, 'Switch ▶'));
+        : h('button.btn.white.mini', { onClick: () => { track('room_switched', { from: current, to: r.code, to_phase: r.phase }); location.replace(`/host?room=${r.code}`); } }, 'Switch ▶'));
   }));
 }
 

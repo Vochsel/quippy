@@ -26,6 +26,10 @@ TTS_PROVIDER = "gateway,elevenlabs"
 # IMAGE_MODEL = "bfl/flux-3-image-klein"   # default; or openai/gpt-image-1-mini,
 #   recraft/recraft-v4.1-flash, bytedance/seedream-5.5, bfl/flux-3-image
 # IMAGE_PROVIDER = "none"                  # placeholders only (no image spend)
+# Product analytics: PostHog project "Quippy" (US Cloud). The project token is
+# public (it also ships to browsers); safe-deploy passes it to the Vercel build.
+POSTHOG_KEY = "phc_pXy5DhLkodfAx4b7n9YaUnJt6QkfVXJs4Rzr25zB4Fi7"
+POSTHOG_HOST = "https://us.i.posthog.com"
 
 # Secrets (wrangler secret put <NAME>):
 #   AI_GATEWAY_API_KEY, ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID

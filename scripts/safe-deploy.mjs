@@ -7,6 +7,7 @@
 // freshly loaded page never talks to an older server. Rooms in the lobby are
 // fine to deploy over: they snapshot themselves and phones reconnect.
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 const LIVE = process.env.QUIPPY_LIVE_URL || 'https://live.quippy.party';
 const wait = process.argv.includes('--wait');
@@ -44,5 +45,10 @@ const version = `v0.${git('rev-list', '--count', 'HEAD')} · ${git('rev-parse', 
 console.log(`No games running. Deploying ${version}: live server (Cloudflare)...`);
 execFileSync('npx', ['wrangler@4', 'deploy', '--var', `QUIPPY_VERSION:${version}`], { stdio: 'inherit' });
 console.log('Deploying the website (Vercel)...');
-execFileSync('vercel', ['deploy', '--prod', '--yes', '--build-env', `QUIPPY_VERSION=${version}`], { stdio: 'inherit' });
+// The website reads the PostHog project token from wrangler.toml too (one source).
+const toml = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
+const tomlVar = (name) => toml.match(new RegExp(`^${name}\\s*=\\s*"([^"]*)"`, 'm'))?.[1] || '';
+const buildEnv = [`QUIPPY_VERSION=${version}`, `POSTHOG_KEY=${tomlVar('POSTHOG_KEY')}`, `POSTHOG_HOST=${tomlVar('POSTHOG_HOST')}`]
+  .flatMap((kv) => ['--build-env', kv]);
+execFileSync('vercel', ['deploy', '--prod', '--yes', ...buildEnv], { stdio: 'inherit' });
 console.log('Done.');

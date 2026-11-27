@@ -4,6 +4,7 @@ import { buildConfig } from '../core/config.js';
 import { ContentLibrary } from '../core/content.js';
 import { LLM } from '../core/llm.js';
 import { Tts } from '../core/tts.js';
+import { Analytics } from '../core/analytics.js';
 import { ImageGen } from '../core/images.js';
 import { SqlStore } from '../core/sqlstore.js';
 import { PACKS } from '../content/index.js';
@@ -37,6 +38,7 @@ export function workerDeps(env) {
       put: async (key, bytes, type) => { await env.MEDIA?.put(key, bytes, { httpMetadata: { contentType: type || 'application/octet-stream' } }); },
     },
     log: (...args) => console.log(...args),
+    analytics: new Analytics({ ...config.posthog, dev: config.dev, version: config.version, runtime: 'cloudflare' }),
     tts: new Tts(config.voice, env.MEDIA
       ? {
         get: async (key) => {
