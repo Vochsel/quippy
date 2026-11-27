@@ -400,6 +400,23 @@ function ago(ms) {
   return `${Math.round(hr / 24)} days ago`;
 }
 
+// Everyone in this room, with a Kick button (TV owner only; works mid-game too).
+function showKickList() {
+  const players = (view?.room?.players || []).filter((p) => !p.isBot);
+  $('#kick-section').classList.toggle('hidden', !isOwner || !players.length);
+  if (!isOwner) return;
+  mountInto($('#kick-list'), players.map((p) => h('div.room-item',
+    avatar(p, '2.6rem'),
+    h('span.room-meta', h('span', p.name), h('span.small', `${p.connected ? 'connected' : 'phone asleep / offline'}${p.audience ? ' · audience' : ''}${p.vip ? ' · 👑 VIP' : ''}`)),
+    h('button.btn.pink.mini', {
+      onClick: (e) => {
+        if (!confirm(`Kick ${p.name} out of the room?${view?.room?.phase === 'game' ? ' They’ll drop out of this game.' : ''} They can rejoin with the code.`)) return;
+        live.action('kick', { playerId: p.id });
+        e.target.closest('.room-item').remove();
+      },
+    }, 'Kick'))));
+}
+
 async function showRooms() {
   const box = $('#room-list');
   mountInto(box, h('p.small', 'Loading your rooms…'));
@@ -443,6 +460,7 @@ function setupSettings() {
     $('#set-rate').value = voice.rate;
     $('#set-pitch').value = voice.pitch;
     showRooms();
+    showKickList();
     $('#set-music').value = audio.musicLevel;
     $('#set-sfx').value = audio.sfxLevel;
     dlg.showModal();

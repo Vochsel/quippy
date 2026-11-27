@@ -176,6 +176,26 @@ test('solo mode: AI bots write their own answers and vote with the judge', async
   assert.ok(calls.filter((c) => c === 'answers').length <= 3, 'one answer call per round');
 });
 
+test('the TV can kick someone mid-game; the game carries on and forgets them', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const room = new Room({ code: 'KICK', crewId: 'h_testcrew01', deps: makeDeps(memoryStore(), {}) });
+  await room.init();
+  for (let i = 0; i < 4; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  const victim = room.gameMeta.roster[0];
+  const tv = { role: 'host', isOwner: true, send: () => {} };
+  const phone = { role: 'player', playerId: room.gameMeta.roster[1], send: () => {} };
+  await room.onMessage(phone, { t: 'action', a: 'kick', playerId: victim });
+  assert.ok(room.players.get(victim) && !room.players.get(victim).kicked, 'a phone cannot kick');
+  await room.onMessage(tv, { t: 'action', a: 'kick', playerId: victim });
+  assert.ok(room.players.get(victim).kicked, 'kicked mid-game');
+  assert.ok(!room.publicPlayers().some((p) => p.id === victim), 'hidden from views');
+  const done = await advance(room, (r) => !r.game && r.lastResults);
+  assert.ok(done, 'game still finished');
+  assert.ok(!room.players.has(victim), 'forgotten after the game');
+});
+
 test('a game snapshot resumes mid-round in a fresh Room (restart survival)', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());

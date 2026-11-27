@@ -239,15 +239,18 @@ export class Room {
       case 'settings':
         if (!this.game) await this.#updateSettings(msg.settings || {});
         break;
+      // The TV can remove anyone, any time. Mid-game they're hidden and dropped
+      // (the game just stops waiting for them) and forgotten when it ends.
       case 'kick': {
         const p = this.players.get(msg.playerId);
-        if (p && !this.game) {
-          this.players.delete(p.id);
-          for (const c of this.conns) {
-            if (c.playerId === p.id) { c.send({ t: 'kicked' }); c.playerId = null; c.role = null; }
-          }
-          if (this.vipId === p.id) this.#electVip();
+        if (!p || !isOwnerHost) break;
+        for (const c of this.conns) {
+          if (c.playerId === p.id) { c.send({ t: 'kicked' }); c.playerId = null; c.role = null; }
         }
+        if (this.game) Object.assign(p, { kicked: true, connected: false, audience: true, autoAudience: true });
+        else this.players.delete(p.id);
+        if (this.vipId === p.id) this.#electVip();
+        this.track(this.crewId, 'player_kicked', { mid_game: !!this.game, was_connected: !!p.connected });
         break;
       }
       case 'addBot':
@@ -533,6 +536,7 @@ export class Room {
     this.gameMeta = null;
     this.paused = false;
     this.music = 'lobby';
+    for (const p of [...this.players.values()]) if (p.kicked) this.players.delete(p.id);
     // People who joined mid-game were parked in the audience: deal them in now.
     for (const p of this.players.values()) {
       if (p.autoAudience) { p.audience = false; p.autoAudience = false; }
