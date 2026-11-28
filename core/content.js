@@ -7,7 +7,7 @@
 // so a new locale can start with just a few files and borrow the rest.
 import { fill, hash, pick, shuffle } from './util.js';
 
-const FILES = ['prompts', 'final', 'personal', 'panic', 'callbacks', 'host', 'pictures'];
+const FILES = ['prompts', 'final', 'personal', 'panic', 'callbacks', 'host', 'pictures', 'people'];
 
 export class ContentLibrary {
   constructor(packs, defaultLocale = 'en-AU') {
@@ -60,6 +60,7 @@ export class ContentLibrary {
       final: keyed('final'),
       personal: keyed('personal'),
       pictures: keyed('pictures'), // visual briefs for Picture Duel
+      people: keyed('people'), // picture briefs starring players ({player}, {player2})
       panic: get('panic').data?.answers || [],
       callbacks: get('callbacks').data || { templates: [] },
       host: get('host').data?.lines || {},
@@ -87,6 +88,7 @@ export class RoomContent {
     this.final = pack.final.filter(ok);
     this.personal = pack.personal.filter(ok);
     this.pictures = (pack.pictures || []).filter(ok);
+    this.people = (pack.people || []).filter(ok);
   }
 
   // Choose n prompts, preferring ones this crew hasn't seen and spreading tags.
@@ -115,6 +117,12 @@ export class RoomContent {
   pickPersonal(n, used) { return this.#choose(this.personal, n, used); }
   // Visual briefs (falls back to the regular prompts if a pack has none).
   pickPictures(n, used) { return this.#choose(this.pictures.length ? this.pictures : this.prompts, n, used); }
+  // Picture briefs starring players: { text with {player}/{player2}, key, tags }.
+  // twoUp: true = only two-person briefs, false = only one-person, undefined = any.
+  pickPeople(n, used, twoUp) {
+    const pool = this.people.filter((p) => twoUp === undefined || p.text.includes('{player2}') === twoUp);
+    return this.#choose(pool, n, used);
+  }
   freshCount(used) { return this.prompts.filter((p) => !used?.has(p.key)).length; }
 
   panic() {

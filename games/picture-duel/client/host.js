@@ -38,7 +38,8 @@ export function mount(root, api) {
   ensureCss('/games/picture-duel/client/picture.css');
   const { h, avatar, fmt } = api;
   let key = null;
-  const keyOf = (g) => [g.phase, g.round, g.matchNo || 0, g.closing ? 'closing' : ''].join('|');
+  const keyOf = (g) => [g.phase, g.round, g.matchNo || 0, g.closing ? 'closing' : '',
+    g.phase === 'selfie' ? (g.players || []).map((p) => `${p.id}:${p.done ? 1 : 0}:${p.photo || ''}`).join(',') : ''].join('|');
   const onResize = () => fitStage(root);
   addEventListener('resize', onResize);
 
@@ -51,7 +52,8 @@ export function mount(root, api) {
   }
 
   function brief(g, animate = true) {
-    return h(`div.card.pd-brief${animate ? '.pop-in' : ''}`, h('span.pd-brief-label', 'The brief'), h('div.pd-brief-text', g.prompt));
+    return h(`div.card.pd-brief${animate ? '.pop-in' : ''}`, h('span.pd-brief-label', 'The brief'), h('div.pd-brief-text', g.prompt),
+      (g.stars || []).length ? h('div.pd-brief-stars', g.stars.map((p) => avatar(p, '2.4rem'))) : null);
   }
 
   function voterChip(v, delay) {
@@ -69,10 +71,19 @@ export function mount(root, api) {
         h('h1.q-title.slam', g.title),
         h('p.q-tagline.slide-up', g.tagline),
         h('div.q-steps',
-          [['✍️', 'Write an image prompt on your phone'], ['🎨', 'The robot paints it (3 tries)'], ['🗳️', 'The room picks the better picture']]
+          [['🤳', 'Take a selfie'], ['✍️', 'Get a brief starring someone here, write a prompt'], ['🎨', 'The robot paints it (3 tries)'], ['🗳️', 'The room picks the better picture']]
             .map(([icon, text], i) => h('div.card.q-step.pop-in', { style: { animationDelay: `${0.3 + i * 0.25}s` } },
               h('div.q-step-icon', icon), h('div', text)))),
         g.ai ? null : h('p.pd-note.slide-up', 'No image model connected, so tonight the robot only does sketches.'));
+    },
+
+    // Everyone takes (or keeps) a selfie; ticks as they confirm.
+    selfie(g) {
+      return h('div.pd-create',
+        h('h2.q-heading.slide-up', 'Selfie time 📸'),
+        h('p.q-big.pop-in', 'Take a selfie on your phone. The robot paints you from it.'),
+        h('div.q-done-grid', g.players.map((p) => h(`div.q-done${p.done ? '.yes' : ''}`, { 'data-id': p.id },
+          avatar(p, '6rem'), h('div.nm', p.name), h('div.tick', '✓')))));
     },
 
     loading(g) {

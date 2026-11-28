@@ -1,0 +1,550 @@
+{
+  "_comment": "Picture briefs starring players (painted from their selfies). {player} / {player2} become player names. Used by Picture Duel and Double Take.",
+  "prompts": [
+    {
+      "text": "{player} as a Renaissance portrait, clutching a sausage sanga like a royal sceptre",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as a Lego minifig stuck in a very long Lego Bunnings queue",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} in claymation, losing a staring contest with a swooping magpie",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player}'s 90s yearbook photo: laser background, frosted tips, huge grin",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as a Pixar hero whose best mate is a talking Esky",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} in a Van Gogh painting: Starry Night over a Bunnings carpark",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} in a 1950s magazine ad selling Aeroguard with a dazzling smile",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as an anime hero powering up at a Woolies self-checkout",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as a Lego wedding cake topper, both in thongs",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as a stained-glass window: patron saint of lost thongs",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} and {player2} in a claymation buddy cop show called Servo Patrol",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as a Bluey-style cartoon character, the cool aunt at the barbie",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} as a cubist Picasso portrait, proudly holding a meat pie",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} and {player2} in a 90s yearbook photo: 'Most Likely To Start a Band'",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} in a bright Ken Done painting, sailing past the Opera House",
+      "tags": [
+        "style"
+      ]
+    },
+    {
+      "text": "{player} at a servo at 3am, buying a Chiko Roll with total confidence",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} defending one hot chip from a seagull army at Bondi",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} driving a ute piled high with a mate's couches on moving day",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} taking a spectacular footy mark right over a kangaroo",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} and {player2} fighting over the last snag at a Bunnings sizzle",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} at the cricket, catching a six in a schooner without spilling",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} surfing a massive wave on a bodyboard made of a Tim Tam",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} running a backyard barbie in a hailstorm, totally unbothered",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} and {player2} at the Melbourne Cup in outrageous fascinators",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} as a surf lifesaver heroically rescuing an inflatable flamingo",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} pulling a giant yabby out of a farm dam, utterly shocked",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} bowling at backyard cricket to a very serious dog batting",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a Kombi road trip, posing at the Big Banana",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} chucking a sickie, then spotted on the evening news at the beach",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} at a country show, winning first prize for a giant pumpkin",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} bravely fending off a huntsman spider with a single thong",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} and {player2} in a tinnie, both pointing nervously at a croc sign",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} as the only fan left at the footy in a torrential downpour",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} reversing a boat trailer while {player2} gives terrible directions",
+      "tags": [
+        "aussie"
+      ]
+    },
+    {
+      "text": "{player} on a cereal box: 'Crunchy Arvos, part of a balanced brekkie'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} as an action figure box: 'BBQ Legend, Tongs Sold Separately'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a romance novel cover: 'Love at the Servo'",
+      "tags": [
+        "cover",
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player} on an 80s workout VHS: 'Sweatin' to the Sausage Sizzle'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a heavy metal album cover, riding a flaming emu",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a gossip mag cover: 'My Secret Life as a Bin Chicken'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a Vegemite jar as the bold new face of the brand",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a Lego set box: 'Bunnings Warehouse, 1,204 pieces'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a 70s duo album cover: 'Thongs for the Memories'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a retro tourism poster: 'Visit Wagga, We Have a Pool'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a romance novel cover, shirt open, wielding a whipper snipper",
+      "tags": [
+        "cover",
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player} on a board game card: 'Go Directly to the Servo'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a self-help bestseller: 'She'll Be Right: A Life Strategy'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a buddy cop movie poster: 'Lethal Weapon: Bunnings'",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} on a Time magazine cover: Person of the Year, for Parking",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} as Mr January on a tradie calendar, posing with a power drill",
+      "tags": [
+        "cover",
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a 90s boy band CD cover in matching double denim",
+      "tags": [
+        "cover"
+      ]
+    },
+    {
+      "text": "{player} in a nature doco, Attenborough whispering as they stalk Costco samples",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} on a Wild West wanted poster: 'For Stealing the Last Tim Tam'",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} and {player2} getting married at Bunnings, sausage sizzle reception",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player}'s superhero origin story: bitten by a radioactive drop bear",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on Married at First Sight, both instantly regretting it",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} on a game show, winning a lifetime supply of Bunnings snags",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} in a nature doco, fiercely guarding a nest of TV remotes",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a wanted poster: 'Notorious Shopping Trolley Bandits'",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} and {player2} on a cheesy first date at a drive-in, popcorn everywhere",
+      "tags": [
+        "story",
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player} and {player2} winning pub trivia, holding a trophy that's a toaster",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} as a weather presenter calmly reporting while a cyclone hits",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} in a 1970s police lineup, the only one holding a cockatoo",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as reality TV stars in a hot tub, both gasping",
+      "tags": [
+        "story",
+        "spicy"
+      ]
+    },
+    {
+      "text": "{player} on a dating show, being chosen by a very confident emu",
+      "tags": [
+        "story"
+      ]
+    },
+    {
+      "text": "{player} as Ned Kelly, but the iconic helmet is an actual bucket",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} landing on the moon and planting an Aussie flag in a snag",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} as Napoleon crossing the Alps on a rearing kangaroo",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as Vikings raiding a Bunnings by longboat",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} commanding a vast army of bin chickens into battle",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as Roman gladiators battling with pool noodles",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} rising from the ocean like Poseidon, holding a bucket of prawns",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} as the caveperson who discovered fire, using a Bunnings lighter",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} riding a giant wombat into battle at golden sunset",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} and {player2} signing a historic treaty on a greasy pizza box",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} as Captain Cook, mapping the coastline on a servo receipt",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} and {player2} jousting on ride-on mowers at a medieval fair",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as astronauts having a barbie on the space station",
+      "tags": [
+        "epic"
+      ]
+    },
+    {
+      "text": "{player} cuddling a sleepy koala that has stolen their hat",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as pugs in tiny matching bow ties",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} as a tiny garden gnome tending one prize-winning tomato",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} reading a bedtime story to a row of baby wombats",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} and {player2} sharing one milkshake with two straws at a 50s diner",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} as a Studio Ghibli-style character sharing lunch with a quokka",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} followed by a line of ducklings who think they're mum",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} and {player2} hosting a fancy tea party for a kookaburra",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} in a onesie, fast asleep on a giant pavlova",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} knitting a tiny woolly jumper for a little penguin",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} and {player2} as kids mid-bounce on a backyard trampoline",
+      "tags": [
+        "cute"
+      ]
+    },
+    {
+      "text": "{player} as a cuddly Care Bear with a meat pie symbol",
+      "tags": [
+        "cute"
+      ]
+    }
+  ]
+}

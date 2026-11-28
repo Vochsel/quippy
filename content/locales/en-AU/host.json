@@ -2,8 +2,8 @@
   "_comment": "Everything the host (Monty) says, plus short status lines for phones. {placeholders} are filled in by the game. Add variants freely; one is picked at random.",
   "lines": {
     "pdIntro": [
-      "Welcome to {game}. You each get a brief. Write an image prompt, the robot paints it, and the room picks the better picture. Art school, but quicker.",
-      "This is {game}. Describe a picture, the machine draws it, everyone else judges. No talent required. Just as well."
+      "Welcome to {game}. Take a selfie, then you each get a brief starring someone in this room. Write a prompt, the robot paints it, and the room picks the winner.",
+      "{game}. The robot paints. You lot star in it. Selfies first, then prompts, then judgement."
     ],
     "pdRoundTitle1": [
       "Round 1 · Sketchy"
@@ -438,6 +438,11 @@
     "unpaused": [
       "And we're back.",
       "Right, where were we? Oh yes. Suffering."
+    ],
+    "pdSelfie": [
+      "Selfie time. Phones up, faces in. The robot needs to know who it's painting.",
+      "Everyone take a selfie. Good light, big smile. You're about to be immortalised. Badly.",
+      "Selfies, please. The robot paints you from these, so maybe not the double chin angle."
     ]
   }
 }

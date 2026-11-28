@@ -20,8 +20,10 @@ export class ImageGen {
     return { available: this.available(), model: this.available() ? this.cfg.model : null };
   }
 
-  // -> { bytes: Uint8Array, type: 'image/jpeg' | 'image/png' | 'image/webp', ms }
-  async generate({ prompt, reference = null, signal } = {}) {
+  // references: photos (Uint8Array) of the people/things to feature, e.g. the
+  // players' selfies. -> { bytes, type: 'image/jpeg' | 'image/png' | 'image/webp', ms }
+  async generate({ prompt, reference = null, references = null, signal } = {}) {
+    const refs = (references || (reference ? [reference] : [])).filter(Boolean);
     if (!this.available()) throw new Error('image generation is off');
     const [{ generateImage }, { createGateway }] = await Promise.all([import('ai'), import('@ai-sdk/gateway')]);
     this.gateway ||= createGateway({ apiKey: this.cfg.gatewayKey });
@@ -29,8 +31,9 @@ export class ImageGen {
     const timeout = AbortSignal.timeout(this.cfg.timeoutMs || 60000);
     const result = await generateImage({
       model: this.gateway.imageModel(this.cfg.model),
-      prompt: reference ? { text: prompt, images: [reference] } : prompt,
+      prompt: refs.length ? { text: prompt, images: refs } : prompt,
       size: this.cfg.size || undefined,
+      providerOptions: this.cfg.quality && /^openai\//.test(this.cfg.model) ? { openai: { quality: this.cfg.quality } } : undefined,
       maxRetries: 1,
       abortSignal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });

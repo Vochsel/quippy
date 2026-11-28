@@ -78,9 +78,12 @@ export function buildConfig(env = {}) {
     image: {
       provider: (env.IMAGE_PROVIDER || 'auto').toLowerCase(), // auto | gateway | none
       gatewayKey: env.AI_GATEWAY_API_KEY || '',
-      model: env.IMAGE_MODEL || 'bfl/flux-3-image-klein',
-      size: env.IMAGE_SIZE || '768x768',
-      timeoutMs: num(env.IMAGE_TIMEOUT_MS, 60000),
+      // GPT Image 2 keeps people recognisable from a selfie and follows briefs
+      // closely; "low" quality is ~13s and ~1.4c an image (medium: ~35s, ~6c).
+      model: env.IMAGE_MODEL || 'openai/gpt-image-2',
+      quality: env.IMAGE_QUALITY || 'low',
+      size: env.IMAGE_SIZE || '1024x1024',
+      timeoutMs: num(env.IMAGE_TIMEOUT_MS, 90000),
     },
 
     // Default timings in seconds (answer time can be changed per room).

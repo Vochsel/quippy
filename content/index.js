@@ -10,6 +10,7 @@ import enAUpanic from './locales/en-AU/panic.json' with { type: 'json' };
 import enAUcallbacks from './locales/en-AU/callbacks.json' with { type: 'json' };
 import enAUhost from './locales/en-AU/host.json' with { type: 'json' };
 import enAUpictures from './locales/en-AU/pictures.json' with { type: 'json' };
+import enAUpeople from './locales/en-AU/people.json' with { type: 'json' };
 // Host personas (see core/tones.js); regenerate with scripts/gen-tones.mjs.
 import enAUtoneSexy from './locales/en-AU/tones/sexy.json' with { type: 'json' };
 import enAUtoneArgumentative from './locales/en-AU/tones/argumentative.json' with { type: 'json' };
@@ -26,6 +27,7 @@ export const PACKS = {
     callbacks: enAUcallbacks,
     host: enAUhost,
     pictures: enAUpictures,
+    people: enAUpeople,
     tones: { sexy: enAUtoneSexy, argumentative: enAUtoneArgumentative, therapist: enAUtoneTherapist, chaplain: enAUtoneChaplain },
   },
 };

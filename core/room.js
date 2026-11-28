@@ -10,7 +10,7 @@
 import { noAnalytics } from './analytics.js';
 import { effectiveTone, speechMs, TONES, TONE_IDS } from './tones.js';
 import { GAMES, gameById } from '../games/registry.js';
-import { applyGameResult, pickFreeColor, publicProfile, saveProfileBasics } from './profiles.js';
+import { applyGameResult, pickFreeColor, PHOTO_RE, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
 import { cleanName, FACE_COUNT, PLAYER_COLORS, pick, uid } from './util.js';
 import { ImageGen, MEDIA_KEY_RE } from './images.js';
@@ -221,6 +221,17 @@ export class Room {
       }
       const saved = await saveProfileBasics(this.deps.store, { id: p.id, name: p.name, color: p.color, face: p.face, photo: msg.photo });
       p.photo = saved.photo || null;
+      this.dirty();
+      return;
+    }
+    // A selfie taken inside a game (picture games start with one): it becomes
+    // the player's profile photo, and games use it as their picture reference.
+    if (a === 'selfie' && conn.role === 'player') {
+      const p = this.players.get(conn.playerId);
+      if (!p || !PHOTO_RE.test(msg.photo || '')) return;
+      const saved = await saveProfileBasics(this.deps.store, { id: p.id, name: p.name, color: p.color, face: p.face, photo: msg.photo });
+      p.photo = saved.photo || null;
+      this.game?.onAction?.(p.id, { type: 'selfieDone' });
       this.dirty();
       return;
     }
@@ -441,6 +452,13 @@ export class Room {
         return p ? { id: p.id, name: p.name, color: p.color, face: p.face, photo: p.photo || null, isBot: !!p.isBot } : { id, name: 'Someone', color: '#ccc', face: 0 };
       },
       isConnected: (id) => !!room.players.get(id)?.connected,
+      // A player's profile photo / selfie as bytes (picture references), or null.
+      photoOf: async (id) => {
+        const file = room.players.get(id)?.photo;
+        if (!file || !PHOTO_RE.test(file) || !room.deps.media) return null;
+        return room.deps.media.get(`photos/${file}`).catch(() => null);
+      },
+      hasPhoto: (id) => !!room.players.get(id)?.photo,
       // Members not yet in this game (joined late / missed the deal), up to a cap.
       newcomers: (max) => {
         const roster = new Set(room.gameMeta?.roster || []);

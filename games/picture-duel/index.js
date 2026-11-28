@@ -1,10 +1,12 @@
 // Picture Duel: Zinger Duel with AI pictures.
 //
-//   Each round every player gets ONE brief ("A koala's worst first date"),
-//   shared with exactly one rival. On their phone they write an image prompt
-//   (optionally with a reference photo), generate up to 3 pictures, pick one
-//   and send it. Then each pair goes head to head: everyone else votes for the
-//   better picture. Round 1 is worth x1, round 2 x2.
+//   It opens with a selfie step: every player takes (or keeps) a selfie, which
+//   becomes their profile photo. Each round every player gets ONE brief that
+//   stars a player ("Ben as a Bunnings action figure"), shared with exactly
+//   one rival. On their phone they write an image prompt, generate up to 3
+//   pictures (the starring players' selfies are used automatically, nobody
+//   uploads anything), pick one and send it. Then each pair goes head to head:
+//   everyone else votes for the better picture. Round 1 is worth x1, round 2 x2.
 //
 // Images are generated server-side (ctx.images) and stored in the media store
 // (ctx.media); game state only keeps media keys. Bots, tests and rooms without
@@ -23,7 +25,8 @@ const REVEAL_MS = 11000;
 const SCORES_MS = 9000;
 const GAME_OVER_MS = 40000;
 const GRACE_MS = 25000; // after the timer, wait this long for pictures still painting
-const TIMED = ['create', 'vote'];
+const SELFIE_MS = 45000;
+const TIMED = ['selfie', 'create', 'vote'];
 
 const zero = () => ({
   matchupsPlayed: 0, matchupsWon: 0, shutouts: 0, votesReceived: 0, votesCast: 0,
@@ -63,6 +66,8 @@ class PictureDuel {
       roundStartScores: {},
       tallies: Object.fromEntries(roster.map((id) => [id, zero()])),
       extras: {}, // who has had to draw two briefs (odd player counts)
+      starred: {}, // how often each player has starred in a brief
+      selfies: {}, // who has confirmed their selfie this game
       matchups: [], matchIdx: 0, history: [], awards: [], closing: false,
     };
   }
@@ -92,11 +97,13 @@ class PictureDuel {
       else { this.#botsCreate(); this.#scheduleCountdown(); }
     }
     if (s.phase === 'vote') this.#botsVote();
+    if (s.phase === 'selfie') this.#scheduleCountdown();
   }
 
   onTimer(name) {
     switch (name) {
-      case 'intro': return this.#beginRound(1);
+      case 'intro': return this.#startSelfies();
+      case 'selfie': return this.#beginRound(1);
       case 'loading': return this.#startCreate();
       case 'create': return this.#closeCreate();
       case 'createGrace': return this.#endCreate();
@@ -110,7 +117,7 @@ class PictureDuel {
 
   onContinue() {
     if (this.s.phase === 'gameOver') this.#finish();
-    else if (['reveal', 'scores', 'intro'].includes(this.s.phase)) this.onTimer(this.s.phase);
+    else if (['reveal', 'scores', 'intro', 'selfie'].includes(this.s.phase)) this.onTimer(this.s.phase);
   }
 
   onHostAction(p) {
@@ -121,6 +128,13 @@ class PictureDuel {
     if (!p || typeof p !== 'object') return;
     const s = this.s;
     switch (p.type) {
+      case 'selfieDone':
+        if (s.phase === 'selfie' && s.roster.includes(pid)) {
+          s.selfies[pid] = true;
+          if (this.#humans().every((id) => s.selfies[id])) this.onTimer('selfie');
+          else this.ctx.update();
+        }
+        break;
       case 'generate':
         if (s.phase === 'create') this.#generate(pid, p.matchupId, p.prompt, p.ref);
         break;
@@ -178,6 +192,30 @@ class PictureDuel {
     }
   }
 
+  #humans() { return this.s.roster.filter((id) => !this.ctx.isBot(id) && this.ctx.isConnected(id)); }
+
+  // Everyone takes (or keeps) a selfie: briefs star the players, painted from these.
+  #startSelfies() {
+    const s = this.s;
+    for (const id of s.roster) if (this.ctx.isBot(id)) s.selfies[id] = true;
+    if (!this.#humans().length) return this.#beginRound(1);
+    this.#phase('selfie', SELFIE_MS);
+    this.#scheduleCountdown();
+    this.ctx.sayLine('pdSelfie', {});
+    this.ctx.buzz(this.#humans(), [80, 60, 80]);
+    return undefined;
+  }
+
+  // Who stars in a brief: players with a photo first (they can be painted
+  // properly), then whoever has starred least, ideally not the two authors.
+  #cast(authors, n) {
+    const s = this.s;
+    const score = (id) => (this.ctx.hasPhoto?.(id) ? 0 : 10) + (s.starred[id] || 0) * 2 + (authors.includes(id) ? 3 : 0) + Math.random();
+    const picked = [...s.roster].sort((a, b) => score(a) - score(b)).slice(0, n);
+    for (const id of picked) s.starred[id] = (s.starred[id] || 0) + 1;
+    return picked;
+  }
+
   #beginRound(r) {
     const s = this.s;
     if (r > ROUNDS) return this.#gameOver();
@@ -213,11 +251,27 @@ class PictureDuel {
     const s = this.s;
     const pairs = this.#deal();
     const used = this.ctx.usedPrompts;
-    let briefs = this.ctx.content.pickPictures?.(pairs.length, used) || [];
-    if (briefs.length < pairs.length) briefs = [...briefs, ...this.ctx.content.pickPrompts(pairs.length - briefs.length, used)];
+    // Briefs star players ("{player} as a Bunnings action figure"); about a
+    // third star two. Falls back to the plain visual briefs if a pack has none.
+    const people = this.ctx.content.pickPeople?.(pairs.length * 2, used) || [];
+    const ones = people.filter((p) => !p.text.includes('{player2}'));
+    const twos = people.filter((p) => p.text.includes('{player2}'));
+    let plain = null;
+    const brief = (i, authors) => {
+      const want2 = s.roster.length >= 4 && i % 3 === 2 && twos.length;
+      const b = (want2 ? twos.shift() : ones.shift()) || twos.shift() || ones.shift();
+      if (!b) {
+        plain ||= this.ctx.content.pickPictures?.(pairs.length, used) || this.ctx.content.pickPrompts(pairs.length, used);
+        const p = plain[i] || plain[0];
+        return { text: cleanText(p?.text || 'Something wonderful', 160), key: p?.key || null, stars: [] };
+      }
+      const stars = this.#cast(authors, b.text.includes('{player2}') ? 2 : 1);
+      const text = b.text.replaceAll('{player}', this.ctx.playerName(stars[0])).replaceAll('{player2}', this.ctx.playerName(stars[1] || stars[0]));
+      return { text: cleanText(text, 160), key: b.key || null, stars };
+    };
     s.matchups = pairs.map((authors, i) => ({
       id: `r${s.round}m${i}`, round: s.round,
-      prompt: { text: cleanText(briefs[i]?.text || 'Something wonderful', 160), key: briefs[i]?.key || null },
+      prompt: brief(i, authors),
       authors,
       entries: Object.fromEntries(authors.map((a) => [a, { tries: [], picked: null, submitted: false, final: null, busy: null, error: null, attempts: 0 }])),
       votes: {}, order: [], result: null,
@@ -270,11 +324,22 @@ class PictureDuel {
       const seed = [...`${pid}${prompt}`].reduce((x, c) => x + c.charCodeAt(0), 0);
       return ctx.media.put(`gen/${name}.svg`, new TextEncoder().encode(placeholderSvg(prompt, seed)), 'image/svg+xml');
     }
-    const reference = refKey ? await ctx.media.get(refKey) : null;
-    const text = reference
-      ? `${prompt}. Use the person or thing in the reference photo as the main subject.`
-      : prompt;
-    const out = await ctx.images.generate({ prompt: text, reference });
+    // The brief's stars are painted from their selfies (taken at the start).
+    const m = this.s.matchups.find((x) => x.id === matchupId);
+    const stars = (m?.prompt.stars || []);
+    const photos = await Promise.all(stars.map((id) => ctx.photoOf?.(id)));
+    const withPhoto = stars.filter((id, i) => photos[i]);
+    const references = photos.filter(Boolean);
+    const extra = refKey ? await ctx.media.get(refKey) : null;
+    if (extra) references.push(extra);
+    const names = withPhoto.map((id) => ctx.playerName(id));
+    const text = [
+      prompt,
+      names.length ? `${names.map((n, i) => `${names.length > 1 ? `The person in reference photo ${i + 1}` : 'The person in the reference photo'} IS ${n}`).join('. ')}. Whenever the prompt mentions ${names.join(' or ')}, paint exactly that person, clearly recognisable; don't add anyone else for that name.` : '',
+      extra ? 'Also feature the person or thing in the last reference photo.' : '',
+      'Bright, funny and vivid. No captions or lettering unless the prompt asks for words.',
+    ].filter(Boolean).join(' ');
+    const out = await ctx.images.generate({ prompt: text, references });
     ctx.log(`picture-duel: ${matchupId} image in ${out.ms} ms (${out.bytes.length} bytes)`);
     const ext = IMAGE_EXT[out.type] || 'jpg';
     return ctx.media.put(`gen/${name}.${ext}`, out.bytes, out.type);
@@ -621,6 +686,8 @@ class PictureDuel {
     switch (s.phase) {
       case 'intro':
         return { ...base, tagline: meta.tagline, ai: !!this.ctx.images?.available() };
+      case 'selfie':
+        return { ...base, players: s.roster.map((id) => ({ ...this.#pub(id), done: !!s.selfies[id] })) };
       case 'loading':
         return { ...base, text: s.loadingText };
       case 'create':
@@ -638,7 +705,7 @@ class PictureDuel {
         const m = s.matchups[s.matchIdx];
         const voters = this.#eligibleVoters(m);
         return {
-          ...base, prompt: m.prompt.text, matchNo: s.matchIdx + 1, matchTotal: s.matchups.length,
+          ...base, prompt: m.prompt.text, stars: (m.prompt.stars || []).map((id) => this.#pub(id)), matchNo: s.matchIdx + 1, matchTotal: s.matchups.length,
           images: m.order.map((id, i) => ({ key: i ? 'B' : 'A', url: this.#url(m.entries[id].final?.key) })),
           voters: voters.map((v) => ({ ...this.#pub(v), done: !!m.votes[v] })),
         };
@@ -679,6 +746,8 @@ class PictureDuel {
     switch (s.phase) {
       case 'intro':
         return watch('phoneIntro');
+      case 'selfie':
+        return inGame ? { ...base, screen: 'selfie', done: !!s.selfies[pid] } : watch('phoneIntro');
       case 'loading':
         return watch('phonePdLoading');
       case 'create': {
@@ -690,6 +759,7 @@ class PictureDuel {
         if (s.closing && !e.busy) return watch('phonePdSubmitted');
         return {
           ...base, screen: 'create', matchupId: m.id, prompt: m.prompt.text, index: mine.indexOf(m) + 1, total: mine.length,
+          stars: (m.prompt.stars || []).map((id) => ({ ...this.#pub(id), photo: this.#pub(id).photo || null })),
           tries: e.tries.map((t) => ({ url: this.#url(t.key), prompt: t.prompt, ref: !!t.ref })),
           picked: e.picked, busy: e.busy ? { prompt: e.busy.prompt, at: e.busy.at } : null, error: e.error,
           triesLeft: Math.max(0, Math.min(MAX_TRIES - e.tries.length, MAX_ATTEMPTS - e.attempts)), maxTries: MAX_TRIES,

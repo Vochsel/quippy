@@ -1,7 +1,7 @@
 // Picture Duel: phone screens.
 // mount(root, api) -> { update(gameView, roomView, me), destroy() }
-import { api as http, LIVE } from '/js/lib/net.js';
-import { deviceId } from '/js/lib/identity.js';
+import { LIVE } from '/js/lib/net.js';
+import { selfieCard } from '/js/lib/selfie.js';
 
 function ensureCss(href) {
   if (!document.querySelector(`link[href="${href}"]`)) {
@@ -11,22 +11,6 @@ function ensureCss(href) {
 
 const src = (url) => (url ? LIVE + url : '');
 const MOOD = { win: '🎉', lose: '😬' };
-
-// Crop to a centred square and shrink to a JPEG data URL (same as profile photos).
-async function squareJpeg(fileObj, size) {
-  const bmp = await createImageBitmap(fileObj, { imageOrientation: 'from-image' }).catch(() => null);
-  const img = bmp || await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = () => rej(new Error('unreadable image'));
-    i.src = URL.createObjectURL(fileObj);
-  });
-  const w = img.width; const hgt = img.height; const side = Math.min(w, hgt);
-  const c = document.createElement('canvas');
-  c.width = size; c.height = size;
-  c.getContext('2d').drawImage(img, (w - side) / 2, (hgt - side) / 2, side, side, 0, 0, size, size);
-  return c.toDataURL('image/jpeg', 0.82);
-}
 
 export function mount(root, api) {
   ensureCss('/games/_quip/client/quip.css');
@@ -38,38 +22,33 @@ export function mount(root, api) {
   // Reference photo + draft prompt survive re-renders (per brief).
   const drafts = {};
 
-  const keyOf = (g) => [g.phase, g.round, g.screen, g.matchupId || '', g.textKey || ''].join('|');
+  const keyOf = (g, me) => [g.phase, g.round, g.screen, g.matchupId || '', g.textKey || '', g.screen === 'selfie' ? `${!!g.done}|${me?.photo || ''}` : ''].join('|');
 
   function createScreen(g) {
-    const d = (drafts[g.matchupId] ||= { text: '', ref: null, refPreview: null });
+    const d = (drafts[g.matchupId] ||= { text: '' });
     const ta = h('textarea', {
       maxLength: g.maxChars || 240, rows: 3, placeholder: 'Describe the picture… e.g. "a koala in a tux spilling red wine, cartoon"',
       autocomplete: 'off', autocorrect: 'off', autocapitalize: 'sentences', spellcheck: 'false', 'data-gramm': 'false',
     });
     ta.value = d.text;
     const chars = h('div.ph-chars');
-    const file = h('input', { type: 'file', accept: 'image/*', style: { display: 'none' } });
-    const refBox = h('div.pd-refbox');
+    // Who's in the picture: painted from their selfies automatically.
+    const refBox = (g.stars || []).length
+      ? h('div.pd-stars', h('span', 'Starring'), g.stars.map((p) => h('span.pd-star', api.avatar(p, '2rem'), h('b', p.name))),
+        h('small', g.stars.some((p) => p.photo) ? 'from their selfie' : ''))
+      : null;
     const genBtn = h('button.btn.pink.pd-gen');
     const status = h('div.pd-status');
     const gallery = h('div.pd-gallery');
     const sendBtn = h('button.btn.lime.block.pd-send', 'Send this one ✓');
     let view = g;
-    let uploading = false;
     let picked = g.picked;
     let lastCount = g.tries.length;
 
     const paintChars = () => { chars.textContent = `${ta.value.length} / ${view.maxChars || 240}`; };
-    const paintRef = () => {
-      mountInto(refBox,
-        d.refPreview ? h('img.pd-refthumb', { src: d.refPreview, alt: 'reference photo' }) : null,
-        h('button.btn.white.pd-refbtn', { disabled: uploading, onClick: () => file.click() },
-          uploading ? 'Uploading…' : d.ref ? '📷 Change photo' : '📷 Add a photo (optional)'),
-        d.ref ? h('button.btn.white.pd-refbtn', { onClick: () => { d.ref = null; d.refPreview = null; paintRef(); } }, '✕') : null);
-    };
     const paintButtons = () => {
       const busy = !!view.busy;
-      genBtn.disabled = busy || uploading || !ta.value.trim() || view.triesLeft <= 0 || view.closing;
+      genBtn.disabled = busy || !ta.value.trim() || view.triesLeft <= 0 || view.closing;
       genBtn.textContent = view.triesLeft <= 0 ? 'No tries left' : view.tries.length ? `🎨 Try again (${view.triesLeft} left)` : `🎨 Generate (${view.triesLeft} tries)`;
       sendBtn.disabled = picked === null || picked === undefined || !view.tries[picked] || busy;
       sendBtn.classList.toggle('hidden', !view.tries.length);
@@ -81,7 +60,7 @@ export function mount(root, api) {
         const bar = h('div.pd-bar', h('div'));
         const label = h('span', 'Painting…');
         mountInto(status, h('div.pd-painting', h('span.spinner'), label), bar);
-        const expect = view.ai ? 9000 : 1500;
+        const expect = view.ai ? 14000 : 1500;
         const step = () => {
           const t = Math.max(0, api.serverNow() - started);
           bar.firstChild.style.width = `${Math.min(95, (1 - Math.exp(-t / expect)) * 100)}%`;
@@ -113,27 +92,12 @@ export function mount(root, api) {
       if (p) gallery.append(h('p.pd-picked-prompt', `“${p.prompt}”`));
     };
 
-    file.addEventListener('change', async () => {
-      const f = file.files?.[0];
-      file.value = '';
-      if (!f) return;
-      uploading = true; paintRef(); paintButtons();
-      try {
-        const image = await squareJpeg(f, 512);
-        const res = await http('/api/media/ref', { deviceId: deviceId(), image });
-        d.ref = res.key; d.refPreview = image;
-        api.toast('Photo added ✓', 1200);
-      } catch (e) {
-        api.toast(`Couldn't use that photo (${e.message})`);
-      }
-      uploading = false; paintRef(); paintButtons();
-    });
     ta.addEventListener('input', () => { d.text = ta.value; paintChars(); paintButtons(); });
     genBtn.addEventListener('click', () => {
       const prompt = ta.value.trim();
       if (!prompt || genBtn.disabled) return;
       genBtn.disabled = true;
-      api.send({ type: 'generate', matchupId: view.matchupId, prompt, ref: d.ref || undefined });
+      api.send({ type: 'generate', matchupId: view.matchupId, prompt });
       api.vibrate(30);
       ta.blur();
     });
@@ -148,7 +112,7 @@ export function mount(root, api) {
       h('div.card',
         h('div.ph-count', g.total > 1 ? `Brief ${g.index} of ${g.total}` : 'Your brief'),
         h('p.ph-prompt', g.prompt),
-        ta, chars, refBox, file,
+        refBox, ta, chars,
         h('div.ph-actions', genBtn),
         status),
       gallery,
@@ -161,11 +125,15 @@ export function mount(root, api) {
       if (picked === null || picked === undefined) picked = next.picked;
       paintStatus(); paintGallery(); paintButtons();
     };
-    paintChars(); paintRef(); patch(g);
+    paintChars(); patch(g);
     return { el, patch, matchupId: g.matchupId };
   }
 
   const screens = {
+    selfie(g, room, me) {
+      return selfieCard({ h, me, action: api.action, send: api.send, toast: api.toast, done: g.done });
+    },
+
     watch(g) {
       const emoji = MOOD[g.mood] || (g.phase === 'loading' ? '🎨' : g.phase === 'vote' ? '🤐' : g.phase === 'create' ? '🖼️' : '📺');
       return h('div.ph-watch.pop-in',
@@ -200,7 +168,7 @@ export function mount(root, api) {
   return {
     update(g, room, me) {
       if (!g) return;
-      const k = keyOf(g);
+      const k = keyOf(g, me);
       if (k === key) {
         if (create && g.screen === 'create' && g.matchupId === create.matchupId) create.patch(g);
         return;

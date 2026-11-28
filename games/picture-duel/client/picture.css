@@ -36,9 +36,11 @@
 /* ---------- Phone ---------- */
 .pd-create-ph .card { margin-bottom: .8rem; }
 .pd-create-ph textarea { font-size: 1.05rem; min-height: 4.6rem; margin: .7rem 0 .2rem; width: 100%; }
-.pd-refbox { display: flex; align-items: center; gap: .5rem; margin-top: .4rem; }
-.pd-refbtn { font-size: .9rem; padding: .45rem .7rem; }
-.pd-refthumb { width: 2.8rem; height: 2.8rem; border-radius: 10px; border: 3px solid var(--ink); object-fit: cover; }
+.pd-stars { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .6rem; margin: .2rem 0 .5rem; font-size: .95rem; }
+.pd-stars > span:first-child { font-weight: 900; opacity: .7; }
+.pd-star { display: inline-flex; align-items: center; gap: .3rem; background: rgba(26, 15, 46, .08); padding: .15rem .55rem .15rem .2rem; border-radius: 999px; }
+.pd-stars small { opacity: .6; }
+.pd-brief-stars { display: flex; justify-content: center; gap: .4rem; margin-top: .5rem; }
 .pd-gen { font-size: 1.1rem; }
 .pd-status:empty { display: none; }
 .pd-status { margin-top: .7rem; color: var(--ink); }
