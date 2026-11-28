@@ -10,6 +10,7 @@
 // Club share this engine. All state lives in `this.s` (plain JSON) so the game
 // can be snapshotted and resumed after a restart.
 import { botAnswers, botJudge } from '../../core/botbrain.js';
+import { aiMatchupQuips, aiScoresQuip } from './quips.js';
 import { cleanText, fill, pick, shuffle, sleep, withTimeout } from '../../core/util.js';
 
 // Every round is worth more: round 1 x1, round 2 x2, the final x3.
@@ -430,9 +431,16 @@ export class QuipGame {
     this.ctx.sayCue(m.readA || `"${a}".`, 'A', m.id);
     this.ctx.sayCue(m.readB || `Or. "${b}".`, 'B', m.id);
     this.#prepareResultLines(m);
-    if (this.p.quip) {
-      this.quips[m.id] = withTimeout(Promise.resolve(this.p.quip(this, m)), 20000).catch(() => null)
-        .then((line) => { if (typeof line === 'string' && line.trim()) this.ctx.prewarm?.([cleanText(line, 200)]); return line; });
+    // Monty's personal jab for this matchup, written while the room votes: one
+    // version per possible result, so the reveal can aim it at the right person.
+    if (this.ctx.llm?.available() || this.p.quip) {
+      const job = this.ctx.llm?.available() ? aiMatchupQuips(this.ctx, this, m) : this.p.quip(this, m);
+      this.quips[m.id] = withTimeout(Promise.resolve(job), 20000).catch(() => null)
+        .then((line) => {
+          const all = typeof line === 'string' ? [line] : Object.values(line || {});
+          this.ctx.prewarm?.(all.filter((t) => typeof t === 'string' && t.trim()).map((t) => cleanText(t, 220)));
+          return line;
+        });
     }
     if (s.matchIdx === s.matchups.length - 1) this.prefetch(s.round + 1);
     // No TV to read it out: open voting straight away.
@@ -519,6 +527,16 @@ export class QuipGame {
     if (s.matchIdx === s.matchups.length - 1) {
       s.scoresLine = this.#scoresLine();
       this.ctx.prewarm?.([s.scoresLine]);
+      // A personal scoreboard jab, ready (and voiced) by the time the board shows.
+      this.scoresAi = null;
+      if (this.ctx.llm?.available()) {
+        const round = s.round;
+        withTimeout(aiScoresQuip(this.ctx, this), 9000).catch(() => null).then((line) => {
+          if (!line || this.s.round !== round) return;
+          this.ctx.prewarm?.([line]);
+          this.scoresAi = { round, line: cleanText(line, 240) };
+        });
+      }
     }
     const loser = winner && m.authors.find((x) => x !== winner);
     const vars = { name: winner ? this.ctx.playerName(winner) : '', other: loser ? this.ctx.playerName(loser) : '' };
@@ -544,7 +562,11 @@ export class QuipGame {
     // Give the model a moment; if its line isn't ready, use a stock one.
     Promise.all([withTimeout(quip, 2500).catch(() => null), sleep(REVEAL_SPEAK_MS)]).then(([line]) => {
       if (epoch !== this.epoch) return;
-      const text = typeof line === 'string' && line.trim() ? cleanText(line, 200) : null;
+      // Per-result lines: the winner's version, or the tie one.
+      const chosen = typeof line === 'string' ? line
+        : line && (kind === 'win' || kind === 'shutout') ? line[winner]
+          : line && (kind === 'tie' || kind === 'noVotes') ? line.tie : null;
+      const text = typeof chosen === 'string' && chosen.trim() ? cleanText(chosen, 220) : null;
       if (text) {
         m.result.quip = text;
         this.ctx.say(text);
@@ -566,7 +588,9 @@ export class QuipGame {
     const s = this.s;
     s.history.push(...s.matchups);
     s.matchups = [];
-    const line = s.scoresLine || this.#scoresLine();
+    const ai = this.scoresAi?.round === s.round ? this.scoresAi.line : null;
+    this.scoresAi = null;
+    const line = ai || s.scoresLine || this.#scoresLine();
     // The board animates for ~2.5s before settling; the line plays over it.
     this.#phase('scores', this.#fit(SCORES_MS, line, 1500));
     this.ctx.music('results');

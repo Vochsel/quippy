@@ -68,3 +68,16 @@
 .pd-opt .q-letter { top: -.7rem; left: -.7rem; width: 2.4rem; height: 2.4rem; font-size: 1.3rem; }
 .pd-opt.on { outline: 5px solid var(--lime); outline-offset: 2px; }
 .pd-opt:disabled:not(.on) { opacity: .5; }
+
+/* Winning picture, full-screen */
+.pd-winner { position: fixed; inset: 0; z-index: 40; display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 1rem; padding: 3vh 4vw 4vh; background: rgba(10, 4, 20, 0); transition: background .6s ease; pointer-events: none; }
+.pd-winner.open { background: rgba(10, 4, 20, .9); }
+.pd-win-stage { min-height: 0; display: grid; place-items: center; overflow: hidden; border-radius: 28px; }
+.pd-win-img { max-height: 64vh; max-width: 88vw; border-radius: 28px; border: 8px solid #fff; box-shadow: 0 0 0 6px var(--ink), 0 30px 80px rgba(0, 0, 0, .6); transition: transform .9s cubic-bezier(.2, 1.15, .3, 1); transform-origin: center; }
+.pd-winner.open .pd-win-img { transform: none; animation: pdKenBurns 7s ease-out .9s both; }
+@keyframes pdKenBurns { from { transform: scale(1); } to { transform: scale(1.08) translateY(-1%); } }
+.pd-win-banner { display: flex; align-items: center; gap: 1rem; font-family: var(--head); font-size: 3.4rem; color: var(--ink); background: var(--yellow); border: 5px solid var(--ink); border-radius: 999px; padding: .3rem 1.6rem .3rem 1.1rem; box-shadow: var(--shadow); animation-delay: .5s; }
+.pd-win-banner b { font-size: 2.6rem; }
+.pd-win-trophy { font-size: 3rem; }
+.pd-win-brief { margin: 0; font-size: 1.6rem; color: #fff; opacity: .9; text-align: center; max-width: 70vw; animation-delay: .8s; }
+.pd-winner.closing { opacity: 0; transition: opacity .6s ease; }

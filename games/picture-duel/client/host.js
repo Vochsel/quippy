@@ -193,6 +193,46 @@ export function mount(root, api) {
     },
   };
 
+  // The winning picture lifts out of its card and fills the TV for a few
+  // seconds (slow zoom, banner, confetti), then fades before the next duel.
+  let winTimers = [];
+  let winEl = null;
+  function clearWinner() {
+    winTimers.forEach(clearTimeout); winTimers = [];
+    if (winEl) { winEl.remove(); winEl = null; }
+  }
+  function winnerShow(g) {
+    const win = (g.answers || []).find((a) => a.winner && a.url);
+    if (!win) return;
+    winTimers.push(setTimeout(() => {
+      const frame = root.querySelector('.q-res.win img');
+      const from = frame?.getBoundingClientRect();
+      const img = h('img.pd-win-img', { src: src(win.url), alt: 'winning picture' });
+      winEl = h('div.pd-winner',
+        h('div.pd-win-stage', img),
+        h('div.pd-win-banner.slam',
+          h('span.pd-win-trophy', g.kind === 'shutout' ? '💯' : '🏆'),
+          h('span', g.kind === 'shutout' ? 'SHUTOUT!' : 'WINNER'),
+          avatar(win.author, '3.4rem'), h('b', win.author.name)),
+        h('p.pd-win-brief.slide-up', g.prompt));
+      document.body.append(winEl);
+      // FLIP: start exactly over the card's picture, then grow to fill the screen.
+      if (from) {
+        const to = img.getBoundingClientRect();
+        img.style.transform = `translate(${from.left + from.width / 2 - (to.left + to.width / 2)}px, ${from.top + from.height / 2 - (to.top + to.height / 2)}px) scale(${from.width / Math.max(1, to.width)})`;
+        img.getBoundingClientRect();
+      }
+      requestAnimationFrame(() => winEl?.classList.add('open'));
+      api.audio?.sfx?.('win');
+      winTimers.push(setTimeout(() => {
+        const r = img.getBoundingClientRect();
+        api.confetti?.({ count: 200, duration: 3000, origin: { x: r.left + r.width / 2, y: r.top + r.height * 0.3 }, spread: true });
+      }, 700));
+      winTimers.push(setTimeout(() => winEl?.classList.add('closing'), 6600));
+      winTimers.push(setTimeout(clearWinner, 7300));
+    }, 4500));
+  }
+
   function shutoutShow() {
     setTimeout(() => api.audio?.sfx?.('shutoutBig'), 2700);
     setTimeout(() => {
@@ -230,11 +270,14 @@ export function mount(root, api) {
         requestAnimationFrame(settle);
         setTimeout(settle, 700);
         setTimeout(settle, 1800);
+        clearWinner();
         if (g.phase === 'reveal' && g.kind === 'shutout') shutoutShow();
+        if (g.phase === 'reveal') winnerShow(g);
       } else {
         patch(g);
       }
     },
-    destroy() { removeEventListener('resize', onResize); },
+    destroy() {
+      clearWinner(); removeEventListener('resize', onResize); },
   };
 }
