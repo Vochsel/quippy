@@ -444,11 +444,6 @@
       "Everyone take a selfie. Good light, big smile. You're about to be immortalised. Badly.",
       "Selfies, please. The robot paints you from these, so maybe not the double chin angle."
     ],
-    "dtIntro": [
-      "Welcome to {game}. The robot paints two pictures of you lot. Your phones get four captions. Two are real, two are lies. Spot the real two. Simple. Probably.",
-      "This is {game}. Two pictures, four captions, two of them true. Like a dating profile, but with more honesty.",
-      "{game}. I've asked a machine to paint your mates doing ridiculous things. Your job is to work out exactly which ridiculous things. Good luck."
-    ],
     "dtSelfie": [
       "First, selfies. The robot needs your faces. Chin up, decent light, no filters. It's not a passport, but it's close.",
       "Selfie time. Take one, or keep the one you've got. The robot will be painting these faces for the rest of the game, so choose wisely.",
@@ -468,46 +463,6 @@
       "That picture was taking forever. Here's a sketch. Art is about compromise.",
       "The robot has missed its deadline. Classic artist. Sketch it is."
     ],
-    "dtFirstQuestion": [
-      "Here we go. Two pictures. Four captions on your phones. Pick the two that made these.",
-      "First pictures are up. Pick the two captions you reckon made them. Trust your gut. Your gut has never let you down, has it?",
-      "Have a look at these. Two of the captions on your phone are real. Find them."
-    ],
-    "dtGuess": [
-      "New pictures. Pick your two.",
-      "Two more masterpieces. Which captions made them?",
-      "Take a good long look. Then pick two.",
-      "Fresh off the easel. Choose wisely."
-    ],
-    "dtNextQuestion": [
-      "Question {n} of {total}.",
-      "On to question {n}. The robot's been busy.",
-      "Question {n}. Brace yourselves."
-    ],
-    "dtDoublePoints": [
-      "Last two questions are worth double. Now's the time to stop guessing and start knowing.",
-      "Double points from here on. Everything counts twice, including your mistakes.",
-      "We're into double points. If you've been coasting, this is your moment."
-    ],
-    "dtReveal": [
-      "Here are the real captions. Some of you were close. Some of you were not.",
-      "Let's see what the robot was actually told to paint.",
-      "And the truth is… this."
-    ],
-    "dtRevealDouble": [
-      "{name} got both. A double take! Show-off.",
-      "Both right for {name}. Either a genius or a very lucky guesser. I won't ask which.",
-      "{name} nailed both captions. Someone's been paying attention."
-    ],
-    "dtRevealAll": [
-      "Everyone got both. Either that was too easy or you're all cheating. I'll allow it.",
-      "A clean sweep. The robot's going to need to try harder."
-    ],
-    "dtRevealNone": [
-      "Not one correct caption between you. The decoys have won this round.",
-      "Nobody got a single one. I'm genuinely impressed. That's hard to do.",
-      "Zero right. The robot would be insulted if it had feelings."
-    ],
     "dtAwardEagle": [
       "Eagle Eye"
     ],
@@ -526,24 +481,92 @@
       "Pictures incoming. Stretch your eyeballs.",
       "Hold tight, the paint's still wet."
     ],
-    "phoneDtGotTwo": [
-      "Double take! Both right.",
-      "Both right. Brilliant.",
-      "Two for two. Insufferable."
+    "dtWelcome": [
+      "Welcome to {game}. You each secretly write a picture starring someone in this room. The robot paints it. Then everyone tries to spot your caption among three fakes.",
+      "This is {game}. Write a picture of your mates, the robot paints it, and the room has to work out which caption made it. Be recognisable. Or don't.",
+      "{game}. You write the picture, the robot does the painting, I write the lies. Points for spotting the truth, and for writing something people can spot."
     ],
-    "phoneDtGotOne": [
-      "One out of two. Not bad.",
-      "Half right. Glass half full.",
-      "Got one. The other one got you."
+    "dtWrite": [
+      "Right. Write one secret picture starring someone in this room. Could be you. Could be them. Make it count.",
+      "Phones out. One picture, starring anyone here. Nobody will know it was you. Until they do.",
+      "Time to write. Pick a victim in this room and describe a picture of them. The robot does the rest."
     ],
-    "phoneDtGotNone": [
-      "Fooled twice. The decoys thank you.",
-      "None right. Bold strategy.",
-      "Zero. The robot is laughing at you."
+    "dtFirstPicture": [
+      "First picture. One of these captions made it. The other three are mine. Pick the real one.",
+      "Here's the first one. Somebody in this room wrote that. Which caption is theirs?",
+      "Have a look. One true caption, three lies. Find the truth. If you're the author, keep your face still."
     ],
-    "phoneDtNoPicks": [
-      "No picks? You can't win if you don't guess.",
+    "dtLookClose": [
+      "Next masterpiece. Which caption made it?",
+      "Another one. Somebody wrote this. Pick their caption.",
+      "Take a good long look. Then pick one.",
+      "Fresh off the easel. Choose wisely."
+    ],
+    "dtNextPicture": [
+      "Picture {n} of {total}.",
+      "On to picture {n}. The robot's been busy.",
+      "Picture {n}. Brace yourselves."
+    ],
+    "dtSecondHalf": [
+      "Second half. Everything's worth double now, including your mistakes.",
+      "Double points from here. If you've been coasting, stop it.",
+      "Points are doubled for the rest. Now's the time to start paying attention."
+    ],
+    "dtRevealSpotted": [
+      "That one was {name}'s. {n} of you saw straight through it.",
+      "{name} wrote that. {n} spotted it. The rest of you, look harder.",
+      "It was {name}. {n} of you knew. Suspicious."
+    ],
+    "dtRevealEveryone": [
+      "Everyone got it. {name}, you're an open book.",
+      "A clean sweep. {name}, that was about as subtle as a road train.",
+      "Nobody fell for my fakes. {name} writes like {name}, apparently."
+    ],
+    "dtRevealFooledAll": [
+      "Not one of you. {name} fooled the whole room.",
+      "Nobody picked {name}'s caption. My decoys are thrilled.",
+      "{name} wrote that and got away with it. Points for writing, none for honesty."
+    ],
+    "dtRevealQuiet": [
+      "Nobody even had a go. {name}'s secret is safe.",
+      "No guesses at all. {name} wrote that, for the record."
+    ],
+    "dtAwardArtist": [
+      "Master Artist"
+    ],
+    "phoneDtSent": [
+      "Sent. Now act natural.",
+      "Locked in. Keep a straight face.",
+      "Done. Don't look at anyone."
+    ],
+    "phoneDtYours": [
+      "This one's yours. Act natural.",
+      "Your picture. Poker face, please.",
+      "That's yours. Look as confused as everyone else."
+    ],
+    "phoneDtRight": [
+      "Spotted it. Nice work.",
+      "Correct. You know these people too well.",
+      "Got it. Eagle eyes."
+    ],
+    "phoneDtWrong": [
+      "Fooled. My fake thanks you.",
+      "Wrong one. It happens. To you, mostly.",
+      "Not that one. Bold choice though."
+    ],
+    "phoneDtNoPick": [
+      "No guess? You can't win if you don't pick.",
       "You didn't pick anything. Mysterious."
+    ],
+    "phoneDtYoursSpotted": [
+      "{n} spotted yours. Points for being readable.",
+      "They saw through you. {n} of them. That's points.",
+      "{n} found your caption. Nice and clear."
+    ],
+    "phoneDtYoursFooled": [
+      "Nobody picked yours. Very sneaky. No points though.",
+      "Nobody spotted it. Brilliant disguise, zero points.",
+      "You fooled the lot. Sadly the points go to being spotted."
     ],
     "finalVoteMedals": [
       "Medals time. Gold, silver, bronze. Not your own.",

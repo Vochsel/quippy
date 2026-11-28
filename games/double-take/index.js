@@ -1,54 +1,64 @@
-// Double Take: two AI pictures of your mates, four captions, spot the real two.
+// Double Take: everyone secretly prompts a picture of someone in the room; the
+// robot paints them all; then, one picture at a time, the room picks which of
+// four captions really made it.
 //
 //   1. Everyone takes (or keeps) a selfie: the robot paints people from it.
-//   2. Five questions. The TV shows two pictures (A and B), each painted from a
-//      secret brief starring players ("{player} as a Lego minifig…"). Phones
-//      show four captions: the two real briefs plus two decoys starring the
-//      same people. Tap the two you think made the pictures.
-//   3. +500 per correct caption, +250 "Double Take!" bonus for both; questions
-//      4 and 5 count double.
+//   2. Write: every player writes ONE secret picture prompt starring someone
+//      in the room ("Ben as a Lego minifig stuck in a Bunnings queue").
+//   3. Every prompt is painted (a few at a time). Anyone named in a prompt is
+//      painted from their selfie. Meanwhile three decoy captions are written
+//      for each prompt (one batched model call, or bank briefs as a fallback).
+//   4. One picture at a time: the TV shows the picture and four captions; all
+//      but the author tap the one they think is real. +500 for a correct
+//      guess, +250 to the author per correct guesser; the second half counts
+//      double.
 //
-// Every picture is queued the moment the selfie step ends (a few at a time),
-// so later questions are usually ready before anyone gets there. A picture
-// that fails is retried once, then its brief is swapped for a decoy, then it
-// falls back to a free "redacted sketch", so the game never stalls. Images are
-// stored in the media store; state only keeps media keys. Rooms without an
-// image model, and bot-only games, get sketches (no paid calls).
+// A picture that fails is retried once, then becomes a free "redacted sketch",
+// so the game never stalls. Images live in the media store; state only keeps
+// media keys. Rooms without an image model, and bot-only games, get sketches
+// (no paid calls). At most MAX_AI_IMAGES paid generations per game.
 import { cleanText, fill, shuffle, uid } from '../../core/util.js';
+import { placeholderSvg, IMAGE_EXT } from '../../core/images.js';
 
 // Names as they go into captions and image prompts (no bot emoji).
 const plain = (name) => String(name || '').replace(/\s*🤖/gu, '').trim() || 'Someone';
-import { placeholderSvg, IMAGE_EXT } from '../../core/images.js';
+const firstName = (name) => plain(name).split(/\s+/)[0];
+const norm = (t) => String(t || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const esc = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const QUESTIONS = 5;
-const DOUBLE_FROM = 4; // questions 4-5 are worth x2
-const SCORES_AFTER = 3; // a scoreboard after question 3 (and at the end)
-const POINTS = 500;
-const BONUS = 250;
+const MAX_CHARS = 160;
+const DECOYS = 3;
+const POINTS = 500; // a correct guess
+const AUTHOR_POINTS = 250; // to the author, per correct guesser
 const MAX_AI_IMAGES = 12; // cost guard: paid generations per game (incl. retries)
+const MAX_REFS = 6; // selfies sent with one picture
 const CONCURRENCY = 4;
+const SUGGESTIONS = 6;
 const INTRO_MS = 10000;
 const SELFIE_MS = 45000;
 const SELFIE_DONE_MS = 2500; // everyone's confirmed: a beat, then go
-const PAINT_MIN_MS = 3500; // question title card, even when the pictures are ready
-const PAINT_WAIT_MS = 60000; // then sketch whatever is still missing
-const GUESS_MS = 25000;
-const GUESS_DONE_MS = 2500; // everyone has two picks: a beat to change their minds
-const REVEAL_MS = 12000;
+const WRITE_MS = 75000;
+const WRITE_DONE_MS = 2000; // everyone's sent theirs: a beat, then go
+const PAINT_MIN_MS = 3500; // picture title card, even when it's ready
+const PAINT_WAIT_MS = 60000; // then sketch it if it's still not there
+const GUESS_MS = 20000;
+const GUESS_DONE_MS = 2500; // everyone has picked: a beat to change their minds
+const REVEAL_MS = 10000;
 const SCORES_MS = 9000;
 const GAME_OVER_MS = 40000;
-const TIMED = ['selfie', 'guess'];
-const PHASE_TIMERS = ['intro', 'selfie', 'guess', 'reveal', 'scores', 'gameOver'];
+const DECOY_TIMEOUT_MS = 30000;
+const TIMED = ['selfie', 'write', 'guess'];
+const PHASE_TIMERS = ['intro', 'selfie', 'write', 'guess', 'reveal', 'scores', 'gameOver'];
 
 const zero = () => ({
-  questionsPlayed: 0, correctPicks: 0, doubleTakes: 0, fooledBy: 0, blanks: 0,
-  votesCast: 0, answerMs: 0, answerTimed: 0,
+  answersWritten: 0, picturesGuessed: 0, correctPicks: 0, fooledBy: 0, blanks: 0,
+  votesCast: 0, answerMs: 0, answerTimed: 0, spottedBy: 0, peopleFooled: 0, starredIn: 0,
 });
 
 const meta = {
   id: 'double-take',
   name: 'Double Take',
-  tagline: 'Two AI pictures of your mates. Four captions. Spot the real two.',
+  tagline: 'Prompt a picture of your mates. Everyone guesses which caption made it.',
   minPlayers: 3,
   maxPlayers: 16,
   accent: '#a98bff',
@@ -68,6 +78,7 @@ class DoubleTake {
   constructor(ctx, state) {
     this.ctx = ctx;
     this.inflight = new Set(); // tokens of generations running in this process (lost on restart)
+    this.decoyToken = null; // the decoy job running in this process
     this.dead = false;
     this.s = state || this.#fresh();
   }
@@ -80,19 +91,22 @@ class DoubleTake {
       roundStartScores: Object.fromEntries(roster.map((id) => [id, 0])),
       tallies: Object.fromEntries(roster.map((id) => [id, zero()])),
       selfies: {}, // pid -> true once confirmed
-      questions: [], qIdx: 0, aiSpent: 0, sketchOnly: false, minUntil: 0,
+      // SECRET until each reveal: pid -> { text, auto }, plus unsent drafts.
+      prompts: {}, drafts: {}, suggest: {},
+      pics: [], idx: 0, aiSpent: 0, sketchOnly: false, minUntil: 0,
+      decoyState: 'idle', // idle | pending | done
       awards: [], finished: false,
     };
   }
 
   serialize() { return this.s; }
-  sceneKey() { return `${this.s.phase}|${this.s.qIdx}`; }
+  sceneKey() { return `${this.s.phase}|${this.s.idx}`; }
 
   // ------------------------------------------------------------- lifecycle
   start() {
     this.ctx.music('intro');
     this.#phase('intro', INTRO_MS);
-    this.ctx.sayLine('dtIntro', { game: meta.name });
+    this.ctx.sayLine('dtWelcome', { game: meta.name });
   }
 
   resume() {
@@ -100,13 +114,13 @@ class DoubleTake {
     const d = this.ctx.timerDeadline?.(s.phase);
     if (d) s.deadline = d;
     // Generations in flight died with the old process: queue them again.
-    for (const q of s.questions) {
-      for (const slot of q.slots) if (slot.status === 'painting') { slot.status = 'queued'; slot.token = null; }
-    }
+    for (const p of s.pics) if (p.status === 'painting') { p.status = 'queued'; p.token = null; }
     this.inflight.clear();
+    if (s.decoyState === 'pending') this.#writeDecoys();
     this.#pump();
+    if (s.phase === 'write') this.#botsWrite();
     if (s.phase === 'painting') this.#checkReady();
-    if (s.phase === 'guess') this.#botsGuess();
+    if (s.phase === 'guess') { this.#botsGuess(); this.#authorTick(); }
   }
 
   onTimer(name) {
@@ -114,11 +128,12 @@ class DoubleTake {
     switch (name) {
       case 'intro': return this.#startSelfies();
       case 'selfie': return this.#endSelfies();
+      case 'write': return this.#endWrite();
       case 'paintMin': return this.#checkReady();
       case 'paint': return this.#paintTimeout();
       case 'guess': return this.#reveal();
       case 'reveal': return this.#afterReveal();
-      case 'scores': return this.s.qIdx >= this.s.questions.length ? this.#gameOver() : this.#startQuestion(this.s.qIdx);
+      case 'scores': return this.s.idx >= this.s.pics.length ? this.#gameOver() : this.#startPicture(this.s.idx);
       case 'gameOver': return this.#finish();
       default: return undefined;
     }
@@ -142,8 +157,13 @@ class DoubleTake {
       this.ctx.sfx('select');
       if (this.#humans().every((id) => s.selfies[id])) this.#selfiesAllDone();
       this.ctx.update();
-    } else if (p.type === 'picks' && s.phase === 'guess') {
-      this.#setPicks(pid, p.qId, p.picks);
+    } else if (p.type === 'prompt' && s.phase === 'write') {
+      this.#submit(pid, p.text);
+    } else if (p.type === 'draft' && s.phase === 'write' && s.roster.includes(pid) && !s.prompts[pid]) {
+      // Kept quietly (no broadcast): sent for them if the timer runs out.
+      s.drafts[pid] = cleanText(p.text, MAX_CHARS);
+    } else if (p.type === 'pick' && s.phase === 'guess') {
+      this.#setPick(pid, p.picId, p.choice);
     }
   }
 
@@ -164,13 +184,12 @@ class DoubleTake {
     // can still retake), so the step only waits on people without one.
     for (const id of s.roster) if (this.ctx.isBot(id) || this.ctx.hasPhoto?.(id)) s.selfies[id] = true;
     const needed = this.#humans().filter((id) => !s.selfies[id]);
+    if (!needed.length) return this.#startWrite(); // everyone's got a face on file
     this.#phase('selfie', SELFIE_MS);
     this.ctx.music('writing');
-    if (needed.length) {
-      this.ctx.sayLine('dtSelfie', {});
-      this.ctx.buzz(needed, [80, 60, 80]);
-    }
-    if (this.#humans().every((id) => s.selfies[id])) this.#selfiesAllDone();
+    this.ctx.sayLine('dtSelfie', {});
+    this.ctx.buzz(needed, [80, 60, 80]);
+    return undefined;
   }
 
   #selfiesAllDone() {
@@ -180,152 +199,271 @@ class DoubleTake {
   }
 
   #endSelfies() {
-    const s = this.s;
-    if (s.phase !== 'selfie') return;
+    if (this.s.phase !== 'selfie') return;
     this.ctx.clearTimer('selfie');
-    s.sketchOnly = !this.ctx.images?.available() || !this.#humans().length;
-    s.questions = this.#buildQuestions();
-    if (!s.questions.length) return this.#gameOver();
-    this.ctx.sayLine(s.sketchOnly ? 'dtPaintingSketch' : 'dtPainting', {});
-    this.#pump();
-    return this.#startQuestion(0);
+    this.#startWrite();
   }
 
-  // ------------------------------------------------------- building briefs
-  // Two kinds of brief: one star ({player}) or two ({player}, {player2}).
-  #briefPools() {
-    const c = this.ctx.content;
-    const used = this.ctx.usedPrompts;
-    const n = QUESTIONS * 2;
-    let one = c.pickPeople?.(n, used, false) || [];
-    let two = c.pickPeople?.(n, used, true) || [];
-    if (one.length + two.length < QUESTIONS * 4) {
-      // A pack without people briefs: borrow visual briefs and star someone in them.
-      const extra = (c.pickPictures?.(QUESTIONS * 4, used) || c.pickPrompts(QUESTIONS * 4, used))
-        .map((p) => ({ ...p, text: `{player} in: ${p.text}` }));
-      one = [...one, ...extra];
+  // ----------------------------------------------------------------- write
+  // Who a prompt stars: roster players named in it (whole word, case-
+  // insensitive, full name or first name), in order of appearance.
+  #namesIn(text) {
+    const hits = [];
+    for (const id of this.s.roster) {
+      const full = plain(this.ctx.playerName(id));
+      let at = -1;
+      for (const v of new Set([full, full.split(/\s+/)[0]])) {
+        if (v.length < 2) continue;
+        const m = new RegExp(`(?<![\\p{L}\\p{N}])${esc(v)}(?![\\p{L}\\p{N}])`, 'iu').exec(text);
+        if (m && (at < 0 || m.index < at)) at = m.index;
+      }
+      if (at >= 0) hits.push({ id, at });
     }
-    return { one: shuffle(one), two: shuffle(two) };
+    return hits.sort((a, b) => a.at - b.at).map((x) => x.id);
   }
 
-  #buildQuestions() {
-    const s = this.s;
+  // Picture briefs from the bank with real names in. `stars` (if given) are
+  // used first, so decoys star the same faces as the real prompt.
+  #bankBriefs(n, stars = [], avoid = new Set()) {
     const ctx = this.ctx;
-    const pools = this.#briefPools();
-    const stars = Object.fromEntries(s.roster.map((id) => [id, 0])); // pictures each player stars in
-    const rank = (exclude) => shuffle(s.roster.filter((id) => !exclude.has(id)))
-      .sort((a, b) => (stars[a] - stars[b]) || (ctx.hasPhoto?.(b) ? 1 : 0) - (ctx.hasPhoto?.(a) ? 1 : 0));
-    // k distinct players, least-starred first, avoiding `avoid` where possible.
-    const choose = (k, avoid) => {
-      const out = rank(avoid).slice(0, k);
-      if (out.length < k) out.push(...rank(new Set(out)).slice(0, k - out.length));
-      return out;
-    };
-    const take = (k) => (k === 2 ? pools.two.shift() || pools.one.shift() : pools.one.shift() || pools.two.shift());
-    const kindOf = (b) => (b.text.includes('{player2}') ? 2 : 1);
-    const named = (b, ids) => ({
-      text: cleanText(fill(b.text, { player: plain(ctx.playerName(ids[0])), player2: plain(ctx.playerName(ids[1] || ids[0])) }), 200),
-      template: b.text, key: b.key || null, stars: ids,
-    });
-    const usedKeys = [];
-    const out = [];
-    for (let n = 0; n < QUESTIONS; n++) {
-      const wantTwo = s.roster.length >= 3 && Math.random() < 0.6;
-      const kinds = shuffle([1, wantTwo ? 2 : 1]);
-      const real = kinds.map(take);
-      const decoys = kinds.map(take);
-      if ([...real, ...decoys].some((b) => !b)) break;
-      // Real briefs: the least-starred players (photos first), spread out.
-      const inQ = new Set();
-      const realNamed = real.map((b) => {
-        const ids = choose(kindOf(b), inQ);
-        ids.forEach((id) => { inQ.add(id); stars[id] += 1; });
-        return named(b, ids);
-      });
-      // Decoys star the same faces (so faces alone don't give it away), in a
-      // different line-up from the real brief of the same kind.
-      const faces = [...inQ];
-      const decoyNamed = decoys.map((b, i) => {
-        const k = kindOf(b);
-        let ids = shuffle(faces).slice(0, k);
-        const twin = realNamed[i].stars;
-        for (let tries = 0; tries < 4 && faces.length > k && ids.join() === twin.join(); tries++) ids = shuffle(faces).slice(0, k);
-        if (ids.length < k) ids.push(...choose(k - ids.length, new Set(ids)));
-        return named(b, ids);
-      });
-      const options = shuffle([...realNamed.map((b, i) => ({ ...b, real: i })), ...decoyNamed.map((b) => ({ ...b, real: null }))]);
-      const realIdx = [0, 1].map((i) => options.findIndex((o) => o.real === i));
-      usedKeys.push(...options.map((o) => o.key).filter(Boolean));
-      out.push({
-        id: `q${n + 1}`, n: n + 1, mult: n + 1 >= DOUBLE_FROM ? 2 : 1,
-        options: options.map(({ real: _r, ...o }) => o),
-        real: realIdx, // SECRET until the reveal: options[real[0]] is picture A, options[real[1]] is B
-        slots: realIdx.map(() => ({ status: 'queued', key: null, tries: 0, token: null, swapped: false, sketch: false, ai: false })),
-        picks: {}, pickMs: {}, startedAt: null, result: null, skipped: false,
-      });
+    const c = ctx.content;
+    let pool = c.pickPeople?.(Math.max(n * 3, 12), ctx.usedPrompts) || [];
+    if (pool.length < n) {
+      // A pack without people briefs: borrow visual briefs and star someone in them.
+      pool = [...pool, ...(c.pickPictures?.(n * 3, ctx.usedPrompts) || c.pickPrompts(n * 3, ctx.usedPrompts))
+        .map((p) => ({ ...p, text: `{player} in: ${p.text}` }))];
     }
-    ctx.markPromptsUsed(usedKeys);
+    // First names, like the name chips on the phones, so fakes read like the real ones.
+    const names = (ids) => ids.map((id) => firstName(ctx.playerName(id)));
+    const out = [];
+    const seen = new Set(avoid);
+    for (let tries = 0; out.length < n && tries < n * 8 && pool.length; tries++) {
+      const b = pool[tries % pool.length];
+      const lead = stars.length ? stars[(out.length + tries) % stars.length] : this.s.roster[Math.floor(Math.random() * this.s.roster.length)];
+      const others = shuffle(this.s.roster.filter((id) => id !== lead));
+      const second = stars.find((id) => id !== lead) || others[0] || lead;
+      const [p1, p2] = names([lead, Math.random() < 0.5 ? second : (others[0] || second)]);
+      const text = cleanText(fill(b.text, { player: p1, player2: p2 }), MAX_CHARS);
+      if (!text || seen.has(norm(text))) continue;
+      seen.add(norm(text));
+      out.push({ text, key: b.key || null });
+    }
     return out;
   }
 
+  #startWrite() {
+    const s = this.s;
+    this.#syncRoster();
+    s.prompts = {};
+    s.drafts = {};
+    // A few starters per player (the 💡 button cycles through them).
+    s.suggest = Object.fromEntries(s.roster.map((id) => [id, this.#bankBriefs(SUGGESTIONS).map((b) => b.text)]));
+    this.#phase('write', WRITE_MS);
+    this.ctx.music('writing');
+    this.ctx.sayLine('dtWrite', {});
+    this.ctx.buzz(this.#humans(), [40, 30, 40]);
+    this.#botsWrite();
+    this.#checkWriteDone();
+  }
+
+  #submit(pid, raw) {
+    const s = this.s;
+    if (!s.roster.includes(pid) || s.prompts[pid]) return;
+    const text = cleanText(raw, MAX_CHARS);
+    if (text.length < 3) return;
+    s.prompts[pid] = { text, auto: false };
+    delete s.drafts[pid];
+    this.ctx.sfx('submit');
+    this.#checkWriteDone();
+    this.ctx.update();
+  }
+
+  #checkWriteDone() {
+    const s = this.s;
+    if (s.phase !== 'write') return;
+    if (!this.#humans().every((id) => s.prompts[id])) return;
+    const left = (s.deadline || 0) - Date.now();
+    if (left > WRITE_DONE_MS) s.deadline = this.ctx.setTimer('write', WRITE_DONE_MS);
+  }
+
+  #endWrite() {
+    const s = this.s;
+    if (s.phase !== 'write') return undefined;
+    this.ctx.clearTimer('write');
+    const used = [];
+    // Anyone who didn't send: their draft if they had one, else a bank brief.
+    for (const id of s.roster) {
+      if (s.prompts[id]) continue;
+      const draft = cleanText(s.drafts[id], MAX_CHARS);
+      if (draft.length >= 3) { s.prompts[id] = { text: draft, auto: false }; continue; }
+      const b = s.suggest[id]?.[0] ? { text: s.suggest[id][0] } : this.#bankBriefs(1)[0];
+      if (b) s.prompts[id] = { text: b.text, auto: !this.ctx.isBot(id) };
+      if (!this.ctx.isBot(id)) s.tallies[id].blanks += 1;
+    }
+    s.drafts = {};
+    // Two people can't share one caption: a repeat gets a bank brief instead.
+    const seen = new Set();
+    for (const id of shuffle(s.roster)) {
+      const pr = s.prompts[id];
+      if (!pr) continue;
+      if (seen.has(norm(pr.text))) {
+        const b = this.#bankBriefs(1, [], seen)[0];
+        if (b) { pr.text = b.text; used.push(b.key); } else { delete s.prompts[id]; continue; }
+      }
+      seen.add(norm(pr.text));
+    }
+    const authors = shuffle(s.roster.filter((id) => s.prompts[id]));
+    const half = Math.ceil(authors.length / 2);
+    s.pics = authors.map((id, i) => ({
+      id: `p${i + 1}`, n: i + 1, mult: i + 1 > half ? 2 : 1,
+      author: id, text: s.prompts[id].text, auto: !!s.prompts[id].auto, stars: this.#namesIn(s.prompts[id].text),
+      status: 'queued', key: null, tries: 0, token: null, sketch: false, ai: false,
+      options: null, real: null, // SECRET until the reveal: options[real] is the author's prompt
+      picks: {}, pickMs: {}, startedAt: null, authorTickAt: null, result: null, skipped: false,
+    }));
+    for (const p of s.pics) {
+      const t = s.tallies[p.author];
+      if (t && !p.auto) t.answersWritten += 1;
+      for (const id of p.stars) if (s.tallies[id]) s.tallies[id].starredIn += 1;
+    }
+    s.prompts = {};
+    s.suggest = {};
+    if (used.length) this.ctx.markPromptsUsed(used.filter(Boolean));
+    if (!s.pics.length) return this.#gameOver();
+    s.sketchOnly = !this.ctx.images?.available() || !this.#humans().length;
+    this.ctx.sayLine(s.sketchOnly ? 'dtPaintingSketch' : 'dtPainting', {});
+    s.decoyState = 'pending';
+    this.#writeDecoys();
+    this.#pump();
+    return this.#startPicture(0);
+  }
+
+  // ---------------------------------------------------------------- decoys
+  #writeDecoys() {
+    const s = this.s;
+    if (s.decoyState !== 'pending') return;
+    const token = uid('d');
+    this.decoyToken = token;
+    const useAi = !!this.ctx.llm?.available?.() && this.#humans().length > 0;
+    const job = useAi ? this.#aiDecoys() : Promise.resolve({});
+    job.catch((e) => { this.ctx.log('double-take: decoys failed:', String(e?.message || e)); return {}; })
+      .then((got) => this.#setDecoys(token, got || {}));
+  }
+
+  // One model call for every picture. -> { [picId]: [text, ...] }
+  async #aiDecoys() {
+    const s = this.s;
+    const ctx = this.ctx;
+    const people = s.roster.map((id) => firstName(ctx.playerName(id)));
+    const out = await ctx.llm.json({
+      system: [
+        'You write decoy captions for a party guessing game. Each player secretly wrote a short prompt for an AI picture starring people in the room. The TV shows each picture with four captions: the real prompt plus three decoys. Players try to spot the real one.',
+        `For each real prompt write exactly ${DECOYS} decoys that could plausibly have made a similar picture: the same style, tone, length and level of detail as the real one, written the way a person at a party would type it. Every decoy stars one or more of the people in the room, named the way the real prompts name them (usually first names), mostly the same people as the real prompt.`,
+        'Make them plausible enough to fool people: similar setting or vibe but a different specific scene. Never just reword the real prompt, never copy any other real prompt, and no two decoys alike.',
+        `Each decoy under ${MAX_CHARS - 20} characters. No quotation marks, no emoji, no hashtags.`,
+        ctx.content?.meta?.llmHint || '',
+        ctx.settings?.family ? 'Family mode: keep it clean.' : '',
+        'JSON shape: {"decoys":{"<id>":["...","...","..."], ...}}',
+      ].filter(Boolean).join('\n'),
+      user: JSON.stringify({ people, prompts: s.pics.map((p) => ({ id: p.id, prompt: p.text })) }),
+      maxTokens: 400 + s.pics.length * 220,
+      timeoutMs: DECOY_TIMEOUT_MS,
+    });
+    return out?.decoys && typeof out.decoys === 'object' ? out.decoys : {};
+  }
+
+  #setDecoys(token, got) {
+    const s = this.s;
+    if (this.dead || token !== this.decoyToken || s.decoyState !== 'pending') return;
+    this.decoyToken = null;
+    const reals = new Set(s.pics.map((p) => norm(p.text)));
+    const used = [];
+    for (const pic of s.pics) {
+      const seen = new Set(reals);
+      const decoys = [];
+      for (const raw of Array.isArray(got[pic.id]) ? got[pic.id] : []) {
+        if (typeof raw !== 'string' || decoys.length >= DECOYS) continue;
+        const text = cleanText(raw.replace(/^["'“]+|["'”]+$/g, ''), MAX_CHARS + 40);
+        if (text.length < 8 || text.length >= MAX_CHARS || seen.has(norm(text)) || !this.#namesIn(text).length) continue;
+        seen.add(norm(text));
+        decoys.push(text);
+      }
+      if (decoys.length < DECOYS) {
+        for (const b of this.#bankBriefs(DECOYS - decoys.length, pic.stars, seen)) {
+          seen.add(norm(b.text));
+          decoys.push(b.text);
+          used.push(b.key);
+        }
+      }
+      const opts = shuffle([{ text: pic.text, real: true }, ...decoys.slice(0, DECOYS).map((text) => ({ text, real: false }))]);
+      pic.options = opts.map((o) => o.text);
+      pic.real = opts.findIndex((o) => o.real);
+    }
+    s.decoyState = 'done';
+    if (used.some(Boolean)) this.ctx.markPromptsUsed(used.filter(Boolean));
+    this.ctx.checkpoint?.();
+    this.#checkReady();
+    this.ctx.update();
+  }
+
   // -------------------------------------------------------------- painting
-  // Start queued pictures (current question first), a few at a time.
+  // Start queued pictures (current one first), a few at a time.
   #pump() {
     const s = this.s;
     if (this.dead) return;
-    for (const q of s.questions.slice(s.qIdx)) {
-      if (q.skipped || q.result) continue;
-      for (let i = 0; i < q.slots.length; i++) {
-        if (this.inflight.size >= CONCURRENCY) return;
-        if (q.slots[i].status === 'queued') this.#paintSlot(q, i);
-      }
+    for (const p of s.pics.slice(s.idx)) {
+      if (this.inflight.size >= CONCURRENCY) return;
+      if (p.skipped || p.result) continue;
+      if (p.status === 'queued') this.#paintPic(p);
     }
   }
 
-  #paintSlot(q, i) {
+  #paintPic(pic) {
     const s = this.s;
-    const slot = q.slots[i];
-    const brief = q.options[q.real[i]];
     const token = uid('j');
-    const useAi = !s.sketchOnly && !slot.sketch && s.aiSpent < MAX_AI_IMAGES;
+    // Bots' prompts only get a paid picture if every person's can still have one.
+    const humansWaiting = s.pics.filter((p) => p !== pic && !p.tries && !p.sketch && !this.ctx.isBot(p.author)).length;
+    const useAi = !s.sketchOnly && !pic.sketch && s.aiSpent < MAX_AI_IMAGES
+      && (!this.ctx.isBot(pic.author) || s.aiSpent + humansWaiting < MAX_AI_IMAGES);
     if (useAi) s.aiSpent += 1;
-    slot.status = 'painting';
-    slot.token = token;
-    slot.tries += 1;
+    pic.status = 'painting';
+    pic.token = token;
+    pic.tries += 1;
     this.inflight.add(token);
     if (useAi) this.ctx.checkpoint?.(); // count paid calls even if we restart mid-flight
-    const job = useAi ? this.#paintAi(brief, q.id) : this.#paintSketch(brief, q.id);
+    const job = useAi ? this.#paintAi(pic) : this.#paintSketch(pic);
     job.then(
-      (key) => this.#painted(q.id, i, token, key, useAi),
-      (err) => this.#failed(q.id, i, token, err),
+      (key) => this.#painted(pic.id, token, key, useAi),
+      (err) => this.#failed(pic.id, token, err),
     );
   }
 
-  async #paintAi(brief, qid) {
+  async #paintAi(pic) {
     const ctx = this.ctx;
-    const names = brief.stars.map((id) => plain(ctx.playerName(id)));
-    const photos = await Promise.all(brief.stars.map((id) => (ctx.photoOf ? ctx.photoOf(id) : null)));
-    const shown = brief.stars.map((id, i) => (photos[i] ? names[i] : null)).filter(Boolean);
-    const refs = photos.filter(Boolean);
-    const who = shown.length === 1
-      ? ` The reference photo shows ${shown[0]}: keep their face recognisable.`
-      : shown.length ? ` The reference photos show ${joinNames(shown)}, in that order: keep their faces recognisable.` : '';
-    const prompt = `${brief.text}.${who} Bright, funny, vivid. No text, captions or lettering in the image.`;
-    const out = await ctx.images.generate({ prompt, references: refs.length ? refs : null });
-    ctx.log(`double-take: ${qid} image in ${out.ms} ms (${out.bytes.length} bytes, ${refs.length} refs)`);
+    const stars = pic.stars.slice(0, MAX_REFS);
+    const photos = await Promise.all(stars.map((id) => (ctx.photoOf ? ctx.photoOf(id) : null)));
+    const names = stars.filter((id, i) => photos[i]).map((id) => plain(ctx.playerName(id)));
+    const references = photos.filter(Boolean);
+    const prompt = [
+      `${pic.text.replace(/[.!?\s]+$/u, '')}.`,
+      names.length ? `${names.map((n, i) => `${names.length > 1 ? `The person in reference photo ${i + 1}` : 'The person in the reference photo'} IS ${n}`).join('. ')}. Whenever the prompt mentions ${names.join(' or ')}, paint exactly that person, clearly recognisable; don't add anyone else for that name.` : '',
+      'Bright, funny and vivid. No captions or lettering unless the prompt asks for words.',
+    ].filter(Boolean).join(' ');
+    const out = await ctx.images.generate({ prompt, references: references.length ? references : null });
+    ctx.log(`double-take: ${pic.id} image in ${out.ms} ms (${out.bytes.length} bytes, ${references.length} refs)`);
     const ext = IMAGE_EXT[out.type] || 'jpg';
     return ctx.media.put(`gen/${ctx.roomCode || 'room'}-dt-${uid()}.${ext}`, out.bytes, out.type);
   }
 
-  // The free fallback: a sketch card with the stars' names and half the brief
-  // blanked out, so it's still a guessing game without an image model.
-  async #paintSketch(brief, qid) {
+  // The free fallback: a sketch card with the stars' names and most of the
+  // prompt blanked out, so it's still a guessing game without an image model.
+  async #paintSketch(pic) {
     const ctx = this.ctx;
     const bareWord = (w) => w.replace(/[^\p{L}\p{N}']/gu, '').replace(/'s$/i, '').toLowerCase();
-    const names = new Set(brief.stars.flatMap((id) => ctx.playerName(id).split(/\s+/).map(bareWord)));
-    const seed = [...`${qid}${brief.text}`].reduce((x, c) => x + c.charCodeAt(0), 0);
+    const names = new Set(pic.stars.flatMap((id) => plain(ctx.playerName(id)).split(/\s+/).map(bareWord)));
+    const seed = [...`${pic.id}${pic.text}`].reduce((x, c) => x + c.charCodeAt(0), 0);
     let n = seed;
-    const text = brief.text.split(/\s+/).map((w) => {
+    const text = pic.text.split(/\s+/).map((w) => {
       const bare = bareWord(w);
       if (names.has(bare) || bare.length <= 3) return w;
       n = (n * 1103515245 + 12345) % 2147483648;
@@ -334,18 +472,17 @@ class DoubleTake {
     return ctx.media.put(`gen/${ctx.roomCode || 'room'}-dt-${uid()}.svg`, new TextEncoder().encode(placeholderSvg(text, seed)), 'image/svg+xml');
   }
 
-  #slot(qid, i, token) {
-    const q = this.s.questions.find((x) => x.id === qid);
-    const slot = q?.slots[i];
-    return slot && slot.token === token ? { q, slot } : {};
+  #pic(picId, token) {
+    const pic = this.s.pics.find((x) => x.id === picId);
+    return pic && pic.token === token ? pic : null;
   }
 
-  #painted(qid, i, token, key, ai) {
+  #painted(picId, token, key, ai) {
     this.inflight.delete(token);
     if (this.dead) return;
-    const { slot } = this.#slot(qid, i, token);
-    if (slot) {
-      Object.assign(slot, { status: 'done', key, token: null, ai });
+    const pic = this.#pic(picId, token);
+    if (pic) {
+      Object.assign(pic, { status: 'done', key, token: null, ai });
       this.ctx.checkpoint?.(); // pictures cost money: never lose one to a restart
       this.#checkReady();
       this.ctx.update();
@@ -353,36 +490,25 @@ class DoubleTake {
     this.#pump();
   }
 
-  #failed(qid, i, token, err) {
+  #failed(picId, token, err) {
     this.inflight.delete(token);
     if (this.dead) return;
     const msg = String(err?.message || err || '');
-    this.ctx.log(`double-take: picture ${qid}/${i} failed:`, msg);
-    const { q, slot } = this.#slot(qid, i, token);
-    if (slot) {
-      slot.token = null;
+    this.ctx.log(`double-take: picture ${picId} failed:`, msg);
+    const pic = this.#pic(picId, token);
+    if (pic) {
+      pic.token = null;
       const refused = /safety|moderat|content polic|refus|blocked/i.test(msg);
-      const decoy = q.options.findIndex((o, j) => !q.real.includes(j) && o.stars.length === q.options[q.real[i]].stars.length);
-      if (slot.sketch) {
-        slot.status = slot.tries >= 5 ? 'failed' : 'queued';
-      } else if (slot.tries < 2 && !refused) {
-        slot.status = 'queued'; // retry the same brief once
-      } else if (!slot.swapped && decoy >= 0) {
-        // Swap: that brief won't paint, so a decoy becomes the real one.
-        slot.swapped = true;
-        q.real[i] = decoy;
-        slot.status = 'queued';
-      } else {
-        slot.sketch = true;
-        slot.status = 'queued';
-      }
-      if (slot.status === 'failed') this.#checkReady();
+      if (pic.sketch) pic.status = pic.tries >= 5 ? 'failed' : 'queued';
+      else if (pic.tries < 2 && !refused) pic.status = 'queued'; // retry once
+      else { pic.sketch = true; pic.status = 'queued'; } // then a sketch
+      if (pic.status === 'failed') this.#checkReady();
       this.ctx.update();
     }
     this.#pump();
   }
 
-  // ------------------------------------------------------------- questions
+  // -------------------------------------------------------------- pictures
   #syncRoster() {
     const s = this.s;
     const add = (this.ctx.newcomers?.(meta.maxPlayers) || []).filter((id) => !s.roster.includes(id));
@@ -397,82 +523,101 @@ class DoubleTake {
     this.ctx.sayLine('lateJoin', { name: joinNames(add.map((id) => this.ctx.playerName(id))) });
   }
 
-  #startQuestion(idx) {
+  #half() { return Math.ceil(this.s.pics.length / 2); }
+
+  #startPicture(idx) {
     const s = this.s;
-    s.qIdx = idx;
-    const q = s.questions[idx];
-    if (!q) return this.#endOfQuestions();
+    s.idx = idx;
+    const pic = s.pics[idx];
+    if (!pic) return this.#endOfPictures();
     if (idx > 0) this.#syncRoster();
     s.minUntil = Date.now() + PAINT_MIN_MS;
     this.ctx.setTimer('paintMin', PAINT_MIN_MS);
     this.#phase('painting', PAINT_WAIT_MS, 'paint');
     this.ctx.sfx('whoosh');
-    if (q.n === DOUBLE_FROM) this.ctx.sayLine('dtDoublePoints', {});
-    else if (idx > 0) this.ctx.sayLine('dtNextQuestion', { n: q.n, total: s.questions.length });
+    if (pic.mult > 1 && s.pics[idx - 1]?.mult === 1) this.ctx.sayLine('dtSecondHalf', {});
+    else if (idx > 0) this.ctx.sayLine('dtNextPicture', { n: pic.n, total: s.pics.length });
     this.#pump();
     return undefined;
   }
 
-  #ready(q) { return q.slots.every((x) => x.status === 'done'); }
-
   #checkReady() {
     const s = this.s;
     if (s.phase !== 'painting') return;
-    const q = s.questions[s.qIdx];
-    if (!q) return;
-    if (q.slots.some((x) => x.status === 'failed')) {
+    const pic = s.pics[s.idx];
+    if (!pic) return;
+    if (pic.status === 'failed') {
       // Even the sketch wouldn't draw: skip this one.
-      q.skipped = true;
+      pic.skipped = true;
       this.ctx.clearTimer('paint');
       this.ctx.clearTimer('paintMin');
-      this.#nextAfter(s.qIdx);
+      this.#nextAfter(s.idx);
       return;
     }
-    if (!this.#ready(q) || Date.now() < s.minUntil - 50) return;
+    if (pic.status !== 'done' || s.decoyState !== 'done' || Date.now() < s.minUntil - 50) return;
     this.#startGuess();
   }
 
-  // Waited long enough: sketch whatever is still missing (the paid call, if
-  // it ever lands, is ignored) so the game moves on.
+  // Waited long enough: decoys from the bank if the model hasn't answered,
+  // and a sketch if the picture still isn't there (a paid call that lands
+  // later is ignored), so the game moves on.
   #paintTimeout() {
     const s = this.s;
     if (s.phase !== 'painting') return;
-    const q = s.questions[s.qIdx];
-    for (let i = 0; i < q.slots.length; i++) {
-      const slot = q.slots[i];
-      if (slot.status === 'done') continue;
-      if (slot.token) this.inflight.delete(slot.token);
-      Object.assign(slot, { status: 'queued', token: null, sketch: true });
-      this.#paintSlot(q, i);
+    const pic = s.pics[s.idx];
+    if (s.decoyState === 'pending') {
+      this.decoyToken ||= uid('d');
+      this.#setDecoys(this.decoyToken, {});
     }
-    this.ctx.sayLine('dtPaintingSlow', {});
+    if (pic.status !== 'done' && pic.status !== 'failed') {
+      if (pic.token) this.inflight.delete(pic.token);
+      Object.assign(pic, { status: 'queued', token: null, sketch: true });
+      this.#paintPic(pic);
+      this.ctx.sayLine('dtPaintingSlow', {});
+    }
+    this.#checkReady();
     this.ctx.update();
   }
 
+  #guessers(pic) { return this.s.roster.filter((id) => id !== pic.author); }
+
   #startGuess() {
     const s = this.s;
-    const q = s.questions[s.qIdx];
+    const pic = s.pics[s.idx];
     this.ctx.clearTimer('paint');
     this.ctx.clearTimer('paintMin');
-    q.startedAt = Date.now();
+    pic.startedAt = Date.now();
+    // The author's tick shows up on the TV a few seconds in, like everyone
+    // else's, so an un-ticked face doesn't give them away.
+    pic.authorTickAt = pic.startedAt + 3000 + Math.floor(Math.random() * 6000);
+    const first = !s.pics.some((p) => p.result);
     this.#phase('guess', GUESS_MS);
     this.ctx.music('voting');
     this.ctx.sfx('reveal');
-    this.ctx.sayLine(s.qIdx === 0 ? 'dtFirstQuestion' : 'dtGuess', {});
+    this.ctx.sayLine(first ? 'dtFirstPicture' : 'dtLookClose', {});
     this.ctx.buzz(s.roster, [40, 30, 40]);
     this.#botsGuess();
+    this.#authorTick();
   }
 
-  #setPicks(pid, qId, picks) {
+  #authorTick() {
+    const pic = this.s.pics[this.s.idx];
+    if (!pic?.authorTickAt) return;
+    this.ctx.later(Math.max(0, pic.authorTickAt - Date.now()) + 50, () => {
+      if (this.s.phase === 'guess' && this.s.pics[this.s.idx]?.id === pic.id) this.ctx.update();
+    });
+  }
+
+  #setPick(pid, picId, choice) {
     const s = this.s;
-    const q = s.questions[s.qIdx];
-    if (!q || q.id !== qId || !s.roster.includes(pid) || !Array.isArray(picks)) return;
-    const clean = [...new Set(picks.filter((x) => Number.isInteger(x) && x >= 0 && x < q.options.length))].slice(0, 2);
-    q.picks[pid] = clean;
-    if (clean.length === 2 && q.pickMs[pid] === undefined) q.pickMs[pid] = Math.max(0, Date.now() - q.startedAt);
+    const pic = s.pics[s.idx];
+    if (!pic || pic.id !== picId || !s.roster.includes(pid) || pid === pic.author) return;
+    if (!Number.isInteger(choice) || choice < 0 || choice >= (pic.options?.length || 0)) return;
+    pic.picks[pid] = choice;
+    if (pic.pickMs[pid] === undefined) pic.pickMs[pid] = Math.max(0, Date.now() - pic.startedAt);
     this.ctx.sfx('select');
-    const everyone = s.roster.filter((id) => this.ctx.isBot(id) || this.ctx.isConnected(id));
-    if (everyone.length && everyone.every((id) => q.picks[id]?.length === 2)) {
+    const everyone = this.#guessers(pic).filter((id) => this.ctx.isBot(id) || this.ctx.isConnected(id));
+    if (everyone.length && everyone.every((id) => pic.picks[id] !== undefined)) {
       const left = (s.deadline || 0) - Date.now();
       if (left > GUESS_DONE_MS) s.deadline = this.ctx.setTimer('guess', GUESS_DONE_MS);
     }
@@ -481,63 +626,68 @@ class DoubleTake {
 
   #reveal() {
     const s = this.s;
-    const q = s.questions[s.qIdx];
-    if (s.phase !== 'guess' || !q || q.result) return;
+    const pic = s.pics[s.idx];
+    if (s.phase !== 'guess' || !pic || pic.result) return;
     this.ctx.clearTimer('guess');
     const right = {};
     const points = {};
-    for (const id of s.roster) {
-      const picks = q.picks[id] || [];
-      const r = picks.filter((x) => q.real.includes(x)).length;
-      const pts = (r * POINTS + (r === 2 ? BONUS : 0)) * q.mult;
-      right[id] = r;
-      points[id] = pts;
-      s.scores[id] = (s.scores[id] || 0) + pts;
+    let spotted = 0;
+    let fooled = 0;
+    for (const id of this.#guessers(pic)) {
+      const pick = pic.picks[id];
+      const ok = pick === pic.real;
+      right[id] = ok;
+      points[id] = ok ? POINTS * pic.mult : 0;
+      if (ok) spotted += 1;
+      else if (pick !== undefined) fooled += 1;
       const t = s.tallies[id];
       if (!t) continue;
-      t.questionsPlayed += 1;
-      t.correctPicks += r;
-      t.fooledBy += picks.length - r;
-      t.votesCast += picks.length;
-      if (r === 2) t.doubleTakes += 1;
-      if (!picks.length) t.blanks += 1;
-      if (q.pickMs[id] !== undefined) { t.answerMs += q.pickMs[id]; t.answerTimed += 1; }
+      t.picturesGuessed += 1;
+      if (pick === undefined) t.blanks += 1;
+      else {
+        t.votesCast += 1;
+        if (ok) t.correctPicks += 1; else t.fooledBy += 1;
+      }
+      if (pic.pickMs[id] !== undefined) { t.answerMs += pic.pickMs[id]; t.answerTimed += 1; }
     }
-    q.result = { right, points };
+    points[pic.author] = spotted * AUTHOR_POINTS * pic.mult;
+    for (const [id, pts] of Object.entries(points)) s.scores[id] = (s.scores[id] || 0) + pts;
+    const ta = s.tallies[pic.author];
+    if (ta) { ta.spottedBy += spotted; ta.peopleFooled += fooled; }
+    pic.result = { right, points, spotted, fooled };
     this.#phase('reveal', REVEAL_MS);
     this.ctx.sfx('reveal');
-    const guessed = s.roster.filter((id) => (q.picks[id] || []).length);
-    const best = [...s.roster].sort((a, b) => points[b] - points[a])[0];
-    if (guessed.length && guessed.every((id) => right[id] === 2)) this.ctx.sayLine('dtRevealAll', {});
-    else if (s.roster.every((id) => !right[id])) this.ctx.sayLine('dtRevealNone', {});
-    else if (right[best] === 2) this.ctx.sayLine('dtRevealDouble', { name: this.ctx.playerName(best) });
-    else this.ctx.sayLine('dtReveal', {});
+    const name = this.ctx.playerName(pic.author);
+    if (!spotted && !fooled) this.ctx.sayLine('dtRevealQuiet', { name });
+    else if (!spotted) this.ctx.sayLine('dtRevealFooledAll', { name });
+    else if (!fooled && spotted >= 2) this.ctx.sayLine('dtRevealEveryone', { name });
+    else this.ctx.sayLine('dtRevealSpotted', { name, n: spotted });
   }
 
   #afterReveal() {
     if (this.s.phase !== 'reveal') return;
-    this.#nextAfter(this.s.qIdx);
+    this.#nextAfter(this.s.idx);
   }
 
   #nextAfter(idx) {
     const s = this.s;
     const next = idx + 1;
-    const played = s.questions.slice(0, next).filter((q) => q.result).length;
-    if (next >= s.questions.length) return this.#endOfQuestions();
-    if (s.questions[idx].n === SCORES_AFTER && played) return this.#scores(next);
-    return this.#startQuestion(next);
+    if (next >= s.pics.length) return this.#endOfPictures();
+    const played = s.pics.slice(0, next).some((p) => p.result);
+    if (s.pics[idx].n === this.#half() && played) return this.#scores(next);
+    return this.#startPicture(next);
   }
 
-  #endOfQuestions() {
+  #endOfPictures() {
     const s = this.s;
-    s.qIdx = s.questions.length;
-    if (s.questions.some((q) => q.result)) return this.#scores(s.questions.length);
+    s.idx = s.pics.length;
+    if (s.pics.some((p) => p.result)) return this.#scores(s.pics.length);
     return this.#gameOver();
   }
 
   #scores(nextIdx) {
     const s = this.s;
-    s.qIdx = nextIdx;
+    s.idx = nextIdx;
     this.#phase('scores', SCORES_MS);
     this.ctx.music('results');
     const ranking = this.#ranking();
@@ -588,13 +738,10 @@ class DoubleTake {
         out.push({ key, title: this.ctx.line(line) || key, playerId: hit.id, name: this.ctx.playerName(hit.id), value: hit.v });
       }
     };
-    add('dtEagle', 'dtAwardEagle', best('doubleTakes', 2));
+    add('dtEagle', 'dtAwardEagle', best('correctPicks', 2));
+    add('dtArtist', 'dtAwardArtist', best('spottedBy', 2));
+    add('dtStar', 'dtAwardStar', best('starredIn', 2));
     add('dtFooled', 'dtAwardFooled', best('fooledBy', 3));
-    // Photogenic: starred in the most real pictures.
-    const starred = {};
-    for (const q of s.questions) if (q.result) for (const i of q.real) for (const id of q.options[i].stars) starred[id] = (starred[id] || 0) + 1;
-    const star = Object.entries(starred).sort((a, b) => b[1] - a[1])[0];
-    if (star && s.roster.includes(star[0])) add('dtStar', 'dtAwardStar', { id: star[0], v: star[1] });
     add('ghost', 'award_ghost', best('blanks', 2));
     const second = ranking.find((r) => r.rank === 2);
     if (second) add('bridesmaid', 'award_bridesmaid', { id: second.id, v: second.score });
@@ -607,39 +754,49 @@ class DoubleTake {
     s.finished = true;
     this.dead = true;
     const ranking = this.#ranking();
-    // Highlights: the real captions, and how many people spotted each.
-    const highlights = [];
-    for (const q of s.questions) {
-      if (!q.result) continue;
-      q.real.forEach((i) => {
-        const spotted = s.roster.filter((id) => (q.picks[id] || []).includes(i)).length;
-        highlights.push({ name: joinNames(q.options[i].stars.map((id) => this.ctx.playerName(id))), prompt: meta.name, answer: q.options[i].text, votes: spotted, totalVotes: s.roster.length });
-      });
-    }
+    // Each prompt a person actually wrote, with how many people spotted it.
+    const answers = s.pics.filter((p) => p.result && !p.auto && !this.ctx.isBot(p.author)).map((p) => ({
+      playerId: p.author, playerName: this.ctx.playerName(p.author), round: p.n,
+      prompt: meta.name, answer: p.text, votes: p.result.spotted, totalVotes: Object.keys(p.result.right).length,
+      won: p.result.spotted > 0, panic: false,
+    }));
+    const bestOf = (id) => {
+      const a = answers.filter((x) => x.playerId === id && x.votes > 0).sort((x, y) => y.votes - x.votes)[0];
+      return a ? { prompt: a.prompt, answer: a.answer, votes: a.votes, totalVotes: a.totalVotes } : null;
+    };
     this.ctx.finish({
       gameType: meta.id,
-      players: ranking.map((r) => ({ ...this.ctx.publicPlayer(r.id), score: r.score, rank: r.rank, counters: { ...s.tallies[r.id] }, best: null })),
+      players: ranking.map((r) => ({ ...this.ctx.publicPlayer(r.id), score: r.score, rank: r.rank, counters: { ...s.tallies[r.id] }, best: bestOf(r.id) })),
       winnerIds: ranking.filter((r) => r.rank === 1 && r.score > 0).map((r) => r.id),
-      answers: [],
-      highlights: highlights.sort((a, b) => a.votes - b.votes).slice(0, 5),
+      answers,
+      highlights: [...answers].sort((a, b) => (b.votes / Math.max(1, b.totalVotes)) - (a.votes / Math.max(1, a.totalVotes)))
+        .slice(0, 5).map((a) => ({ name: a.playerName, prompt: a.prompt, answer: a.answer, votes: a.votes, totalVotes: a.totalVotes })),
       awards: s.awards,
     });
   }
 
   // ------------------------------------------------------------------ bots
+  #botsWrite() {
+    const s = this.s;
+    for (const id of s.roster.filter((x) => this.ctx.isBot(x) && !s.prompts[x])) {
+      this.ctx.later(1500 + Math.random() * 6000, () => {
+        if (s.phase !== 'write' || s.prompts[id]) return;
+        const text = s.suggest[id]?.[Math.floor(Math.random() * (s.suggest[id]?.length || 1))] || this.#bankBriefs(1)[0]?.text;
+        if (text) this.#submit(id, text);
+      });
+    }
+  }
+
   #botsGuess() {
     const s = this.s;
-    const q = s.questions[s.qIdx];
-    if (!q) return;
-    for (const id of s.roster.filter((x) => this.ctx.isBot(x) && !(q.picks[x]?.length === 2))) {
-      this.ctx.later(3000 + Math.random() * 12000, () => {
-        if (s.phase !== 'guess' || s.questions[s.qIdx]?.id !== q.id) return;
-        // Bots are decent but not psychic: each pick is right a bit over half the time.
-        const real = shuffle([...q.real]);
-        const fake = shuffle(q.options.map((_, i) => i).filter((i) => !q.real.includes(i)));
-        const picks = [];
-        while (picks.length < 2) picks.push(Math.random() < 0.55 && real.length ? real.shift() : fake.shift() ?? real.shift());
-        this.#setPicks(id, q.id, picks);
+    const pic = s.pics[s.idx];
+    if (!pic) return;
+    for (const id of this.#guessers(pic).filter((x) => this.ctx.isBot(x) && pic.picks[x] === undefined)) {
+      this.ctx.later(3000 + Math.random() * 10000, () => {
+        if (s.phase !== 'guess' || s.pics[s.idx]?.id !== pic.id) return;
+        // Decent but not psychic: right a bit under half the time.
+        const fakes = pic.options.map((_, i) => i).filter((i) => i !== pic.real);
+        this.#setPick(id, pic.id, Math.random() < 0.45 ? pic.real : fakes[Math.floor(Math.random() * fakes.length)]);
       });
     }
   }
@@ -649,53 +806,58 @@ class DoubleTake {
   #url(key) { return key ? this.ctx.media.url(key) : null; }
 
   #progress() {
-    const slots = this.s.questions.filter((q) => !q.skipped).flatMap((q) => q.slots);
-    return { done: slots.filter((x) => x.status === 'done').length, total: slots.length };
+    const pics = this.s.pics.filter((p) => !p.skipped);
+    return { done: pics.filter((p) => p.status === 'done').length, total: pics.length };
   }
 
   #scoreboard() {
     return this.#ranking().map((r) => ({ ...this.#pub(r.id), score: r.score, rank: r.rank, delta: r.delta }));
   }
 
-  #letters(q) { return Object.fromEntries(q.real.map((opt, i) => [opt, i ? 'B' : 'A'])); }
-
   hostView() {
     const s = this.s;
-    const q = s.questions[s.qIdx];
+    const pic = s.pics[s.idx];
     const base = {
       phase: s.phase, deadline: s.deadline, timer: TIMED.includes(s.phase), timerTotal: s.timerMs,
-      mode: meta.id, title: meta.name, qNo: q?.n || 0, qTotal: s.questions.length || QUESTIONS, mult: q?.mult || 1,
+      mode: meta.id, title: meta.name, picNo: pic?.n || 0, picTotal: s.pics.length, mult: pic?.mult || 1,
     };
     switch (s.phase) {
       case 'intro':
         return { ...base, tagline: meta.tagline, ai: !!this.ctx.images?.available() };
       case 'selfie':
         return { ...base, players: s.roster.map((id) => ({ ...this.#pub(id), done: !!s.selfies[id] })) };
+      case 'write':
+        return { ...base, players: s.roster.map((id) => ({ ...this.#pub(id), done: !!s.prompts[id] })) };
       case 'painting':
-        return { ...base, ...this.#progress(), ready: q.slots.filter((x) => x.status === 'done').length, sketchOnly: s.sketchOnly };
-      case 'guess':
-        // No secrets here: which captions are real stays server-side.
+        return { ...base, ...this.#progress(), sketchOnly: s.sketchOnly };
+      case 'guess': {
+        // No secrets here: which caption is real (and whose it is) stays server-side.
+        const authorDone = Date.now() >= (pic.authorTickAt || 0) || this.#guessers(pic).every((id) => pic.picks[id] !== undefined);
         return {
           ...base,
-          images: q.slots.map((slot, i) => ({ letter: i ? 'B' : 'A', url: this.#url(slot.key) })),
-          captions: q.options.map((o) => o.text),
-          guessers: s.roster.map((id) => ({ ...this.#pub(id), done: (q.picks[id] || []).length === 2 })),
+          image: this.#url(pic.key),
+          captions: pic.options,
+          guessers: s.roster.map((id) => ({ ...this.#pub(id), done: id === pic.author ? authorDone : pic.picks[id] !== undefined })),
         };
+      }
       case 'reveal': {
-        const letters = this.#letters(q);
+        const r = pic.result;
         return {
           ...base,
-          images: q.slots.map((slot, i) => ({ letter: i ? 'B' : 'A', url: this.#url(slot.key), caption: q.options[q.real[i]].text })),
-          captions: q.options.map((o, i) => ({
-            text: o.text, real: letters[i] || null,
-            pickers: s.roster.filter((id) => (q.picks[id] || []).includes(i)).map((id) => this.#pub(id)),
+          image: this.#url(pic.key),
+          author: this.#pub(pic.author),
+          spotted: r.spotted, guessed: Object.keys(r.right).length,
+          captions: pic.options.map((text, i) => ({
+            text, real: i === pic.real,
+            pickers: this.#guessers(pic).filter((id) => pic.picks[id] === i).map((id) => this.#pub(id)),
           })),
-          results: [...s.roster].sort((a, b) => q.result.points[b] - q.result.points[a])
-            .map((id) => ({ ...this.#pub(id), right: q.result.right[id], points: q.result.points[id], guessed: (q.picks[id] || []).length > 0 })),
+          results: [...s.roster].filter((id) => r.points[id] !== undefined)
+            .sort((a, b) => r.points[b] - r.points[a])
+            .map((id) => ({ ...this.#pub(id), author: id === pic.author, right: !!r.right[id], picked: pic.picks[id] !== undefined, points: r.points[id] })),
         };
       }
       case 'scores':
-        return { ...base, scoreboard: this.#scoreboard(), final: s.qIdx >= s.questions.length };
+        return { ...base, scoreboard: this.#scoreboard(), final: s.idx >= s.pics.length };
       case 'gameOver':
         return { ...base, scoreboard: this.#scoreboard(), awards: s.awards };
       default:
@@ -705,32 +867,42 @@ class DoubleTake {
 
   playerView(pid) {
     const s = this.s;
-    const q = s.questions[s.qIdx];
+    const pic = s.pics[s.idx];
     const inGame = s.roster.includes(pid);
     const base = {
       phase: s.phase, deadline: s.deadline, timer: TIMED.includes(s.phase), timerTotal: s.timerMs,
-      inGame, score: s.scores[pid] || 0, title: meta.name, qNo: q?.n || 0, qTotal: s.questions.length || QUESTIONS, mult: q?.mult || 1,
+      inGame, score: s.scores[pid] || 0, title: meta.name, picNo: pic?.n || 0, picTotal: s.pics.length, mult: pic?.mult || 1,
     };
-    const watch = (key, extra = {}) => ({ ...base, screen: 'watch', text: this.#stableLine(key), textKey: key, ...extra });
+    const watch = (key, extra = {}, vars = {}) => ({ ...base, screen: 'watch', text: this.#stableLine(key, vars), textKey: key, ...extra });
     switch (s.phase) {
       case 'intro':
         return watch('phoneIntro');
       case 'selfie':
         return inGame ? { ...base, screen: 'selfie', done: !!s.selfies[pid] } : watch('phoneDtAudience');
+      case 'write':
+        if (!inGame) return watch('phoneDtAudience');
+        if (s.prompts[pid]) return watch('phoneDtSent', { mood: 'sent' });
+        return {
+          ...base, screen: 'write', maxChars: MAX_CHARS, suggestions: s.suggest[pid] || [],
+          names: s.roster.map((id) => ({ ...this.#pub(id), name: firstName(this.ctx.playerName(id)), me: id === pid })),
+        };
       case 'painting':
         return watch('phoneDtPainting');
       case 'guess':
         if (!inGame) return watch('phoneDtAudience');
-        return { ...base, screen: 'guess', qId: q.id, options: q.options.map((o) => o.text), picked: q.picks[pid] || [] };
+        if (pid === pic.author) return watch('phoneDtYours', { mood: 'yours' });
+        return { ...base, screen: 'guess', picId: pic.id, options: pic.options, picked: pic.picks[pid] ?? null };
       case 'reveal': {
         if (!inGame) return watch('phoneWatchReveal');
-        const r = q.result.right[pid] || 0;
-        const letters = this.#letters(q);
-        const picks = q.picks[pid] || [];
+        const r = pic.result;
+        const mine = pid === pic.author;
+        const pick = pic.picks[pid];
+        const key = mine ? (r.spotted ? 'phoneDtYoursSpotted' : 'phoneDtYoursFooled')
+          : pick === undefined ? 'phoneDtNoPick' : r.right[pid] ? 'phoneDtRight' : 'phoneDtWrong';
         return {
-          ...base, screen: 'result', right: r, gained: q.result.points[pid] || 0, guessed: picks.length > 0,
-          text: this.#stableLine(!picks.length ? 'phoneDtNoPicks' : r === 2 ? 'phoneDtGotTwo' : r === 1 ? 'phoneDtGotOne' : 'phoneDtGotNone'),
-          options: q.options.map((o, i) => ({ text: o.text, real: letters[i] || null, mine: picks.includes(i) })),
+          ...base, screen: 'result', mine, right: !!r.right[pid], picked: pick !== undefined, gained: r.points[pid] || 0,
+          text: this.#stableLine(key, { n: r.spotted }), textKey: key,
+          options: pic.options.map((text, i) => ({ text, real: i === pic.real, mine: pick === i, count: this.#guessers(pic).filter((id) => pic.picks[id] === i).length })),
         };
       }
       case 'gameOver': {
@@ -746,11 +918,11 @@ class DoubleTake {
   }
 
   // The same line for a whole phase (views are rebuilt on every update).
-  #stableLine(key) {
+  #stableLine(key, vars = {}) {
     const scene = this.sceneKey();
     if (this.lineCache?.scene !== scene) this.lineCache = { scene, lines: {} };
-    this.lineCache.lines[key] ??= this.ctx.line(key) || '';
-    return this.lineCache.lines[key];
+    const k = `${key}|${JSON.stringify(vars)}`;
+    this.lineCache.lines[k] ??= this.ctx.line(key, vars) || '';
+    return this.lineCache.lines[k];
   }
 }
-

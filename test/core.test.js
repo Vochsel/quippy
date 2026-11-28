@@ -370,7 +370,7 @@ test('host tones: lines switch with the tone, spicy tones are off in family mode
   assert.equal(effectiveTone('nonsense', false).id, 'normal');
 });
 
-test('double-take: selfies, secret captions, painting retries, cost guard, restart mid-game', async (t) => {
+test('double-take: secret prompts, decoys, selfie references, cost guard, scoring, restart mid-guess', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());
   const store = memoryStore();
@@ -378,64 +378,142 @@ test('double-take: selfies, secret captions, painting retries, cost guard, resta
   const files = new Map();
   const media = { get: async (k) => files.get(k) || null, put: async (k, b) => { files.set(k, b); } };
   const calls = [];
-  let failures = 2;
-  // A fake paid model: the first two calls fail, the rest answer with a tiny "JPEG".
+  let failures = 4;
+  // A fake paid model: the first four calls fail, the rest answer with a tiny "JPEG".
   const images = {
     available: () => true,
     generate: async ({ prompt, references }) => {
-      calls.push({ prompt, refs: references?.length || 0 });
+      calls.push({ prompt, refs: references || [] });
       if (failures-- > 0) throw new Error('boom');
       return { bytes: new Uint8Array([0xff, 0xd8, 1, 2]), type: 'image/jpeg', ms: 1 };
     },
   };
-  const deps = { ...makeDeps(store, saved), images, media };
+  // A fake language model for the decoys: some good ones, some it must throw out.
+  const llmCalls = [];
+  const llm = {
+    available: () => true,
+    status: () => ({}),
+    json: async ({ user }) => {
+      const { prompts } = JSON.parse(user);
+      llmCalls.push(prompts);
+      const decoys = {};
+      prompts.forEach((p, i) => {
+        decoys[p.id] = [
+          p.prompt, // the real one: rejected
+          prompts[(i + 1) % prompts.length].prompt, // someone else's real prompt: rejected
+          `Ann Smith ${'very '.repeat(40)}long`, // too long: rejected
+          'nobody from the room in this one at all', // stars nobody: rejected
+          `Ann juggling flaming pies at the footy, take ${i}`,
+          `Ben riding a pelican to Bunnings, take ${i}`,
+        ];
+      });
+      return { decoys };
+    },
+  };
+  const deps = { ...makeDeps(store, saved), images, media, llm };
   const room = new Room({ code: 'DUBS', crewId: 'h_testcrew05', deps });
   await room.init();
-  for (let i = 0; i < 4; i++) room.addBot();
-  // Two "humans" (bot entries flipped so they never act by themselves); one has a selfie.
+  for (let i = 0; i < 12; i++) room.addBot();
+  // Two "humans" (bot entries flipped so they never act by themselves).
   const [h1, h2] = [...room.players.keys()];
-  for (const id of [h1, h2]) room.players.get(id).isBot = false;
-  room.players.get(h1).photo = 'dev_h1abcd-0123abcd.jpg';
-  files.set('photos/dev_h1abcd-0123abcd.jpg', new Uint8Array([0xff, 0xd8, 9]));
+  Object.assign(room.players.get(h1), { isBot: false, name: 'Ann Smith', photo: 'dev_h1abcd-0123abcd.jpg' });
+  Object.assign(room.players.get(h2), { isBot: false, name: 'Ben' });
+  const photo1 = new Uint8Array([0xff, 0xd8, 1]);
+  const photo2 = new Uint8Array([0xff, 0xd8, 2]);
+  files.set('photos/dev_h1abcd-0123abcd.jpg', photo1);
+  files.set('photos/dev_h2abcd-0123abcd.jpg', photo2);
   await room.startGame('double-take');
-  assert.ok(await advance(room, (r) => r.game?.s.phase === 'selfie'), 'selfie step');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'selfie'), 'selfie step (Ben has no photo)');
   const g = room.game;
-  assert.equal(g.hostView().players.length, 4);
-  assert.equal(g.playerView(h1).screen, 'selfie');
-  g.onAction(h1, { type: 'selfieDone' });
+  assert.equal(g.playerView(h2).screen, 'selfie');
+  room.players.get(h2).photo = 'dev_h2abcd-0123abcd.jpg'; // took one
   g.onAction(h2, { type: 'selfieDone' });
-  assert.ok(await advance(room, (r) => r.game?.s.phase === 'guess'), 'first question up');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'write'), 'write step');
 
-  const q = g.s.questions[0];
-  assert.equal(g.s.questions.length, 5);
-  for (const x of g.s.questions) {
-    assert.equal(x.options.length, 4);
-    assert.equal(new Set(x.options.map((o) => o.text)).size, 4, 'four different captions');
-    assert.equal(new Set(x.real).size, 2);
-    const faces = new Set(x.real.flatMap((i) => x.options[i].stars));
-    assert.ok(x.options.every((o) => o.stars.every((id) => faces.has(id))), 'decoys star the same faces');
+  // Write: name chips, real-name suggestions, nothing secret on the TV.
+  const wv = g.playerView(h1);
+  assert.equal(wv.screen, 'write');
+  assert.ok(wv.names.some((p) => p.name === 'Ann' && p.me) && wv.names.some((p) => p.name === 'Ben'));
+  assert.ok(wv.names.every((p) => !p.name.includes('🤖')), 'chips use bare names');
+  assert.equal(wv.suggestions.length, 6);
+  assert.ok(wv.suggestions.every((x) => !/[{}🤖]/u.test(x)), 'suggestions have real names filled in');
+  const mine = 'Ben and Ann Smith arm-wrestling an axolotl at the footy';
+  g.onAction(h1, { type: 'prompt', text: `  ${mine}\n` });
+  g.onAction(h2, { type: 'draft', text: 'ann as a zeppelin pilot, oil painting' }); // never sent: used at time-up
+  assert.ok(await advance(room, (r) => Object.keys(r.game.s.prompts).length === 11), 'bots wrote theirs');
+  assert.equal(g.s.phase, 'write', 'still waiting on Ben');
+  for (const v of [g.hostView(), g.playerView(h2), g.playerView([...room.players.keys()][5])]) {
+    const j = JSON.stringify(v);
+    assert.ok(!j.includes('axolotl') && !j.includes('zeppelin'), 'no prompts in views while writing');
   }
-  // Nothing in the views says which captions are real before the reveal.
+  assert.equal(g.playerView(h1).textKey, 'phoneDtSent');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'guess'), 'first picture up');
+
+  const reals = g.s.pics.map((p) => p.text);
+  assert.equal(g.s.pics.length, 12);
+  assert.equal(llmCalls.length, 1, 'one batched decoy call');
+  assert.equal(llmCalls[0].length, 12);
+  const pa = g.s.pics.find((p) => p.author === h1);
+  const pb = g.s.pics.find((p) => p.author === h2);
+  assert.equal(pa.text, mine);
+  assert.equal(pb.text, 'ann as a zeppelin pilot, oil painting');
+  assert.deepEqual(pa.stars, [h2, h1], 'named people, in order of appearance');
+  assert.deepEqual(pb.stars, [h1], 'case-insensitive first-name match');
+  for (const p of g.s.pics) {
+    assert.equal(p.options.length, 4);
+    assert.equal(new Set(p.options.map((o) => o.toLowerCase())).size, 4, 'four different captions');
+    assert.equal(p.options[p.real], p.text);
+    const decoys = p.options.filter((_, i) => i !== p.real);
+    assert.ok(decoys.every((d) => !reals.includes(d)), 'decoys are never a real prompt');
+    assert.ok(decoys.every((d) => d.length < 160 && !d.includes('nobody from the room')));
+    assert.equal(decoys.filter((d) => /juggling|pelican/.test(d)).length, 2, 'model decoys kept, bad ones replaced from the bank');
+  }
+
+  // Nothing in the views says which caption is real, or whose it is.
+  const pic = g.s.pics[g.s.idx];
+  const others = [...g.s.roster].filter((id) => id !== pic.author);
   const hv = g.hostView();
-  const pv = g.playerView(h1);
-  assert.deepEqual(hv.captions, q.options.map((o) => o.text));
-  assert.deepEqual(pv.options, q.options.map((o) => o.text));
-  for (const v of [hv, pv]) assert.ok(!/"(real|stars|template)"/.test(JSON.stringify(v)), 'no secrets in views');
-  assert.ok(q.slots.every((s) => /^gen\/[\w-]+\.jpg$/.test(s.key)), 'state keeps media keys');
-  assert.ok(q.slots.some((s) => s.tries === 2), 'a failed picture was retried');
-  assert.ok(calls.some((c) => c.refs === 1 && /reference photo shows/.test(c.prompt)) || !g.s.questions.some((x) => x.real.some((i) => x.options[i].stars.includes(h1))), 'selfie used as a reference');
+  assert.deepEqual(hv.captions, pic.options);
+  assert.equal(hv.guessers.length, 12, 'the author is on the TV list too');
+  const pv = g.playerView(others[0]);
+  assert.deepEqual(pv.options, pic.options);
+  for (const v of [hv, pv]) assert.ok(!/"(real|author|stars|text)"/.test(JSON.stringify(v)), 'no secrets in views');
+  assert.equal(g.playerView(pic.author).textKey, 'phoneDtYours');
+  assert.equal(g.playerView(pic.author).options, undefined);
 
-  const decoys = [0, 1, 2, 3].filter((i) => !q.real.includes(i));
-  g.onAction(h1, { type: 'picks', qId: q.id, picks: [decoys[0]] });
-  g.onAction(h1, { type: 'picks', qId: q.id, picks: [...q.real, 99] });
-  g.onAction(h2, { type: 'picks', qId: q.id, picks: decoys });
+  // Selfies of the named people go along, in order, with who is who.
+  const callA = calls.find((c) => c.prompt.startsWith(mine));
+  assert.ok(callA, "Ann's prompt was sent to the painter");
+  assert.deepEqual(callA.refs, [photo2, photo1]);
+  assert.match(callA.prompt, /reference photo 1 IS Ben\. The person in reference photo 2 IS Ann Smith/);
+
+  // Guess: one human right, one wrong (if they're not the author).
+  const wrong = [0, 1, 2, 3].find((i) => i !== pic.real);
+  const before = { ...g.s.scores };
+  if (pic.author !== h1) {
+    g.onAction(h1, { type: 'pick', picId: pic.id, choice: wrong });
+    g.onAction(h1, { type: 'pick', picId: pic.id, choice: pic.real }); // changed their mind
+    g.onAction(h1, { type: 'pick', picId: pic.id, choice: 9 }); // ignored
+  }
+  if (pic.author !== h2) g.onAction(h2, { type: 'pick', picId: pic.id, choice: wrong });
+  g.onAction(pic.author, { type: 'pick', picId: pic.id, choice: pic.real }); // authors can't guess
+  assert.equal(pic.picks[pic.author], undefined);
   assert.ok(await advance(room, (r) => r.game?.s.phase === 'reveal'), 'reveal');
-  assert.equal(g.s.scores[h1], 1250, '2 right + Double Take bonus');
-  assert.equal(g.s.scores[h2], 0);
-  assert.equal(g.playerView(h1).right, 2);
-  assert.ok(g.hostView().captions.filter((c) => c.real).length === 2, 'reveal shows the real two');
+  const spotted = others.filter((id) => pic.picks[id] === pic.real).length;
+  assert.equal(pic.result.spotted, spotted);
+  assert.equal(g.s.scores[pic.author] - before[pic.author], spotted * 250 * pic.mult, 'author: +250 per correct guesser');
+  if (pic.author !== h1) assert.equal(g.s.scores[h1] - before[h1], 500 * pic.mult);
+  if (pic.author !== h2) assert.equal(g.s.scores[h2] - before[h2], 0);
+  const rv = g.hostView();
+  assert.equal(rv.captions.filter((c) => c.real).length, 1, 'reveal shows the real one');
+  assert.equal(rv.author.id, pic.author);
 
-  // Restart: the revived game re-queues anything unfinished and plays to the end.
+  // Restart mid-guess: the revived game keeps the picks and plays to the end.
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'guess'), 'second picture up');
+  const pic2 = g.s.pics[g.s.idx];
+  const pic2Idx = g.s.idx;
+  const guesser = [h1, h2].find((id) => id !== pic2.author);
+  g.onAction(guesser, { type: 'pick', picId: pic2.id, choice: pic2.real });
   await room.saveNow();
   const snap = structuredClone(saved.last);
   for (const tmr of room.timers.values()) clearTimeout(tmr.handle);
@@ -444,15 +522,45 @@ test('double-take: selfies, secret captions, painting retries, cost guard, resta
   room.game = null;
   const revived = new Room({ code: 'DUBS', crewId: 'h_testcrew05', deps, snapshot: snap });
   await revived.init();
-  assert.equal(revived.game.s.phase, 'reveal');
+  assert.equal(revived.game.s.phase, 'guess');
+  assert.equal(revived.game.s.pics[revived.game.s.idx].picks[guesser], pic2.real);
+  assert.deepEqual(revived.game.hostView().captions, pic2.options);
+  // A latecomer can guess from the next picture.
+  revived.addBot();
+  const late = [...revived.players.keys()].at(-1);
+  assert.ok(await advance(revived, (r) => r.game?.s.phase === 'guess' && r.game.s.idx > pic2Idx), 'next picture after restart');
+  assert.ok(revived.game.s.roster.includes(late), 'latecomer dealt in');
+  assert.equal(revived.game.playerView(late).screen, 'guess');
   const final = revived.game.s;
   assert.ok(await advance(revived, (r) => !r.game && r.lastResults), 'revived game finished');
+
   assert.ok(calls.length <= 12, `cost guard (${calls.length} paid calls)`);
+  assert.ok(final.pics.some((p) => p.tries === 2), 'a failed picture was retried');
+  assert.ok(final.pics.every((p) => /^gen\/[\w-]+\.(jpg|svg)$/.test(p.key)), 'state keeps media keys');
+  assert.ok(final.pics.some((p) => p.key.endsWith('.svg')), 'over budget: the rest are sketches');
+  assert.ok([pa, pb].every((p) => final.pics.find((x) => x.id === p.id).key.endsWith('.jpg')), "people's prompts get the paid pictures first");
+  // Scoring math, recomputed from the picks: +500 a correct guess, +250 to the
+  // author per correct guesser, x2 in the second half.
+  const half = Math.ceil(final.pics.length / 2);
+  const expect = Object.fromEntries(final.roster.map((id) => [id, 0]));
+  for (const p of final.pics.filter((x) => x.result)) {
+    const mult = p.n > half ? 2 : 1;
+    assert.equal(p.mult, mult);
+    for (const [id, choice] of Object.entries(p.picks)) {
+      if (choice === p.real) { expect[id] += 500 * mult; expect[p.author] += 250 * mult; }
+    }
+  }
+  assert.deepEqual(final.scores, expect);
   const res = revived.lastResults;
-  assert.equal(res.players.length, 4);
-  assert.ok(final.tallies[h1].doubleTakes >= 1);
-  assert.ok(final.tallies[h1].answerTimed >= 1 && final.tallies[h1].votesCast >= 2);
-  assert.equal(final.tallies[h2].questionsPlayed, 5);
+  assert.equal(res.players.length, 13);
+  assert.equal(final.tallies[h1].answersWritten, 1);
+  assert.equal(final.tallies[h2].answersWritten, 1, 'a draft counts');
+  assert.ok(final.tallies[guesser].answerTimed >= 1 && final.tallies[guesser].votesCast >= 1);
+  assert.ok(final.tallies[h1].starredIn >= 2);
+  await flush(20);
+  const answers = await store.all('SELECT prompt, answer, votes, total_votes AS totalVotes FROM answers', []);
+  assert.deepEqual(answers.map((a) => a.answer).sort(), [mine, pb.text].sort(), "results list people's prompts (not bots')");
+  assert.ok(answers.every((a) => a.prompt === 'Double Take' && a.totalVotes >= 11));
   assert.ok(res.awards.length >= 1);
 });
 

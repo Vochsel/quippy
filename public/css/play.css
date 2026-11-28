@@ -104,3 +104,4 @@ body.paused::after { content: '⏸ Paused'; position: fixed; inset: 0; z-index: 
 .selfie-card { display: grid; gap: .8rem; justify-items: center; }
 .selfie-card .avatar { border-radius: 24px; }
 .selfie-ghost { width: 9rem; height: 9rem; border-radius: 24px; border: 4px dashed rgba(26, 15, 46, .3); display: grid; place-items: center; font-size: 4rem; }
+.selfie-card .linkish { color: var(--ink); opacity: .6; }

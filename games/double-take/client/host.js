@@ -38,7 +38,7 @@ export function mount(root, api) {
   ensureCss('/games/double-take/client/double-take.css');
   const { h, avatar, fmt } = api;
   let key = null;
-  const keyOf = (g) => [g.phase, g.qNo,
+  const keyOf = (g) => [g.phase, g.picNo,
     g.phase === 'selfie' ? (g.players || []).map((p) => `${p.id}:${p.photo || ''}`).join(',') : ''].join('|');
   const settle = () => fitStage(root);
   addEventListener('resize', settle);
@@ -49,7 +49,7 @@ export function mount(root, api) {
     return img;
   }
 
-  const qMeta = (g) => h('div.q-meta', `Question ${g.qNo} of ${g.qTotal}${g.mult > 1 ? ' · double points' : ''}`);
+  const picMeta = (g) => h('div.q-meta', `Picture ${g.picNo} of ${g.picTotal}${g.mult > 1 ? ' · double points' : ''}`);
 
   function tickGrid(people, cls = '6rem') {
     return h('div.q-done-grid', people.map((p) => h(`div.q-done${p.done ? '.yes' : ''}`, { 'data-id': p.id },
@@ -60,13 +60,15 @@ export function mount(root, api) {
     return h('div.dt-dots', Array.from({ length: g.total || 0 }, (_, i) => h(`i${i < g.done ? '.on' : ''}`)));
   }
 
+  const paintLabel = (g) => (g.sketchOnly ? `Sketching… ${g.done}/${g.total}` : `The robot is painting… ${g.done}/${g.total}`);
+
   const screens = {
     intro(g) {
       return h('div.q-intro',
         h('h1.q-title.slam', g.title),
         h('p.q-tagline.slide-up', g.tagline),
         h('div.q-steps',
-          [['🤳', 'Take a selfie'], ['🎨', 'The robot paints two pictures starring you lot'], ['🔎', 'Four captions on your phone: pick the real two']]
+          [['🤳', 'Take a selfie'], ['✍️', 'Secretly write a picture starring someone here'], ['🔎', 'Spot which caption really made each picture']]
             .map(([icon, text], i) => h('div.card.q-step.pop-in', { style: { animationDelay: `${0.3 + i * 0.25}s` } },
               h('div.q-step-icon', icon), h('div', text)))),
         g.ai ? null : h('p.dt-note.slide-up', 'No image model connected, so tonight you get redacted sketches. Still counts.'));
@@ -79,41 +81,47 @@ export function mount(root, api) {
         tickGrid(g.players, '7rem'));
     },
 
+    write(g) {
+      return h('div.dt-selfie',
+        h('h2.q-heading.slide-up', 'Write a secret picture ✍️'),
+        h('p.q-big.pop-in', 'Star someone in the room: yourself, your mate, anyone. Keep it secret.'),
+        tickGrid(g.players, '7rem'));
+    },
+
     painting(g) {
       return h('div.q-loading',
-        h('div.q-round-card.slam', `Question ${g.qNo} of ${g.qTotal}`),
+        h('div.q-round-card.slam', `Picture ${g.picNo} of ${g.picTotal}`),
         g.mult > 1 ? h('div.chip.pink.q-double.pop-in', 'Double points!') : null,
-        h('p.q-loading-text.dt-progress', h('span.spinner'), ' ',
-          h('span.dt-progress-text', g.sketchOnly ? `Sketching… ${g.done}/${g.total}` : `The robot is painting… ${g.done}/${g.total}`)),
+        h('p.q-loading-text.dt-progress', h('span.spinner'), ' ', h('span.dt-progress-text', paintLabel(g))),
         progressDots(g));
     },
 
     guess(g) {
       return h('div.dt-guess',
-        qMeta(g),
-        h('div.dt-pair', g.images.map((im, i) => h(`div.card.dt-frame.pop-in${i ? '.tilt-r' : '.tilt-l'}`, { style: { animationDelay: `${0.2 + i * 0.3}s` } },
-          h('span.q-letter', im.letter), picture(im.url)))),
-        h('div.dt-captions', g.captions.map((c, i) => h('div.card.dt-cap.pop-in', { style: { animationDelay: `${0.9 + i * 0.15}s` } },
-          h('span.dt-cap-n', `${i + 1}`), h('span', c)))),
+        picMeta(g),
+        h('div.dt-stage',
+          h('div.card.dt-frame.tilt-l.pop-in', picture(g.image)),
+          h('div.dt-captions', g.captions.map((c, i) => h('div.card.dt-cap.pop-in', { style: { animationDelay: `${0.6 + i * 0.15}s` } },
+            h('span.dt-cap-n', `${i + 1}`), h('span.dt-cap-text', c))))),
         h('div.q-voter-row', g.guessers.map((v) => h(`span.q-vwait${v.done ? '.done' : ''}`, { 'data-id': v.id },
           avatar(v, '2.6rem'), h('span', v.name), h('i', '✓')))),
-        h('div.q-progress', 'Pick the two real captions on your phone!'));
+        h('div.q-progress', 'Which caption made this? Pick on your phone!'));
     },
 
     reveal(g) {
-      const T = { caption: 0.6, pickers: 1.6, results: 3 };
+      const T = { caption: 0.5, pickers: 1.3, byline: 2.2, results: 3 };
       return h('div.dt-guess.dt-reveal',
-        qMeta(g),
-        h('div.dt-pair', g.images.map((im, i) => h('div.card.dt-frame', { style: { '--d': `${T.caption + i * 0.4}s` } },
-          h('span.q-letter', im.letter), picture(im.url),
-          h('p.dt-truth', { style: { animationDelay: `${T.caption + i * 0.4}s` } }, `“${im.caption}”`)))),
-        h('div.dt-captions', g.captions.map((c, i) => h(`div.card.dt-cap${c.real ? '.real' : '.decoy'}`, { style: { '--d': `${T.caption}s` } },
-          h('span.dt-cap-n', c.real || '✗'), h('span.dt-cap-text', c.text),
-          h('div.dt-pickers', c.pickers.map((p, j) => h('span.dt-picker', { style: { animationDelay: `${T.pickers + i * 0.1 + j * 0.08}s` } }, avatar(p, '1.8rem'))))))),
-        h('div.dt-results', g.results.map((r, i) => h(`div.dt-res.r${r.right}`, { style: { animationDelay: `${T.results + i * 0.08}s` } },
-          avatar(r, '3.4rem'), h('b', r.name),
-          h('span.dt-res-n', r.guessed ? `${r.right}/2` : '—'),
-          r.right === 2 ? h('span.chip.lime.dt-dbl', 'Double Take!') : null,
+        picMeta(g),
+        h('div.dt-stage',
+          h('div.card.dt-frame',
+            picture(g.image),
+            h('div.dt-byline', { style: { animationDelay: `${T.byline}s` } }, avatar(g.author, '2.6rem'), h('span', 'Written by '), h('b', g.author.name))),
+          h('div.dt-captions', g.captions.map((c, i) => h(`div.card.dt-cap${c.real ? '.real' : '.decoy'}`, { style: { '--d': `${T.caption}s` } },
+            h('span.dt-cap-n', c.real ? '✓' : '✗'), h('span.dt-cap-text', c.text),
+            h('div.dt-pickers', c.pickers.map((p, j) => h('span.dt-picker', { style: { animationDelay: `${T.pickers + i * 0.1 + j * 0.08}s` } }, avatar(p, '1.8rem')))))))),
+        h('div.dt-results', g.results.map((r, i) => h(`div.dt-res${r.right || (r.author && r.points) ? '.r1' : '.r0'}`, { style: { animationDelay: `${T.results + i * 0.08}s` } },
+          avatar(r, '3rem'), h('b', r.name),
+          h('span.dt-res-n', r.author ? `✍️ ${g.spotted}/${g.guessed}` : r.right ? '✓' : r.picked ? '✗' : '—'),
           h('span.dt-res-pts', r.points ? `+${fmt(r.points)}` : '')))));
     },
 
@@ -149,7 +157,7 @@ export function mount(root, api) {
           r.rank.textContent = `${p.rank}`;
         });
       }, 2300);
-      return h('div.q-scores', h('h2.q-heading.slide-up', g.final ? 'Final scores' : 'Scores'), board);
+      return h('div.q-scores', h('h2.q-heading.slide-up', g.final ? 'Final scores' : 'Halfway scores'), board);
     },
 
     gameOver(g) {
@@ -169,12 +177,12 @@ export function mount(root, api) {
   };
 
   function patch(g) {
-    if (g.phase === 'selfie') {
+    if (g.phase === 'selfie' || g.phase === 'write') {
       for (const p of g.players || []) root.querySelector(`.q-done[data-id="${p.id}"]`)?.classList.toggle('yes', !!p.done);
     }
     if (g.phase === 'painting') {
       const t = root.querySelector('.dt-progress-text');
-      if (t) t.textContent = g.sketchOnly ? `Sketching… ${g.done}/${g.total}` : `The robot is painting… ${g.done}/${g.total}`;
+      if (t) t.textContent = paintLabel(g);
       root.querySelectorAll('.dt-dots i').forEach((d, i) => d.classList.toggle('on', i < g.done));
     }
     if (g.phase === 'guess') {
@@ -193,7 +201,7 @@ export function mount(root, api) {
         requestAnimationFrame(settle);
         setTimeout(settle, 700);
         setTimeout(settle, 1800);
-        if (g.phase === 'reveal' && g.results?.some((r) => r.right === 2)) setTimeout(() => api.confetti?.({ count: 90, duration: 1800 }), 3200);
+        if (g.phase === 'reveal' && g.spotted === 0 && g.results?.some((r) => r.picked && !r.author)) setTimeout(() => api.confetti?.({ count: 70, duration: 1600 }), 2400);
       } else {
         patch(g);
       }

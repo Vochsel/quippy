@@ -66,6 +66,8 @@ export function selfieCard({ h, me, action, send, toast = () => {}, done = false
     has ? avatar(me, '9rem') : h('div.selfie-ghost', '🤳'),
     h('button.btn.pink.block.big', { onClick: () => file.click() }, has ? '📸 Retake selfie' : '📸 Take selfie'),
     upload,
-    has ? h('button.btn.lime.block', { onClick: () => send({ type: 'selfieDone' }) }, '✓ Use this one') : null,
+    has ? h('button.btn.lime.block', { onClick: () => send({ type: 'selfieDone' }) }, '✓ Use this one')
+      // No photo and don't want one: carry on (the robot paints you from your name).
+      : h('button.linkish', { onClick: () => send({ type: 'selfieDone' }) }, 'Skip: paint me from my name'),
     status, file, library);
 }
