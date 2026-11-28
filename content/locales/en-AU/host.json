@@ -544,6 +544,12 @@
     "phoneDtNoPicks": [
       "No picks? You can't win if you don't guess.",
       "You didn't pick anything. Mysterious."
+    ],
+    "finalVoteMedals": [
+      "Medals time. Gold, silver, bronze. Not your own.",
+      "Hand out your medals. Gold first. No voting for yourself.",
+      "Gold, silver, bronze. Tap them in order. Choose wisely.",
+      "Podium time. Your gold, your silver, your bronze. Go."
     ]
   }
 }

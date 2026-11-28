@@ -163,7 +163,7 @@ export function mount(root, api) {
     }, 300);
   }
 
-  const voteHint = (g) => `Tap ${g.votesPer > 1 ? `up to ${g.votesPer} favourites` : 'your favourite'} on your phone`;
+  const voteHint = (g) => (g.votesPer > 1 ? `Hand out your ${['🥇', '🥈', '🥉'].slice(0, g.votesPer).join(' ')} on your phone` : 'Tap your 🥇 on your phone');
 
   function promptCard(g, animate = true) {
     return h(`div.card.q-prompt${animate ? '.pop-in' : ''}`,
@@ -340,8 +340,10 @@ export function mount(root, api) {
             a.winner ? h('div.q-ribbon.small', 'WINNER') : null,
             h('div.q-final-text', fitText(a.text), a.panic ? h('span.chip.pink.q-panic', '🆘') : null),
             h('div.q-byline', h('span.q-by', 'by'), avatar(a.author, '2.2rem', { crown: a.winner }), h('b', a.author.name)),
+            h('div.q-medals', [['gold', '🥇'], ['silver', '🥈'], ['bronze', '🥉']].filter(([k]) => a.medals?.[k])
+              .map(([k, e]) => h(`span.q-medal.${k}`, `${e}×${a.medals[k]}`))),
             h('div.q-voter-chips', a.voters.map((v) => voterChip(v, 0))),
-            h('div.q-final-foot', h('span.q-vcount', `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))));
+            h('div.q-final-foot', h('span.q-vcount', a.medals ? `${a.votes} medal pt${a.votes === 1 ? '' : 's'}` : `${a.votes} vote${a.votes === 1 ? '' : 's'}`), h('span.q-pts', `+${fmt(a.points)}`))))));
     },
 
     gameOver(g) {
@@ -376,7 +378,8 @@ export function mount(root, api) {
   }
 
   function voterChip(v, delay) {
-    return h('span.q-chip', { style: { animationDelay: `${delay}s`, '--c': v.color } }, avatar(v, '1.9rem'), h('span', v.name));
+    const medal = { gold: '🥇', silver: '🥈', bronze: '🥉' }[v.medal];
+    return h('span.q-chip', { style: { animationDelay: `${delay}s`, '--c': v.color } }, medal ? h('span.q-chip-medal', medal) : null, avatar(v, '1.9rem'), h('span', v.name));
   }
 
   function voterRow(voters = []) {

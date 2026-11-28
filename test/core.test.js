@@ -473,3 +473,36 @@ test('picture model is a room setting (Flare by default, Sunburst switchable)', 
   assert.equal(IMAGE_MODELS[0].id, 'openai/gpt-image-2.5-flare');
   assert.equal(buildConfig({}).image.model, 'openai/gpt-image-2.5-flare');
 });
+
+test('final round is a medal vote: gold 900, silver 600, bronze 300 (+ winner bonus)', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const room = new Room({ code: 'GOLD', crewId: 'h_testcrew01', deps: makeDeps(memoryStore(), {}) });
+  await room.init();
+  for (let i = 0; i < 5; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  const voting = await advance(room, (r) => r.game?.s?.phase === 'finalVote' && !r.game.s.final.reading);
+  assert.ok(voting, 'reached the final vote');
+  const g = room.game; const f = g.s.final;
+  assert.equal(f.votesPer, 3, 'three medals each');
+  const [a, b, c, d] = f.order;
+  const before = { ...g.s.scores };
+  const fk = (id) => `f${f.order.indexOf(id)}`;
+  f.done = {}; f.votes = {};
+  // Two voters: a gets gold+gold, b silver+bronze, c bronze+silver. d votes too.
+  g.onAction(d, { type: 'finalVote', picks: [fk(a), fk(b), fk(c)] });
+  g.onAction(c, { type: 'finalVote', picks: [fk(a), fk(c), fk(b)] }); // own answer is ignored
+  assert.deepEqual(f.votes[c], [a, b], 'own answer dropped, order kept');
+  g.finalReveal();
+  const r = f.result;
+  assert.deepEqual(r.medals[a], { gold: 2, silver: 0, bronze: 0 });
+  assert.equal(r.votes[a], 6);
+  assert.equal(r.points[a], 6 * 300 + 300, 'two golds + winner bonus');
+  assert.equal(r.votes[b], 2 + 2, 'silver + silver (c\'s list shifted up)');
+  assert.equal(r.points[c], 1 * 300, 'one bronze');
+  assert.deepEqual(r.winners, [a]);
+  assert.equal(r.ascending.at(-1), a, 'winner revealed last');
+  assert.equal(g.s.scores[a] - before[a], r.points[a]);
+  const view = g.hostView();
+  assert.ok(view.answers.some((x) => x.medals.gold === 2));
+});

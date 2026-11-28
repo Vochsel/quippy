@@ -82,30 +82,41 @@ export function mount(root, api) {
         }, o.text)));
     },
 
-    // Tap to vote: every tap counts immediately. When all picks are used the
-    // phone moves on by itself (the server marks you done).
+    // Medal vote: taps hand out gold, silver, bronze in order (tap a medalled
+    // answer again to take it back; the rest move up). Every tap counts
+    // immediately; with all medals given the phone moves on by itself.
     finalVote(g) {
-      const picks = new Set();
+      const MEDAL = ['🥇', '🥈', '🥉'];
+      const NAME = ['gold', 'silver', 'bronze'];
+      const picks = [];
       const need = Math.min(g.votesPer, g.options.filter((o) => !o.mine).length);
       const status = h('div.ph-count');
       const paint = () => {
-        status.textContent = need > 1 ? `Tap ${need} favourites · ${picks.size} / ${need}` : 'Tap your favourite';
+        status.textContent = picks.length < need ? `Tap your ${MEDAL[picks.length]} ${NAME[picks.length]}` : 'Medals given ✓';
       };
       const opts = g.options.map((o) => {
-        const b = h(`button.btn.white.ph-opt${o.mine ? '.mine' : ''}`, { disabled: o.mine }, o.text, o.mine ? h('small', 'yours') : null);
+        const badge = h('span.ph-medal');
+        const b = h(`button.btn.white.ph-opt${o.mine ? '.mine' : ''}`, { disabled: o.mine }, badge, o.text, o.mine ? h('small', 'yours') : null);
         b.addEventListener('click', () => {
-          if (picks.has(o.id)) picks.delete(o.id);
-          else if (picks.size < need) picks.add(o.id);
-          for (const [i, el] of opts.entries()) el.classList.toggle('on', picks.has(g.options[i].id));
+          const at = picks.indexOf(o.id);
+          if (at >= 0) picks.splice(at, 1);
+          else if (picks.length < need) picks.push(o.id);
+          else return;
+          for (const [i, el] of opts.entries()) {
+            const rank = picks.indexOf(g.options[i].id);
+            el.classList.toggle('on', rank >= 0);
+            el.dataset.medal = rank >= 0 ? NAME[rank] : '';
+            el.querySelector('.ph-medal').textContent = rank >= 0 ? MEDAL[rank] : '';
+          }
           paint();
           api.send({ type: 'finalVote', picks: [...picks] });
-          api.vibrate(picks.size >= need ? [30, 40, 30] : 15);
+          api.vibrate(picks.length >= need ? [30, 40, 30] : 15);
         });
         return b;
       });
       paint();
       return h('div.ph-vote.slide-up',
-        h('div.card', status, h('p.ph-prompt', g.prompt)),
+        h('div.card', status, h('p.ph-prompt', g.prompt), h('p.small', `${MEDAL.slice(0, need).join(' ')} · gold is worth the most`)),
         opts);
     },
 

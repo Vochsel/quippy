@@ -14,7 +14,12 @@ import { aiMatchupQuips, aiScoresQuip } from './quips.js';
 import { cleanText, fill, pick, shuffle, sleep, withTimeout } from '../../core/util.js';
 
 // Every round is worth more: round 1 x1, round 2 x2, the final x3.
-const FINAL_VOTE_POINTS = 200; // x3 in the final = 600 per vote
+// The final is a medal vote: each voter gives gold, silver and bronze (3, 2,
+// 1 medal points) to answers other than their own. x3 in the final, so a gold
+// is worth 900, a silver 600 and a bronze 300.
+const MEDALS = ['gold', 'silver', 'bronze'];
+const MEDAL_WEIGHT = [3, 2, 1];
+const MEDAL_POINTS = 100;
 const WIN_BONUS = 100;
 const SHUTOUT_BONUS = 250;
 const REVEAL_MS = 9500;
@@ -655,13 +660,14 @@ export class QuipGame {
     f.order = shuffle(Object.keys(f.answers));
     this.ctx.sfx('buzzer');
     if (f.order.length < 2) return this.finalReveal();
-    f.votesPer = Math.max(1, Math.min(3, f.order.length - 2));
+    // Medals per voter: gold, silver, bronze (fewer if there are fewer answers to rank).
+    f.votesPer = Math.max(1, Math.min(MEDALS.length, f.order.length - 1));
     // Pick every read-out line now so their audio is generated ahead.
     f.reads = f.order.map((id) => {
       const a = f.answers[id].text;
       return this.ctx.line('readFinalAnswer', { a }) || `"${a}".`;
     });
-    f.voteLine = this.ctx.line('finalVoteStart', { n: f.votesPer });
+    f.voteLine = this.ctx.line('finalVoteMedals', { n: f.votesPer }) || this.ctx.line('finalVoteStart', { n: f.votesPer });
     this.#botsJudgeFinal();
     this.ctx.prewarm?.([f.prompt.text, ...f.reads, f.voteLine]);
     this.ctx.update();
@@ -698,7 +704,7 @@ export class QuipGame {
     f.reading = false;
     this.ctx.clearTimer('finalReadCap');
     this.#phase('finalVote', this.ctx.timing.finalVote * 1000);
-    this.ctx.say(f.voteLine || this.ctx.line('finalVoteStart', { n: f.votesPer }));
+    this.ctx.say(f.voteLine || this.ctx.line('finalVoteMedals', { n: f.votesPer }));
     this.ctx.buzz(null, [40]);
     this.#botsFinalVote();
   }
@@ -707,9 +713,9 @@ export class QuipGame {
     return [...new Set([...this.s.roster, ...this.ctx.audienceIds()])].filter((id) => this.ctx.isConnected(id));
   }
 
-  // Each tap on a phone sends that player's current picks; they count
-  // straight away (no "lock in"). Once someone has used all their picks
-  // they're done, and when everyone is done the reveal starts.
+  // Each tap on a phone sends that player's current picks IN MEDAL ORDER
+  // (gold first); they count straight away (no "lock in"). Once someone has
+  // handed out all their medals they're done; when everyone is, the reveal starts.
   #picksNeeded(pid) {
     const f = this.s.final;
     return Math.min(f.votesPer, f.order.filter((a) => a !== pid).length);
@@ -744,25 +750,34 @@ export class QuipGame {
     const f = s.final;
     if (!f || f.result) return;
     this.ctx.clearTimer('finalVote');
+    // Tally medals: votes[id] = medal points (gold 3, silver 2, bronze 1).
+    const medals = Object.fromEntries(f.order.map((id) => [id, { gold: 0, silver: 0, bronze: 0 }]));
     const votes = Object.fromEntries(f.order.map((id) => [id, 0]));
-    for (const picks of Object.values(f.votes)) for (const id of picks) if (id in votes) votes[id] += 1;
+    for (const picks of Object.values(f.votes)) {
+      picks.slice(0, MEDALS.length).forEach((id, rank) => {
+        if (!(id in votes)) return;
+        medals[id][MEDALS[rank]] += 1;
+        votes[id] += MEDAL_WEIGHT[rank];
+      });
+    }
     const totalVotes = Object.values(votes).reduce((x, y) => x + y, 0);
     const points = {};
     for (const id of f.order) {
-      points[id] = votes[id] * FINAL_VOTE_POINTS * 3;
+      points[id] = votes[id] * MEDAL_POINTS * 3;
       s.scores[id] = (s.scores[id] || 0) + points[id];
-      if (s.tallies[id]) s.tallies[id].votesReceived += votes[id];
+      if (s.tallies[id]) s.tallies[id].votesReceived += medals[id].gold + medals[id].silver + medals[id].bronze;
     }
     const top = Math.max(0, ...Object.values(votes));
-    const topVotes = Math.max(0, ...Object.values(votes));
-    if (topVotes > 0) {
+    if (top > 0) {
       for (const id of f.order) {
-        if (votes[id] === topVotes) { points[id] += WIN_BONUS * 3; s.scores[id] += WIN_BONUS * 3; }
+        if (votes[id] === top) { points[id] += WIN_BONUS * 3; s.scores[id] += WIN_BONUS * 3; }
       }
     }
+    // Reveal order: fewest medal points first; ties broken by golds, then silvers.
+    const rankKey = (id) => votes[id] * 10000 + medals[id].gold * 100 + medals[id].silver;
     f.result = {
-      votes, points, totalVotes,
-      ascending: [...f.order].sort((x, y) => votes[x] - votes[y]),
+      votes, medals, points, totalVotes,
+      ascending: [...f.order].sort((x, y) => rankKey(x) - rankKey(y)),
       winners: top > 0 ? f.order.filter((id) => votes[id] === top) : [],
     };
     // Reveal pace matches the TV: quicker per card when the grid is big.
@@ -1073,7 +1088,11 @@ export class QuipGame {
           answers: (f.result?.ascending || []).map((id) => ({
             text: f.answers[id].text, panic: !!f.answers[id].panic, author: this.#pub(id),
             votes: f.result.votes[id], points: f.result.points[id], winner: f.result.winners.includes(id),
-            voters: Object.entries(f.votes).filter(([, picks]) => picks.includes(id)).map(([voter]) => this.#pub(voter)),
+            medals: f.result.medals?.[id] || { gold: 0, silver: 0, bronze: 0 },
+            // Who gave this answer a medal, gold first.
+            voters: Object.entries(f.votes).filter(([, picks]) => picks.includes(id))
+              .map(([voter, picks]) => ({ ...this.#pub(voter), medal: MEDALS[picks.indexOf(id)] || null }))
+              .sort((a, b) => MEDALS.indexOf(a.medal) - MEDALS.indexOf(b.medal)),
           })),
         };
       }
