@@ -28,10 +28,12 @@ export async function squareJpeg(fileObj, size = 512, quality = 0.85) {
 }
 
 export function selfieCard({ h, me, action, send, toast = () => {}, done = false, onTaken = () => {} }) {
+  // Camera (front-facing) or the photo library: both end up the same way.
   const file = h('input', { type: 'file', accept: 'image/*', capture: 'user', style: { display: 'none' } });
+  const library = h('input', { type: 'file', accept: 'image/*', style: { display: 'none' } });
   const status = h('p.small.center', '');
-  file.addEventListener('change', async () => {
-    const f = file.files?.[0];
+  const use = async (input) => {
+    const f = input.files?.[0];
     if (!f) return;
     status.textContent = 'Uploading…';
     try {
@@ -43,14 +45,18 @@ export function selfieCard({ h, me, action, send, toast = () => {}, done = false
     } catch (e) {
       status.textContent = `Couldn't use that photo (${e.message}). Try again?`;
     }
-    file.value = '';
-  });
+    input.value = '';
+  };
+  file.addEventListener('change', () => use(file));
+  library.addEventListener('change', () => use(library));
+  const upload = h('button.btn.white.block', { onClick: () => library.click() }, '🖼️ Choose a photo');
   const has = !!me?.photo;
   if (done) {
     return h('div.card.center.selfie-card.pop-in',
       avatar(me, '9rem'), h('h2', has ? 'We remember your face ✓' : 'You’re in the picture ✓'),
       h('p.small', 'Eyes on the TV. The robot is warming up.'),
-      h('button.btn.white', { onClick: () => file.click() }, '📸 Retake selfie'), status, file);
+      h('button.btn.white', { onClick: () => file.click() }, '📸 Retake selfie'),
+      h('button.btn.white', { onClick: () => library.click() }, '🖼️ Choose a photo'), status, file, library);
   }
   return h('div.card.center.selfie-card.pop-in',
     h('h2', has ? 'Use this face?' : 'Selfie time 📸'),
@@ -59,6 +65,7 @@ export function selfieCard({ h, me, action, send, toast = () => {}, done = false
       : 'The robot paints everyone from their selfie. Make it a good one: face the camera, decent light.'),
     has ? avatar(me, '9rem') : h('div.selfie-ghost', '🤳'),
     h('button.btn.pink.block.big', { onClick: () => file.click() }, has ? '📸 Retake selfie' : '📸 Take selfie'),
+    upload,
     has ? h('button.btn.lime.block', { onClick: () => send({ type: 'selfieDone' }) }, '✓ Use this one') : null,
-    status, file);
+    status, file, library);
 }
