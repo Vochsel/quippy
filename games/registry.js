@@ -4,8 +4,9 @@
 import zingerDuel from './zinger-duel/index.js';
 import callbackClub from './callback-club/index.js';
 import pictureDuel from './picture-duel/index.js';
+import doubleTake from './double-take/index.js';
 
-export const GAMES = [zingerDuel, callbackClub, pictureDuel];
+export const GAMES = [zingerDuel, callbackClub, pictureDuel, doubleTake];
 
 export function gameById(id) {
   return GAMES.find((g) => g.id === id) || null;

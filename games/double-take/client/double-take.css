@@ -1,0 +1,61 @@
+/* Double Take (TV + phone). Builds on quippy.css + the quip styles. */
+
+/* ---------- TV ---------- */
+.dt-note { font-size: 1.5rem; opacity: .85; margin: 0; }
+.dt-selfie { padding-top: 1rem; }
+
+.dt-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; max-width: 40rem; }
+.dt-dots i { width: 1.3rem; height: 1.3rem; border-radius: 50%; border: 3px solid var(--ink); background: rgba(255, 255, 255, .2); transition: background .3s, transform .3s; }
+.dt-dots i.on { background: var(--violet); transform: scale(1.15); }
+
+.dt-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; max-width: 92rem; margin: 0 auto; align-items: start; justify-items: center; }
+.dt-frame { position: relative; padding: .8rem; width: min(100%, 40vh); }
+.dt-img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border: 4px solid var(--ink); border-radius: 14px; background: var(--paper-2); opacity: 0; transition: opacity .5s; }
+.dt-img.loaded { opacity: 1; }
+
+.dt-captions { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem 1.4rem; max-width: 92rem; margin: 1.4rem auto 0; }
+.dt-cap { display: flex; align-items: center; gap: .9rem; padding: .7rem 1.1rem; font-size: 1.4rem; line-height: 1.2; position: relative; }
+.dt-cap-n { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; background: var(--violet); color: var(--ink); border: 4px solid var(--ink); font-family: var(--head); font-size: 1.3rem; }
+.dt-cap-text { flex: 1; }
+
+.dt-reveal .dt-frame { width: min(100%, 30vh); }
+/* Leave room for Monty's caption box: fitStage shrinks the screen to fit above it. */
+.dt-guess, .dt-reveal { padding-bottom: 8.5rem; }
+.dt-guess .q-voter-row { margin-top: 1.2rem; }
+.dt-guess .q-progress { margin-top: 1rem; }
+.dt-truth { margin: .7rem 0 0; text-align: center; font-family: var(--head); font-size: 1.4rem; line-height: 1.15; color: var(--ink); animation: popIn .45s both; }
+.dt-reveal .dt-captions { margin-top: 1.2rem; }
+.dt-reveal .dt-cap { font-size: 1.3rem; padding: .6rem 1rem; transition: opacity .4s, transform .4s, background .4s; transition-delay: var(--d, 0s); }
+.dt-reveal .dt-cap.real { background: #eaffc2; }
+.dt-reveal .dt-cap.real .dt-cap-n { background: var(--lime); }
+.dt-reveal .dt-cap.decoy { opacity: .62; }
+.dt-reveal .dt-cap.decoy .dt-cap-n { background: var(--red); color: #fff; }
+.dt-reveal .dt-cap.decoy .dt-cap-text { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: rgba(26, 15, 46, .45); }
+.dt-pickers { display: flex; flex-wrap: wrap; gap: .2rem; justify-content: flex-end; max-width: 12rem; }
+.dt-picker { animation: popIn .35s both; }
+
+.dt-results { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem 1.4rem; margin-top: 1.4rem; }
+.dt-res { display: inline-flex; align-items: center; gap: .5rem; padding: .3rem 1rem .3rem .35rem; border-radius: 999px; background: var(--ink); border: 3px solid rgba(255, 255, 255, .35); font-size: 1.3rem; animation: popIn .4s both; }
+.dt-res-n { font-family: var(--head); color: var(--yellow); }
+.dt-res.r0 .dt-res-n { color: var(--muted); }
+.dt-res-pts { font-family: var(--head); color: var(--lime); }
+.dt-dbl { font-size: .95rem; }
+
+/* ---------- Phone ---------- */
+.dt-guess-ph .card { margin-bottom: .9rem; }
+.dt-opts { display: grid; gap: .7rem; }
+.dt-opt { display: flex; align-items: center; gap: .7rem; width: 100%; text-align: left; padding: .8rem .9rem; border: 4px solid var(--ink); border-radius: 18px; background: var(--paper); color: var(--ink); font: inherit; font-size: 1.05rem; line-height: 1.25; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform .15s, background .15s; }
+.dt-opt .dt-opt-n { flex: none; width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; background: var(--paper-2); border: 3px solid var(--ink); font-family: var(--head); }
+.dt-opt-text { flex: 1; overflow-wrap: anywhere; }
+.dt-opt.on { background: var(--lime); transform: rotate(-1deg) scale(1.02); }
+.dt-opt.on .dt-opt-n { background: var(--ink); color: var(--lime); }
+.dt-hint { text-align: center; font-size: .95rem; opacity: .85; margin: .9rem 0 0; }
+
+.dt-result-ph .ph-watch { padding-top: .5rem; }
+.dt-opts.done { margin-top: 1.2rem; }
+.dt-opts.done .dt-opt { cursor: default; font-size: .95rem; padding: .55rem .7rem; }
+.dt-opts.done .dt-opt.real .dt-opt-n { background: var(--lime); }
+.dt-opts.done .dt-opt.decoy { opacity: .6; }
+.dt-opts.done .dt-opt.decoy .dt-opt-n { background: var(--red); color: #fff; }
+.dt-opts.done .dt-opt.mine { outline: 4px solid var(--yellow); outline-offset: 2px; opacity: 1; }
+.dt-opt-mine { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; background: var(--ink); color: var(--yellow); border-radius: 999px; padding: .1rem .5rem; }

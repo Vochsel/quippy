@@ -266,7 +266,8 @@ class PictureDuel {
         return { text: cleanText(p?.text || 'Something wonderful', 160), key: p?.key || null, stars: [] };
       }
       const stars = this.#cast(authors, b.text.includes('{player2}') ? 2 : 1);
-      const text = b.text.replaceAll('{player}', this.ctx.playerName(stars[0])).replaceAll('{player2}', this.ctx.playerName(stars[1] || stars[0]));
+      const plain = (id) => this.ctx.playerName(id).replace(/\s*🤖/gu, '').trim();
+      const text = b.text.replaceAll('{player}', plain(stars[0])).replaceAll('{player2}', plain(stars[1] || stars[0]));
       return { text: cleanText(text, 160), key: b.key || null, stars };
     };
     s.matchups = pairs.map((authors, i) => ({
@@ -332,7 +333,7 @@ class PictureDuel {
     const references = photos.filter(Boolean);
     const extra = refKey ? await ctx.media.get(refKey) : null;
     if (extra) references.push(extra);
-    const names = withPhoto.map((id) => ctx.playerName(id));
+    const names = withPhoto.map((id) => ctx.playerName(id).replace(/\s*🤖/gu, '').trim());
     const text = [
       prompt,
       names.length ? `${names.map((n, i) => `${names.length > 1 ? `The person in reference photo ${i + 1}` : 'The person in the reference photo'} IS ${n}`).join('. ')}. Whenever the prompt mentions ${names.join(' or ')}, paint exactly that person, clearly recognisable; don't add anyone else for that name.` : '',

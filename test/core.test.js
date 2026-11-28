@@ -368,3 +368,89 @@ test('host tones: lines switch with the tone, spicy tones are off in family mode
   assert.equal(effectiveTone('therapist', true).id, 'therapist');
   assert.equal(effectiveTone('nonsense', false).id, 'normal');
 });
+
+test('double-take: selfies, secret captions, painting retries, cost guard, restart mid-game', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const store = memoryStore();
+  const saved = {};
+  const files = new Map();
+  const media = { get: async (k) => files.get(k) || null, put: async (k, b) => { files.set(k, b); } };
+  const calls = [];
+  let failures = 2;
+  // A fake paid model: the first two calls fail, the rest answer with a tiny "JPEG".
+  const images = {
+    available: () => true,
+    generate: async ({ prompt, references }) => {
+      calls.push({ prompt, refs: references?.length || 0 });
+      if (failures-- > 0) throw new Error('boom');
+      return { bytes: new Uint8Array([0xff, 0xd8, 1, 2]), type: 'image/jpeg', ms: 1 };
+    },
+  };
+  const deps = { ...makeDeps(store, saved), images, media };
+  const room = new Room({ code: 'DUBS', crewId: 'h_testcrew05', deps });
+  await room.init();
+  for (let i = 0; i < 4; i++) room.addBot();
+  // Two "humans" (bot entries flipped so they never act by themselves); one has a selfie.
+  const [h1, h2] = [...room.players.keys()];
+  for (const id of [h1, h2]) room.players.get(id).isBot = false;
+  room.players.get(h1).photo = 'dev_h1abcd-0123abcd.jpg';
+  files.set('photos/dev_h1abcd-0123abcd.jpg', new Uint8Array([0xff, 0xd8, 9]));
+  await room.startGame('double-take');
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'selfie'), 'selfie step');
+  const g = room.game;
+  assert.equal(g.hostView().players.length, 4);
+  assert.equal(g.playerView(h1).screen, 'selfie');
+  g.onAction(h1, { type: 'selfieDone' });
+  g.onAction(h2, { type: 'selfieDone' });
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'guess'), 'first question up');
+
+  const q = g.s.questions[0];
+  assert.equal(g.s.questions.length, 5);
+  for (const x of g.s.questions) {
+    assert.equal(x.options.length, 4);
+    assert.equal(new Set(x.options.map((o) => o.text)).size, 4, 'four different captions');
+    assert.equal(new Set(x.real).size, 2);
+    const faces = new Set(x.real.flatMap((i) => x.options[i].stars));
+    assert.ok(x.options.every((o) => o.stars.every((id) => faces.has(id))), 'decoys star the same faces');
+  }
+  // Nothing in the views says which captions are real before the reveal.
+  const hv = g.hostView();
+  const pv = g.playerView(h1);
+  assert.deepEqual(hv.captions, q.options.map((o) => o.text));
+  assert.deepEqual(pv.options, q.options.map((o) => o.text));
+  for (const v of [hv, pv]) assert.ok(!/"(real|stars|template)"/.test(JSON.stringify(v)), 'no secrets in views');
+  assert.ok(q.slots.every((s) => /^gen\/[\w-]+\.jpg$/.test(s.key)), 'state keeps media keys');
+  assert.ok(q.slots.some((s) => s.tries === 2), 'a failed picture was retried');
+  assert.ok(calls.some((c) => c.refs === 1 && /reference photo shows/.test(c.prompt)) || !g.s.questions.some((x) => x.real.some((i) => x.options[i].stars.includes(h1))), 'selfie used as a reference');
+
+  const decoys = [0, 1, 2, 3].filter((i) => !q.real.includes(i));
+  g.onAction(h1, { type: 'picks', qId: q.id, picks: [decoys[0]] });
+  g.onAction(h1, { type: 'picks', qId: q.id, picks: [...q.real, 99] });
+  g.onAction(h2, { type: 'picks', qId: q.id, picks: decoys });
+  assert.ok(await advance(room, (r) => r.game?.s.phase === 'reveal'), 'reveal');
+  assert.equal(g.s.scores[h1], 1250, '2 right + Double Take bonus');
+  assert.equal(g.s.scores[h2], 0);
+  assert.equal(g.playerView(h1).right, 2);
+  assert.ok(g.hostView().captions.filter((c) => c.real).length === 2, 'reveal shows the real two');
+
+  // Restart: the revived game re-queues anything unfinished and plays to the end.
+  await room.saveNow();
+  const snap = structuredClone(saved.last);
+  for (const tmr of room.timers.values()) clearTimeout(tmr.handle);
+  for (const h of room.laters) clearTimeout(h);
+  room.game.dead = true;
+  room.game = null;
+  const revived = new Room({ code: 'DUBS', crewId: 'h_testcrew05', deps, snapshot: snap });
+  await revived.init();
+  assert.equal(revived.game.s.phase, 'reveal');
+  const final = revived.game.s;
+  assert.ok(await advance(revived, (r) => !r.game && r.lastResults), 'revived game finished');
+  assert.ok(calls.length <= 12, `cost guard (${calls.length} paid calls)`);
+  const res = revived.lastResults;
+  assert.equal(res.players.length, 4);
+  assert.ok(final.tallies[h1].doubleTakes >= 1);
+  assert.ok(final.tallies[h1].answerTimed >= 1 && final.tallies[h1].votesCast >= 2);
+  assert.equal(final.tallies[h2].questionsPlayed, 5);
+  assert.ok(res.awards.length >= 1);
+});

@@ -443,6 +443,107 @@
       "Selfie time. Phones up, faces in. The robot needs to know who it's painting.",
       "Everyone take a selfie. Good light, big smile. You're about to be immortalised. Badly.",
       "Selfies, please. The robot paints you from these, so maybe not the double chin angle."
+    ],
+    "dtIntro": [
+      "Welcome to {game}. The robot paints two pictures of you lot. Your phones get four captions. Two are real, two are lies. Spot the real two. Simple. Probably.",
+      "This is {game}. Two pictures, four captions, two of them true. Like a dating profile, but with more honesty.",
+      "{game}. I've asked a machine to paint your mates doing ridiculous things. Your job is to work out exactly which ridiculous things. Good luck."
+    ],
+    "dtSelfie": [
+      "First, selfies. The robot needs your faces. Chin up, decent light, no filters. It's not a passport, but it's close.",
+      "Selfie time. Take one, or keep the one you've got. The robot will be painting these faces for the rest of the game, so choose wisely.",
+      "Faces, please. Point your phone at yourself and smile like you mean it. Or don't. The robot paints grumpy just as well."
+    ],
+    "dtPainting": [
+      "Right, the robot's got its brushes out. Give it a moment. It's an artist, it needs to feel things.",
+      "Painting has begun. Somewhere a GPU is sweating over your faces. Spare a thought for it.",
+      "The robot is painting you all now. I've seen the briefs. I'm so sorry."
+    ],
+    "dtPaintingSketch": [
+      "No robot painter tonight, so I'll be doing sketches. Half the words are missing. Think of it as a cryptic crossword with faces.",
+      "The painting robot didn't show up, so you're getting my sketches. They're redacted. For legal reasons."
+    ],
+    "dtPaintingSlow": [
+      "The robot's taking its time, so I've done a quick sketch instead. Don't tell it.",
+      "That picture was taking forever. Here's a sketch. Art is about compromise.",
+      "The robot has missed its deadline. Classic artist. Sketch it is."
+    ],
+    "dtFirstQuestion": [
+      "Here we go. Two pictures. Four captions on your phones. Pick the two that made these.",
+      "First pictures are up. Pick the two captions you reckon made them. Trust your gut. Your gut has never let you down, has it?",
+      "Have a look at these. Two of the captions on your phone are real. Find them."
+    ],
+    "dtGuess": [
+      "New pictures. Pick your two.",
+      "Two more masterpieces. Which captions made them?",
+      "Take a good long look. Then pick two.",
+      "Fresh off the easel. Choose wisely."
+    ],
+    "dtNextQuestion": [
+      "Question {n} of {total}.",
+      "On to question {n}. The robot's been busy.",
+      "Question {n}. Brace yourselves."
+    ],
+    "dtDoublePoints": [
+      "Last two questions are worth double. Now's the time to stop guessing and start knowing.",
+      "Double points from here on. Everything counts twice, including your mistakes.",
+      "We're into double points. If you've been coasting, this is your moment."
+    ],
+    "dtReveal": [
+      "Here are the real captions. Some of you were close. Some of you were not.",
+      "Let's see what the robot was actually told to paint.",
+      "And the truth is… this."
+    ],
+    "dtRevealDouble": [
+      "{name} got both. A double take! Show-off.",
+      "Both right for {name}. Either a genius or a very lucky guesser. I won't ask which.",
+      "{name} nailed both captions. Someone's been paying attention."
+    ],
+    "dtRevealAll": [
+      "Everyone got both. Either that was too easy or you're all cheating. I'll allow it.",
+      "A clean sweep. The robot's going to need to try harder."
+    ],
+    "dtRevealNone": [
+      "Not one correct caption between you. The decoys have won this round.",
+      "Nobody got a single one. I'm genuinely impressed. That's hard to do.",
+      "Zero right. The robot would be insulted if it had feelings."
+    ],
+    "dtAwardEagle": [
+      "Eagle Eye"
+    ],
+    "dtAwardFooled": [
+      "Easily Fooled"
+    ],
+    "dtAwardStar": [
+      "The Robot's Muse"
+    ],
+    "phoneDtAudience": [
+      "Watch the TV and see if you can spot the real captions.",
+      "Eyes on the TV. Play along in your head."
+    ],
+    "phoneDtPainting": [
+      "The robot is painting. Eyes on the TV.",
+      "Pictures incoming. Stretch your eyeballs.",
+      "Hold tight, the paint's still wet."
+    ],
+    "phoneDtGotTwo": [
+      "Double take! Both right.",
+      "Both right. Brilliant.",
+      "Two for two. Insufferable."
+    ],
+    "phoneDtGotOne": [
+      "One out of two. Not bad.",
+      "Half right. Glass half full.",
+      "Got one. The other one got you."
+    ],
+    "phoneDtGotNone": [
+      "Fooled twice. The decoys thank you.",
+      "None right. Bold strategy.",
+      "Zero. The robot is laughing at you."
+    ],
+    "phoneDtNoPicks": [
+      "No picks? You can't win if you don't guess.",
+      "You didn't pick anything. Mysterious."
     ]
   }
 }
