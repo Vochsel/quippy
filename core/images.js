@@ -5,6 +5,13 @@
 // the Node server and the Cloudflare Worker share this file.
 import { cleanText } from './util.js';
 
+// Picture models a room can choose in the lobby (the first is the default
+// unless IMAGE_MODEL says otherwise). Both keep people recognisable from a selfie.
+export const IMAGE_MODELS = [
+  { id: 'openai/gpt-image-2.5-flare', label: 'Flare · fast' },
+  { id: 'openai/gpt-image-2.5-sunburst', label: 'Sunburst · best likeness' },
+];
+
 export class ImageGen {
   constructor(cfg = {}) {
     this.cfg = cfg;
@@ -22,18 +29,20 @@ export class ImageGen {
 
   // references: photos (Uint8Array) of the people/things to feature, e.g. the
   // players' selfies. -> { bytes, type: 'image/jpeg' | 'image/png' | 'image/webp', ms }
-  async generate({ prompt, reference = null, references = null, signal } = {}) {
+  // model: one of IMAGE_MODELS (a room's choice); anything else uses the default.
+  async generate({ prompt, reference = null, references = null, signal, model = null } = {}) {
     const refs = (references || (reference ? [reference] : [])).filter(Boolean);
+    const modelId = IMAGE_MODELS.some((m) => m.id === model) ? model : this.cfg.model;
     if (!this.available()) throw new Error('image generation is off');
     const [{ generateImage }, { createGateway }] = await Promise.all([import('ai'), import('@ai-sdk/gateway')]);
     this.gateway ||= createGateway({ apiKey: this.cfg.gatewayKey });
     const t = Date.now();
     const timeout = AbortSignal.timeout(this.cfg.timeoutMs || 60000);
     const result = await generateImage({
-      model: this.gateway.imageModel(this.cfg.model),
+      model: this.gateway.imageModel(modelId),
       prompt: refs.length ? { text: prompt, images: refs } : prompt,
       size: this.cfg.size || undefined,
-      providerOptions: this.cfg.quality && /^openai\//.test(this.cfg.model) ? { openai: { quality: this.cfg.quality } } : undefined,
+      providerOptions: this.cfg.quality && /^openai\//.test(modelId) ? { openai: { quality: this.cfg.quality } } : undefined,
       maxRetries: 1,
       abortSignal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     });

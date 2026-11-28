@@ -233,7 +233,7 @@ function renderLobby(room) {
   const enough = ready >= room.minPlayers;
   const bots = players.filter((p) => p.isBot).length;
   remember('start', { enough, owner: isOwner, settings: room.settings, locales: room.locales, charOpts: room.answerCharOptions, n: ready, min: room.minPlayers, dev: room.dev, vip: room.players.find((p) => p.vip)?.name, bots, ai: room.llm.available,
-    tones: room.hostTones, voices: hostVoiceOptions(), defaultVoice: voice?.provider === 'gateway' ? voice.serverVoice : null }, (d) => {
+    tones: room.hostTones, voices: hostVoiceOptions(), imageModels: room.imageModels || [], defaultImageModel: room.defaultImageModel, defaultVoice: voice?.provider === 'gateway' ? voice.serverVoice : null }, (d) => {
     const vip = d.vip;
     mountInto($('#start-box'),
       h('div.start-row',
@@ -255,6 +255,9 @@ function renderLobby(room) {
         h('label', 'Host tone:', h('select', { onChange: (e) => live.action('settings', { settings: { hostTone: e.target.value } }) },
           (d.tones || []).map((t) => h('option', { value: t.id, selected: t.id === (d.settings.hostTone || 'normal'), disabled: t.spicy && d.settings.family },
             `${t.emoji} ${t.label}${t.spicy && d.settings.family ? ' (not in family mode)' : ''}`)))),
+        // Picture games (Picture Duel, Double Take): which image model paints.
+        d.imageModels.length ? h('label', 'Pictures:', h('select', { onChange: (e) => live.action('settings', { settings: { imageModel: e.target.value } }) },
+          d.imageModels.map((m) => h('option', { value: m.id, selected: m.id === (d.settings.imageModel || d.defaultImageModel) }, m.label)))) : null,
         d.voices.length ? h('label', 'Host voice:', h('select', { onChange: (e) => live.action('settings', { settings: { hostVoice: e.target.value } }) },
           h('option', { value: '', selected: !d.settings.hostVoice }, `Default${d.defaultVoice ? ` (${d.defaultVoice})` : ''}`),
           d.voices.map((v) => h('option', { value: v.id, selected: v.id === d.settings.hostVoice }, v.hint ? `${v.id} · ${v.hint}` : v.id)))) : null,

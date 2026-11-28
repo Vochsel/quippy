@@ -454,3 +454,22 @@ test('double-take: selfies, secret captions, painting retries, cost guard, resta
   assert.equal(final.tallies[h2].questionsPlayed, 5);
   assert.ok(res.awards.length >= 1);
 });
+
+test('picture model is a room setting (Flare by default, Sunburst switchable)', async () => {
+  const { IMAGE_MODELS } = await import('../core/images.js');
+  const deps = makeDeps(memoryStore(), {});
+  const seen = [];
+  deps.images = { available: () => true, status: () => ({}), generate: async (o) => { seen.push(o.model); return null; } };
+  const room = new Room({ code: 'PICS', crewId: 'h_testcrew01', deps });
+  await room.init();
+  const ctx = room.makeCtx({ id: 'picture-duel' });
+  await ctx.images.generate({ prompt: 'x' });
+  const tv = { role: 'host', isOwner: true, send: () => {} };
+  await room.onMessage(tv, { t: 'action', a: 'settings', settings: { imageModel: 'openai/gpt-image-2.5-sunburst' } });
+  await ctx.images.generate({ prompt: 'x' });
+  await room.onMessage(tv, { t: 'action', a: 'settings', settings: { imageModel: 'evil/model' } });
+  assert.deepEqual(seen, [null, 'openai/gpt-image-2.5-sunburst']);
+  assert.equal(room.settings.imageModel, 'openai/gpt-image-2.5-sunburst', 'unknown models are ignored');
+  assert.equal(IMAGE_MODELS[0].id, 'openai/gpt-image-2.5-flare');
+  assert.equal(buildConfig({}).image.model, 'openai/gpt-image-2.5-flare');
+});

@@ -13,7 +13,7 @@ import { GAMES, gameById } from '../games/registry.js';
 import { applyGameResult, pickFreeColor, PHOTO_RE, publicProfile, saveProfileBasics } from './profiles.js';
 import { loreSummary, updateCrewLore } from './lore.js';
 import { cleanName, FACE_COUNT, PLAYER_COLORS, pick, uid } from './util.js';
-import { ImageGen, MEDIA_KEY_RE } from './images.js';
+import { IMAGE_MODELS, ImageGen, MEDIA_KEY_RE } from './images.js';
 
 // Rooms without a media store (tests) keep game images in memory.
 const memoryMedia = () => {
@@ -56,6 +56,7 @@ export class Room {
       answerChars: deps.config.answerChars,
       hostTone: 'normal', // see core/tones.js
       hostVoice: '', // '' = the server's default voice
+      imageModel: '', // '' = the server's default picture model (see IMAGE_MODELS)
       ...(s.settings || {}),
     };
     this.selectedGame = gameById(s.selectedGame) ? s.selectedGame : GAMES[0].id;
@@ -76,9 +77,9 @@ export class Room {
     await this.deps.llm.init?.();
     this.crew = await this.deps.store.ensureCrew(this.crewId);
     if (!this.hadSnapshot && this.crew?.settings) {
-      const { locale, family, answerSeconds, answerChars, hostTone, hostVoice } = this.crew.settings;
+      const { locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel } = this.crew.settings;
       Object.assign(this.settings, Object.fromEntries(
-        Object.entries({ locale, family, answerSeconds, answerChars, hostTone, hostVoice }).filter(([, v]) => v !== undefined)));
+        Object.entries({ locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel }).filter(([, v]) => v !== undefined)));
     }
     await this.refreshHall();
     this.#prewarmStockLines();
@@ -317,6 +318,7 @@ export class Room {
     if (typeof next.hostVoice === 'string' && /^[\w.-]{0,64}$/.test(next.hostVoice)) this.settings.hostVoice = next.hostVoice;
     // A new tone or voice: let Monty show it off straight away.
     if (JSON.stringify(this.voiceStyle()) !== style) setTimeout(() => this.say(this.content().line('lobbyWelcome')), 300);
+    if (typeof next.imageModel === 'string' && (next.imageModel === '' || IMAGE_MODELS.some((m) => m.id === next.imageModel))) this.settings.imageModel = next.imageModel;
     const chars = Number(next.answerChars);
     if (Number.isInteger(chars) && chars >= 40 && chars <= 400) this.settings.answerChars = chars;
     await this.deps.store.saveCrewSettings(this.crewId, { ...this.settings });
@@ -428,7 +430,15 @@ export class Room {
       llm: this.deps.llm,
       // AI images: available(), generate({ prompt, reference }) -> { bytes, type }.
       // Off (no key / tests) -> available() is false; draw a placeholder instead.
-      images: this.deps.images || (this.deps.images = new ImageGen(this.deps.config.image || {})),
+      // Uses the picture model chosen in the lobby (Settings → Picture model).
+      images: (() => {
+        const gen = this.deps.images || (this.deps.images = new ImageGen(this.deps.config.image || {}));
+        return {
+          available: () => gen.available(),
+          status: () => gen.status(),
+          generate: (opts = {}) => gen.generate({ ...opts, model: room.settings.imageModel || null }),
+        };
+      })(),
       // Game media (generated images, reference photos). Store bytes here and
       // keep only the key in game state; url(key) is what screens load.
       media: {
@@ -765,6 +775,8 @@ export class Room {
       })),
       minPlayers: def.minPlayers,
       hostTones: TONES.map(({ id, label, emoji, spicy }) => ({ id, label, emoji, spicy })),
+      imageModels: this.deps.config.image?.gatewayKey ? IMAGE_MODELS : [],
+      defaultImageModel: this.deps.config.image?.model || null,
       voiceStyle: this.voiceStyle(),
       // Who would be dealt in if the game started now (same rule as startGame).
       readyCount: Math.min(this.#members().length, Math.min(def.maxPlayers, MAX_PLAYERS_HARD)),
