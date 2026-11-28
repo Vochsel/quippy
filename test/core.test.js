@@ -121,7 +121,7 @@ for (const { id: gameType, minPlayers } of GAMES) {
   });
 }
 
-test('a 13-player crowd answers one prompt each, so rounds stay short', async (t) => {
+test('a big crowd (13) still answers two prompts each in rounds 1 and 2', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());
   const store = memoryStore();
@@ -133,8 +133,8 @@ test('a 13-player crowd answers one prompt each, so rounds stay short', async (t
   assert.ok(started, 'round 1 dealt');
   const { matchups, roster } = room.game.s;
   assert.equal(roster.length, 13);
-  assert.equal(matchups.length, 7, 'ceil(13 / 2) matchups');
-  for (const id of roster) assert.ok(matchups.some((m) => m.authors.includes(id)), 'everyone has a prompt');
+  assert.equal(matchups.length, 13, 'one matchup per player');
+  for (const id of roster) assert.equal(matchups.filter((m) => m.authors.includes(id)).length, 2, 'everyone has two prompts');
   for (const m of matchups) assert.notEqual(m.authors[0], m.authors[1]);
   const done = await advance(room, (r) => !r.game && r.lastResults);
   assert.ok(done, 'game finished');

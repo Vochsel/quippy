@@ -223,15 +223,15 @@ export class QuipGame {
       if (ms > 0) this.countdown.push(this.ctx.later(ms, () => { if (epoch === this.epoch) fn(); }));
     };
     const slow = (n) => this.#pending().filter((id) => roasts[id]).sort(() => Math.random() - 0.5).slice(0, n);
+    // Kept brief: a time call at 30s, then one roast of a straggler at 10s.
     at(30, () => {
       if (!this.#pending().length) return;
       this.ctx.sayLine('thirtySeconds', {});
-      for (const id of slow(1)) this.ctx.say(roasts[id]);
     });
     at(10, () => {
-      if (!this.#pending().length) return;
-      this.ctx.sayLine('tenSeconds', {});
-      for (const id of slow(2)) this.ctx.say(roasts[id]);
+      const late = slow(1);
+      if (late.length) this.ctx.say(roasts[late[0]]);
+      else if (this.#pending().length) this.ctx.sayLine('tenSeconds', {});
     });
     // "5, 4, 3, 2, 1" is played by the TV itself, locked to its timer ring.
   }
@@ -239,7 +239,7 @@ export class QuipGame {
   // ---------------------------------------------------------------- prompts
   prefetch(round) {
     if (this.pending[round] || round > 3) return;
-    const gen = round === 3 ? this.p.finalPrompt(this) : this.p.roundPrompts(this, round, this.s.roster.length <= 8 ? this.s.roster.length : Math.ceil(this.s.roster.length / 2));
+    const gen = round === 3 ? this.p.finalPrompt(this) : this.p.roundPrompts(this, round, this.s.roster.length);
     this.pending[round] = Promise.resolve(gen).catch((e) => {
       this.ctx.log(`${this.meta.id}: prompt generation failed for round ${round}:`, e?.message || e);
       return null;
@@ -306,12 +306,10 @@ export class QuipGame {
     const s = this.s;
     const roster = shuffle(s.roster);
     const n = roster.length;
-    // Up to 8 players: everyone answers two prompts (a ring of n matchups).
-    // A bigger crowd answers one each (pairs), so a round never runs past ~8
-    // head-to-heads; an odd player out pairs with someone who answers twice.
-    const ring = n <= 8;
-    const count = ring ? n : Math.ceil(n / 2);
-    const authorsOf = (i) => (ring ? [roster[i], roster[(i + 1) % n]] : [roster[2 * i], roster[2 * i + 1] ?? roster[0]]);
+    // Everyone answers two prompts, whatever the crowd size: a ring of n
+    // matchups where each player faces a different rival on each.
+    const count = n;
+    const authorsOf = (i) => [roster[i], roster[(i + 1) % n]];
     let list = (Array.isArray(generated) ? generated : []).map((p) => this.#normalise(p)).filter(Boolean);
     if (list.length < count) list = [...list, ...this.ctx.content.pickPrompts(count - list.length, this.ctx.usedPrompts)];
     list = list.slice(0, count);
@@ -425,7 +423,7 @@ export class QuipGame {
     this.ctx.music('voting');
     this.ctx.sfx('whoosh');
     // A little segue now and then, so it doesn't sound like a loop.
-    if (s.matchIdx > 0 && Math.random() < 0.6) this.ctx.sayLine('votePreamble', {});
+    if (s.matchIdx > 0 && Math.random() < 0.25) this.ctx.sayLine('votePreamble', {});
     const [a, b] = m.order.map((id) => m.answers[id].text);
     this.ctx.sayCue(m.prompt.text, 'prompt', m.id);
     this.ctx.sayCue(m.readA || `"${a}".`, 'A', m.id);

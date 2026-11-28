@@ -21,7 +21,7 @@ const host = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/locales', LOCAL
 const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/locales', LOCALE, 'meta.json'), 'utf8'));
 
 // Labels and exact read-outs stay as they are in every tone.
-const SKIP = (k) => /Title|^count\d|^award_|^read(Answers|AnswerA|AnswerB|FinalAnswer)$/.test(k);
+const SKIP = (k) => /Title|Award|^count\d|^award_|^read(Answers|AnswerA|AnswerB|FinalAnswer)$/.test(k);
 // Countdown calls must stay very short.
 const TIGHT = new Set(['thirtySeconds', 'tenSeconds', 'answerStart', 'votePreamble', 'unpaused', 'phoneListen', 'answersLocked']);
 
@@ -34,7 +34,8 @@ function check(key, originals, line) {
   const allowed = new Set(originals.map(holes));
   if (!allowed.has(holes(text))) return false;
   const longest = Math.max(...originals.map((o) => o.length));
-  const limit = TIGHT.has(key) ? Math.max(28, longest * 1.6) : Math.max(70, longest * 1.7 + 20);
+  // Same length as the originals or shorter: the host should stay succinct.
+  const limit = TIGHT.has(key) ? Math.max(24, longest * 1.3) : Math.max(50, longest * 1.15 + 10);
   return text.length <= limit;
 }
 
@@ -59,7 +60,7 @@ for (const id of wanted) {
       system: [
         `You rewrite the spoken lines of Monty, the host of a party comedy game played on a TV with phones as controllers. ${meta.llmHint || ''}`,
         `New persona for this rewrite: ${tone.brief}`,
-        'For EVERY key, write 3 to 6 fresh variants in that persona, keeping each line\'s job (what event it announces) and roughly its length: they are spoken aloud between game phases, so keep them punchy. Very short originals stay very short.',
+        'For EVERY key, write 3 to 6 fresh variants in that persona, keeping each line\'s job (what event it announces). Make each line NO LONGER than the originals, ideally shorter: they are spoken aloud between game phases and the host must stay succinct. One punchy sentence beats two. Very short originals stay very short.',
         'Keep every {placeholder} exactly as spelled in the original and use the same set of placeholders as at least one original variant. Do not add new placeholders.',
         'Plain text only: no emoji, no stage directions, no asterisks. Make them genuinely funny.',
         'JSON shape: {"lines":{"<key>":["variant", ...], ...}} with exactly the keys given.',

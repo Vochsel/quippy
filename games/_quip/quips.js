@@ -71,7 +71,7 @@ export async function aiMatchupQuips(ctx, game, m) {
   const out = await ctx.llm.json({
     system: [
       `You are the voice of the host of a party comedy-writing game, reacting out loud right after a head-to-head vote. Persona: ${persona(ctx)} ${ctx.content?.meta?.llmHint || ''}`,
-      'Write three alternative spoken lines, one for each possible result. Each: ONE or TWO short sentences, max 24 words, said straight to the room. Use first names. Be specific to these people and these answers: a generic line is a failure. Punchy, surprising, genuinely funny; a sharp personal jab is welcome.',
+      'Write three alternative spoken lines, one for each possible result. Each is ONE short sentence, max 14 words: a quick jab, not a speech. Use first names. Be specific to these people and these answers: a generic line is a failure. Punchy, surprising, genuinely funny; a sharp personal jab is welcome.',
       SAFE,
       ctx.settings?.family ? 'Family mode: keep it clean, no innuendo.' : '',
       `Comic angle for this one: ${pick(ANGLES)}.`,
@@ -88,7 +88,7 @@ export async function aiMatchupQuips(ctx, game, m) {
     maxTokens: 1500,
     timeoutMs: 18000,
   });
-  const clean = (t) => (typeof t === 'string' && t.trim() ? t.trim().replace(/^["']|["']$/g, '').slice(0, 220) : null);
+  const clean = (t) => (typeof t === 'string' && t.trim() ? t.trim().replace(/^["']|["']$/g, '').slice(0, 140) : null);
   const lines = { [a]: clean(out?.if_a_wins), [b]: clean(out?.if_b_wins), tie: clean(out?.if_tie) };
   if (!lines[a] && !lines[b]) return null;
   remember(game, shuffle(Object.values(lines).filter(Boolean)).slice(0, 2));
@@ -108,7 +108,7 @@ export async function aiScoresQuip(ctx, game) {
   const out = await ctx.llm.json({
     system: [
       `You are the voice of the host of a party comedy game announcing the scoreboard out loud. Persona: ${persona(ctx)} ${ctx.content?.meta?.llmHint || ''}`,
-      'Write ONE spoken line (max 30 words) about the standings: name the leader and take a specific, funny shot at someone (a slump, a surge, a near miss, who is coasting). Personal and pointed, not generic.',
+      'Write ONE spoken sentence (max 16 words) about the standings: name the leader and take one specific, funny shot at someone. Personal and pointed, not generic. Brevity is the joke.',
       SAFE,
       ctx.settings?.family ? 'Family mode: keep it clean.' : '',
       s.recentQuips?.length ? `Avoid repeating these recent lines: ${s.recentQuips.map((q) => `"${q}"`).join(' ')}` : '',
@@ -118,7 +118,7 @@ export async function aiScoresQuip(ctx, game) {
     maxTokens: 800,
     timeoutMs: 15000,
   });
-  const line = typeof out?.line === 'string' ? out.line.trim().slice(0, 240) : null;
+  const line = typeof out?.line === 'string' ? out.line.trim().slice(0, 150) : null;
   if (line) remember(game, [line]);
   return line;
 }
