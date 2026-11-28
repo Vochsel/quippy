@@ -48,7 +48,9 @@ export function selfieCard({ h, me, action, send, toast = () => {}, done = false
   const has = !!me?.photo;
   if (done) {
     return h('div.card.center.selfie-card.pop-in',
-      avatar(me, '9rem'), h('h2', 'You’re in the picture ✓'), h('p.small', 'Eyes on the TV. The robot is warming up.'));
+      avatar(me, '9rem'), h('h2', has ? 'We remember your face ✓' : 'You’re in the picture ✓'),
+      h('p.small', 'Eyes on the TV. The robot is warming up.'),
+      h('button.btn.white', { onClick: () => file.click() }, '📸 Retake selfie'), status, file);
   }
   return h('div.card.center.selfie-card.pop-in',
     h('h2', has ? 'Use this face?' : 'Selfie time 📸'),

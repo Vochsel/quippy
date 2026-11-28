@@ -160,11 +160,16 @@ class DoubleTake {
   // --------------------------------------------------------------- selfies
   #startSelfies() {
     const s = this.s;
-    for (const id of s.roster) if (this.ctx.isBot(id)) s.selfies[id] = true;
+    // Faces are remembered: anyone with a saved selfie is already done (they
+    // can still retake), so the step only waits on people without one.
+    for (const id of s.roster) if (this.ctx.isBot(id) || this.ctx.hasPhoto?.(id)) s.selfies[id] = true;
+    const needed = this.#humans().filter((id) => !s.selfies[id]);
     this.#phase('selfie', SELFIE_MS);
     this.ctx.music('writing');
-    this.ctx.sayLine('dtSelfie', {});
-    this.ctx.buzz(this.#humans(), [80, 60, 80]);
+    if (needed.length) {
+      this.ctx.sayLine('dtSelfie', {});
+      this.ctx.buzz(needed, [80, 60, 80]);
+    }
     if (this.#humans().every((id) => s.selfies[id])) this.#selfiesAllDone();
   }
 

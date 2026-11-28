@@ -78,9 +78,9 @@ export function buildConfig(env = {}) {
     image: {
       provider: (env.IMAGE_PROVIDER || 'auto').toLowerCase(), // auto | gateway | none
       gatewayKey: env.AI_GATEWAY_API_KEY || '',
-      // GPT Image 2 keeps people recognisable from a selfie and follows briefs
-      // closely; "low" quality is ~13s and ~1.4c an image (medium: ~35s, ~6c).
-      model: env.IMAGE_MODEL || 'openai/gpt-image-2',
+      // GPT Image 2.5 Flare keeps people recognisable from a selfie and follows briefs
+      // closely; "low" quality is ~12s and ~1.4c an image (2.5-sunburst: best likeness, ~17s).
+      model: env.IMAGE_MODEL || 'openai/gpt-image-2.5-flare',
       quality: env.IMAGE_QUALITY || 'low',
       size: env.IMAGE_SIZE || '1024x1024',
       timeoutMs: num(env.IMAGE_TIMEOUT_MS, 90000),

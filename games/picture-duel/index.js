@@ -197,12 +197,15 @@ class PictureDuel {
   // Everyone takes (or keeps) a selfie: briefs star the players, painted from these.
   #startSelfies() {
     const s = this.s;
-    for (const id of s.roster) if (this.ctx.isBot(id)) s.selfies[id] = true;
-    if (!this.#humans().length) return this.#beginRound(1);
+    // Faces are remembered: anyone with a saved selfie is already done (they
+    // can retake from their phone), so only people without one are asked.
+    for (const id of s.roster) if (this.ctx.isBot(id) || this.ctx.hasPhoto?.(id)) s.selfies[id] = true;
+    const needed = this.#humans().filter((id) => !s.selfies[id]);
+    if (!needed.length) return this.#beginRound(1);
     this.#phase('selfie', SELFIE_MS);
     this.#scheduleCountdown();
     this.ctx.sayLine('pdSelfie', {});
-    this.ctx.buzz(this.#humans(), [80, 60, 80]);
+    this.ctx.buzz(needed, [80, 60, 80]);
     return undefined;
   }
 
