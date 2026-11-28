@@ -153,7 +153,7 @@ test('solo mode: AI bots write their own answers and vote with the judge', async
       const items = JSON.parse(user);
       if (system.includes('answers for bot players')) {
         calls.push('answers');
-        return { answers: Object.fromEntries(items.map((i) => [i.key, `AI ${i.style.split(' ')[0]}`])) };
+        return { answers: Object.fromEntries(items.map((i) => [i.key, `AI ${i.style.split(' ')[0]} ${i.key}`])) };
       }
       if (system.includes('You judge')) {
         calls.push('judge');
@@ -505,4 +505,45 @@ test('final round is a medal vote: gold 900, silver 600, bronze 300 (+ winner bo
   assert.equal(g.s.scores[a] - before[a], r.points[a]);
   const view = g.hostView();
   assert.ok(view.answers.some((x) => x.medals.gold === 2));
+});
+
+test('identical answers on the same prompt are bounced back to rethink', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const room = new Room({ code: 'SAME', crewId: 'h_testcrew01', deps: makeDeps(memoryStore(), {}) });
+  await room.init();
+  for (let i = 0; i < 4; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  const answering = await advance(room, (r) => r.game?.s?.phase === 'answer');
+  assert.ok(answering);
+  const g = room.game;
+  const m = g.s.matchups[0];
+  const [a, b] = m.authors;
+  m.answers = {};
+  g.onAction(a, { type: 'answer', matchupId: m.id, text: 'A very confident emu' });
+  g.onAction(b, { type: 'answer', matchupId: m.id, text: '  a VERY confident emu!! ' });
+  assert.ok(!m.answers[b], 'duplicate not accepted');
+  const pv = g.playerView(b);
+  assert.equal(pv.screen, 'answer');
+  assert.equal(pv.retry?.text, 'a VERY confident emu!!', 'their text comes back to edit');
+  g.onAction(b, { type: 'answer', matchupId: m.id, text: 'A deeply insecure emu' });
+  assert.equal(m.answers[b]?.text, 'A deeply insecure emu');
+  assert.ok(!g.s.retry?.[b], 'retry cleared once accepted');
+  // Panic suggestions differ between the two players on a prompt.
+  const pa = g.playerView(a); // a has another prompt or is done; check panic map directly
+  const picks = Object.entries(g.s.panicPicks || {}).filter(([k]) => k.endsWith(`|${m.id}`)).map(([, v]) => v);
+  assert.equal(new Set(picks).size, picks.length, 'no shared panic lines');
+  void pa;
+  // Final round: same rule across everyone.
+  const finalReady = await advance(room, (r) => r.game?.s?.phase === 'finalAnswer');
+  assert.ok(finalReady);
+  const f = g.s.final;
+  f.answers = {};
+  const [x, y] = g.s.roster;
+  g.onAction(x, { type: 'answer', matchupId: 'final', text: 'Wet bread' });
+  g.onAction(y, { type: 'answer', matchupId: 'final', text: 'wet. bread.' });
+  assert.ok(!f.answers[y], 'final duplicate bounced');
+  assert.equal(g.playerView(y).retry?.text, 'wet. bread.');
+  const done = await advance(room, (r) => !r.game && r.lastResults);
+  assert.ok(done, 'game still finishes (bots re-roll their own duplicates)');
 });

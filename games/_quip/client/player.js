@@ -13,7 +13,7 @@ export function mount(root, api) {
   const { h, mountInto, fmt } = api;
   let key = null;
 
-  const keyOf = (g) => [g.phase, g.round, g.screen, g.matchupId || '', g.textKey || ''].join('|');
+  const keyOf = (g) => [g.phase, g.round, g.screen, g.matchupId || '', g.textKey || '', g.retry?.at || ''].join('|');
 
   const screens = {
     watch(g) {
@@ -30,8 +30,11 @@ export function mount(root, api) {
         // Keep it exactly as typed: no autocorrect / spellcheck rewriting the joke.
         autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false', 'data-gramm': 'false',
       });
-      const chars = h('div.ph-chars', `0 / ${g.maxLength || 200}`);
-      const submit = h('button.btn.pink', { disabled: true }, 'Send it ✓');
+      // Bounced as a duplicate: their text comes back to edit.
+      if (g.retry?.text) ta.value = g.retry.text;
+      const chars = h('div.ph-chars', `${ta.value.length} / ${g.maxLength || 200}`);
+      const submit = h('button.btn.pink', { disabled: !ta.value.trim() }, 'Send it ✓');
+      if (g.retry) api.vibrate([60, 40, 60]);
       const send = () => {
         const text = ta.value.trim();
         if (!text) return;
@@ -54,6 +57,7 @@ export function mount(root, api) {
         h('div.card',
           h('div.ph-count', g.final ? 'Final round · everyone answers' : `Prompt ${g.index} of ${g.total}`),
           h('p.ph-prompt', g.prompt),
+          g.retry ? h('p.ph-retry.pop-in', 'Someone already wrote exactly that. Make it your own!') : null,
           ta, chars,
           h('div.ph-actions',
             h('button.btn.white', {

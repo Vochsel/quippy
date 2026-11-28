@@ -246,3 +246,4 @@ body.flash::after { content: ''; position: fixed; inset: 0; background: #fff; z-
 .ph-opt.on[data-medal="gold"] { background: #ffe14d; }
 .ph-opt.on[data-medal="silver"] { background: #e3e7ee; }
 .ph-opt.on[data-medal="bronze"] { background: #f2b48a; }
+.ph-retry { margin: .2rem 0 .5rem; padding: .45rem .7rem; border-radius: 12px; background: #ffe0e8; color: #b0123f; font-weight: 900; font-size: .95rem; border: 3px solid #b0123f; }

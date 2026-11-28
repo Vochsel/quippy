@@ -17,6 +17,12 @@ import { cleanText, fill, pick, shuffle, sleep, withTimeout } from '../../core/u
 // The final is a medal vote: each voter gives gold, silver and bronze (3, 2,
 // 1 medal points) to answers other than their own. x3 in the final, so a gold
 // is worth 900, a silver 600 and a bronze 300.
+// Two answers that only differ in case, spacing or punctuation are "the same".
+const sameAnswer = (a, b) => {
+  const n = (t) => String(t || '').toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '');
+  return !!n(a) && n(a) === n(b);
+};
+
 const MEDALS = ['gold', 'silver', 'bronze'];
 const MEDAL_WEIGHT = [3, 2, 1];
 const MEDAL_POINTS = 100;
@@ -336,8 +342,22 @@ export class QuipGame {
   #panicFor(pid, matchupId) {
     this.s.panicPicks ||= {};
     const k = `${pid}|${matchupId}`;
-    this.s.panicPicks[k] ||= this.ctx.content.panic();
+    if (!this.s.panicPicks[k]) {
+      // Not the same canned line as anyone else on this prompt.
+      const taken = Object.entries(this.s.panicPicks).filter(([key]) => key.endsWith(`|${matchupId}`)).map(([, v]) => v);
+      let pickLine = this.ctx.content.panic();
+      for (let i = 0; i < 8 && taken.some((t) => sameAnswer(t, pickLine)); i++) pickLine = this.ctx.content.panic();
+      this.s.panicPicks[k] = pickLine;
+    }
     return this.s.panicPicks[k];
+  }
+
+  // Someone tried to send an answer already given on this prompt: their
+  // phone shows it again with a nudge to make it their own.
+  #rejectDuplicate(pid, matchupId, text) {
+    this.s.retry ||= {};
+    this.s.retry[pid] = { matchupId, text, at: Date.now() };
+    this.ctx.update();
   }
 
   #maxChars() {
@@ -354,6 +374,9 @@ export class QuipGame {
     if (!m || !m.authors.includes(pid) || m.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
     if (!t) return;
+    // No identical answers on the same prompt: send it back for a rethink.
+    if (Object.entries(m.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, matchupId, t);
+    if (this.s.retry?.[pid]) delete this.s.retry[pid];
     m.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
     if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; tally.lastLen = t.length; }
@@ -640,6 +663,8 @@ export class QuipGame {
     if (!f || f.closed || !this.s.roster.includes(pid) || f.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
     if (!t) return;
+    if (Object.entries(f.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, 'final', t);
+    if (this.s.retry?.[pid]) delete this.s.retry[pid];
     f.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
     if (tally) { tally.answersWritten += 1; if (panic) tally.panics += 1; tally.lastLen = t.length; }
@@ -927,7 +952,10 @@ export class QuipGame {
     }
     if (!jobs.length) return;
     const submit = (job, text) => {
-      if (this.s.phase === 'answer' && !this.s.answersClosed) this.#submitAnswer(job.id, job.m.id, text || this.#botLine(), false);
+      if (this.s.phase !== 'answer' || this.s.answersClosed) return;
+      // A duplicate gets bounced: bots just try another line.
+      for (let i = 0; i < 4 && !job.m.answers[job.id]; i++) this.#submitAnswer(job.id, job.m.id, (i === 0 && text) || this.#botLine(), false);
+      if (this.s.retry) delete this.s.retry[job.id];
     };
     if (!this.#aiBots()) {
       for (const job of jobs) this.ctx.later(this.#rand(2500, 9000), () => submit(job));
@@ -978,7 +1006,11 @@ export class QuipGame {
   #botsFinalAnswer() {
     const bots = this.#botIds().filter((id) => !this.s.final?.answers[id]);
     if (!bots.length) return;
-    const submit = (id, text) => { if (this.s.phase === 'finalAnswer') this.#submitFinal(id, text || this.#botLine(), false); };
+    const submit = (id, text) => {
+      if (this.s.phase !== 'finalAnswer') return;
+      for (let i = 0; i < 4 && !this.s.final.answers[id]; i++) this.#submitFinal(id, (i === 0 && text) || this.#botLine(), false);
+      if (this.s.retry) delete this.s.retry[id];
+    };
     if (!this.#aiBots()) {
       for (const id of bots) this.ctx.later(this.#rand(3000, 10000), () => submit(id));
       return;
@@ -1126,12 +1158,16 @@ export class QuipGame {
         return {
           ...base, screen: 'answer', matchupId: next.id, prompt: next.prompt.text, panicText: this.#panicFor(pid, next.id),
           index: mine.indexOf(next) + 1, total: mine.length, maxLength: this.#maxChars(),
+          retry: s.retry?.[pid]?.matchupId === next.id ? s.retry[pid] : null,
         };
       }
       case 'finalAnswer': {
         if (!inGame) return watch('phoneAudienceWriting');
         if (s.final.answers[pid] || s.final.closed) return watch('phoneAnswered');
-        return { ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true, panicText: this.#panicFor(pid, 'final') };
+        return {
+          ...base, screen: 'answer', matchupId: 'final', prompt: s.final.prompt.text, index: 1, total: 1, maxLength: this.#maxChars(), final: true,
+          panicText: this.#panicFor(pid, 'final'), retry: s.retry?.[pid]?.matchupId === 'final' ? s.retry[pid] : null,
+        };
       }
       case 'vote': {
         const m = s.matchups[s.matchIdx];
