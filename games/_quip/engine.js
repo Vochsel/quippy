@@ -374,8 +374,9 @@ export class QuipGame {
     if (!m || !m.authors.includes(pid) || m.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
     if (!t) return;
-    // No identical answers on the same prompt: send it back for a rethink.
-    if (Object.entries(m.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, matchupId, t);
+    // "No copycat answers" (lobby setting, off by default): an answer identical
+    // to another on the same prompt goes back for a rethink.
+    if (this.ctx.settings?.noDuplicates && Object.entries(m.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, matchupId, t);
     if (this.s.retry?.[pid]) delete this.s.retry[pid];
     m.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];
@@ -663,7 +664,7 @@ export class QuipGame {
     if (!f || f.closed || !this.s.roster.includes(pid) || f.answers[pid]) return;
     const t = cleanText(text, this.#maxChars());
     if (!t) return;
-    if (Object.entries(f.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, 'final', t);
+    if (this.ctx.settings?.noDuplicates && Object.entries(f.answers).some(([id, a]) => id !== pid && sameAnswer(a.text, t))) return this.#rejectDuplicate(pid, 'final', t);
     if (this.s.retry?.[pid]) delete this.s.retry[pid];
     f.answers[pid] = { text: t, panic: !!panic };
     const tally = this.s.tallies[pid];

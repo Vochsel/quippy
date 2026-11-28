@@ -57,6 +57,7 @@ export class Room {
       hostTone: 'normal', // see core/tones.js
       hostVoice: '', // '' = the server's default voice
       imageModel: '', // '' = the server's default picture model (see IMAGE_MODELS)
+      noDuplicates: false, // bounce answers identical to another on the same prompt
       ...(s.settings || {}),
     };
     this.selectedGame = gameById(s.selectedGame) ? s.selectedGame : GAMES[0].id;
@@ -77,9 +78,9 @@ export class Room {
     await this.deps.llm.init?.();
     this.crew = await this.deps.store.ensureCrew(this.crewId);
     if (!this.hadSnapshot && this.crew?.settings) {
-      const { locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel } = this.crew.settings;
+      const { locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel, noDuplicates } = this.crew.settings;
       Object.assign(this.settings, Object.fromEntries(
-        Object.entries({ locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel }).filter(([, v]) => v !== undefined)));
+        Object.entries({ locale, family, answerSeconds, answerChars, hostTone, hostVoice, imageModel, noDuplicates }).filter(([, v]) => v !== undefined)));
     }
     await this.refreshHall();
     this.#prewarmStockLines();
@@ -312,6 +313,7 @@ export class Room {
     const locales = this.deps.content.locales().map((l) => l.id);
     if (locales.includes(next.locale)) this.settings.locale = next.locale;
     if (typeof next.family === 'boolean') this.settings.family = next.family;
+    if (typeof next.noDuplicates === 'boolean') this.settings.noDuplicates = next.noDuplicates;
     if ([45, 60, 90, 120, 150].includes(Number(next.answerSeconds))) this.settings.answerSeconds = Number(next.answerSeconds);
     const style = JSON.stringify(this.voiceStyle());
     if (TONE_IDS.includes(next.hostTone)) this.settings.hostTone = next.hostTone;

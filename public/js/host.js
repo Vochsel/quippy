@@ -247,6 +247,8 @@ function renderLobby(room) {
         h('label', 'Prompts:', h('select', { onChange: (e) => live.action('settings', { settings: { locale: e.target.value } }) },
           d.locales.map((l) => h('option', { value: l.id, selected: l.id === d.settings.locale }, `${l.flag} ${l.label} (${l.prompts})`)))),
         h('label', 'Family friendly:', h('input', { type: 'checkbox', checked: !!d.settings.family, onChange: (e) => live.action('settings', { settings: { family: e.target.checked } }) })),
+        h('label', { title: 'Answers identical to someone else\'s on the same prompt go back to the phone to rethink' }, 'No copycat answers:',
+          h('input', { type: 'checkbox', checked: !!d.settings.noDuplicates, onChange: (e) => live.action('settings', { settings: { noDuplicates: e.target.checked } }) })),
         h('label', 'Answer time:', h('select', { onChange: (e) => live.action('settings', { settings: { answerSeconds: Number(e.target.value) } }) },
           [45, 60, 90, 120, 150].map((s) => h('option', { value: s, selected: s === d.settings.answerSeconds }, `${s}s`)))),
         h('label', 'Max answer:', h('select', { onChange: (e) => live.action('settings', { settings: { answerChars: Number(e.target.value) } }) },

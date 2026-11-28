@@ -507,11 +507,29 @@ test('final round is a medal vote: gold 900, silver 600, bronze 300 (+ winner bo
   assert.ok(view.answers.some((x) => x.medals.gold === 2));
 });
 
-test('identical answers on the same prompt are bounced back to rethink', async (t) => {
+test('identical answers are allowed by default', async (t) => {
+  mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  t.after(() => mock.timers.reset());
+  const room = new Room({ code: 'SAMD', crewId: 'h_testcrew01', deps: makeDeps(memoryStore(), {}) });
+  await room.init();
+  assert.equal(room.settings.noDuplicates, false);
+  for (let i = 0; i < 4; i++) room.addBot();
+  await room.startGame('zinger-duel');
+  assert.ok(await advance(room, (r) => r.game?.s?.phase === 'answer'));
+  const g = room.game; const m = g.s.matchups[0]; const [a, b] = m.authors;
+  m.answers = {};
+  g.onAction(a, { type: 'answer', matchupId: m.id, text: 'Wet bread' });
+  g.onAction(b, { type: 'answer', matchupId: m.id, text: 'wet bread' });
+  assert.equal(m.answers[b]?.text, 'wet bread');
+});
+
+test('with "no copycat answers" on, identical answers bounce back to rethink', async (t) => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'] });
   t.after(() => mock.timers.reset());
   const room = new Room({ code: 'SAME', crewId: 'h_testcrew01', deps: makeDeps(memoryStore(), {}) });
   await room.init();
+  await room.onMessage({ role: 'host', isOwner: true, send: () => {} }, { t: 'action', a: 'settings', settings: { noDuplicates: true } });
+  assert.equal(room.settings.noDuplicates, true);
   for (let i = 0; i < 4; i++) room.addBot();
   await room.startGame('zinger-duel');
   const answering = await advance(room, (r) => r.game?.s?.phase === 'answer');
