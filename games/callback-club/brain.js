@@ -84,6 +84,9 @@ function systemPrompt(ctx) {
     '- Never about appearance, weight, race, religion, sexuality, disability, health or anything genuinely hurtful.',
     '- Never acronyms, letter puzzles, rhymes or "fill in exactly N words" mechanics.',
     '- Callbacks should make sense to people who were in the room even if they half-forgot: quote the earlier answer briefly.',
+    '- Every prompt must make complete sense read cold by someone who missed the earlier round: quote the earlier answer in full (in quotes) rather than alluding to it.',
+    '- Players are the people who WROTE answers, never characters inside them: if Shazza answered a pilot prompt, there is no "Shazza\'s pilot".',
+    '- Re-read each prompt before finalising: is it a clear, answerable question or fill-in with lots of possible punchlines? If not, rewrite it.',
     '- A callback must take the earlier moment somewhere NEW (a sequel, consequence, new setting, someone else\'s view). Never repeat or lightly reword an earlier prompt, and never make the prompt just the old answer restated. The callback should set up a fresh joke, not be the old one.',
     meta.llmHint || '',
     ctx.settings.family ? 'FAMILY MODE: keep everything suitable for kids. No innuendo, no drinking jokes.' : 'Cheeky innuendo is okay in moderation; nothing explicit.',
@@ -126,6 +129,7 @@ async function aiRoundPrompts(ctx, game, round, count) {
       'JSON shape: {"prompts":[{"text":"the prompt","about":"player name or empty","callback":"what it calls back to, <=8 words, or empty"}]}',
     ].filter((x) => x !== '').join('\n'),
     maxTokens: 5000,
+    smart: true, // the stronger model: these have to make sense
   });
   const seen = earlierPrompts(game);
   const prompts = (out?.prompts || [])
@@ -151,6 +155,7 @@ async function aiFinalPrompt(ctx, game) {
       'JSON shape: {"text":"the prompt","callback":"what it calls back to"}',
     ].join('\n'),
     maxTokens: 2500,
+    smart: true,
   });
   if (!out?.text) throw new Error('model returned no final prompt');
   if (repeatsEarlier(out.text, earlierPrompts(game))) throw new Error('final prompt repeated an earlier one');

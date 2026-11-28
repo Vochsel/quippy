@@ -32,6 +32,9 @@ export function buildConfig(env = {}) {
       apiKey: env.LLM_API_KEY || '',
       gatewayKey: env.AI_GATEWAY_API_KEY || '',
       model: env.LLM_MODEL || '',
+      // A stronger model for the writing that has to make sense (Callback Club
+      // prompts). Only used through the Vercel AI Gateway; '' = use `model`.
+      smartModel: env.LLM_SMART_MODEL ?? 'anthropic/claude-fable-5.2',
       timeoutMs: num(env.LLM_TIMEOUT_MS, 30000),
       temperature: env.LLM_TEMPERATURE === undefined || env.LLM_TEMPERATURE === '' ? null : num(env.LLM_TEMPERATURE, null),
     },

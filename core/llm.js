@@ -124,11 +124,13 @@ export class LLM {
   #isLocal() { return this.provider === 'ollama' || this.provider === 'lmstudio'; }
 
   // Ask for a JSON object. Returns the parsed object or throws.
-  async json({ system, user, maxTokens = 1200, timeoutMs }) {
+  // smart: use the stronger model (cfg.smartModel) for this call, when the
+  // gateway is in use; local models just use their one model.
+  async json({ system, user, maxTokens = 1200, timeoutMs, smart = false }) {
     await this.init();
     if (!this.available()) throw new Error('no-llm');
     const body = {
-      model: this.model,
+      model: smart && this.provider === 'vercel' && this.cfg.smartModel ? this.cfg.smartModel : this.model,
       messages: [
         { role: 'system', content: `${system}\n\nRespond with a single JSON object and nothing else.` },
         { role: 'user', content: user },
