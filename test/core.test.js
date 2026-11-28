@@ -150,7 +150,8 @@ test('solo mode: AI bots write their own answers and vote with the judge', async
   deps.llm = {
     available: () => true, status: () => ({ available: true }), label: 'fake', model: 'fake',
     async json({ system, user }) {
-      const items = JSON.parse(user);
+      // Bot-answer requests put the JSON list after any in-joke context.
+      const items = JSON.parse(user.includes('Write these:\n') ? user.split('Write these:\n').pop() : user);
       if (system.includes('answers for bot players')) {
         calls.push('answers');
         return { answers: Object.fromEntries(items.map((i) => [i.key, `AI ${i.style.split(' ')[0]} ${i.key}`])) };

@@ -946,6 +946,27 @@ export class QuipGame {
     return this.botJobs[key];
   }
 
+  // What a regular would know, so bots can blend in: tonight's answers that
+  // landed (most votes first) and the crew's running jokes.
+  #botContext() {
+    const s = this.s;
+    const rows = [];
+    for (const m of s.history || []) {
+      if (!m.result) continue;
+      for (const id of m.authors) {
+        const a = m.answers[id];
+        if (!a || a.panic) continue;
+        const votes = m.result.votes?.[id] || 0;
+        rows.push({ votes, won: m.result.winner === id, line: `"${a.text}" (to "${m.prompt.text}", ${votes} vote${votes === 1 ? '' : 's'}${m.result.winner === id ? ', won' : ''})` });
+      }
+    }
+    rows.sort((x, y) => y.votes - x.votes || y.won - x.won);
+    const jokes = (this.ctx.lore?.().jokes || []).slice().sort((x, y) => (y.heat || 0) - (x.heat || 0))
+      .map((j) => (j.detail ? `${j.title}: ${j.detail}` : j.title));
+    const players = s.roster.filter((id) => !this.ctx.isBot(id)).map((id) => this.ctx.playerName(id));
+    return { tonight: rows.map((r) => r.line), lore: jokes, players };
+  }
+
   #botsAnswer() {
     const jobs = [];
     for (const id of this.#botIds()) {
@@ -963,7 +984,7 @@ export class QuipGame {
       return;
     }
     const items = jobs.map((j) => ({ key: j.key, prompt: j.m.prompt.text, name: this.ctx.playerName(j.id) }));
-    this.#botJob(`answer-${this.s.round}`, () => botAnswers(this.ctx, items, this.#maxChars())).then((written) => {
+    this.#botJob(`answer-${this.s.round}`, () => botAnswers(this.ctx, items, this.#maxChars(), this.#botContext())).then((written) => {
       if (!written) return;
       for (const job of jobs) this.ctx.later(this.#rand(300, 5000), () => submit(job, written[job.key]));
     });
@@ -1018,7 +1039,7 @@ export class QuipGame {
     }
     const prompt = this.s.final.prompt.text;
     const items = bots.map((id) => ({ key: id, prompt, name: this.ctx.playerName(id) }));
-    this.#botJob('answer-final', () => botAnswers(this.ctx, items, this.#maxChars())).then((written) => {
+    this.#botJob('answer-final', () => botAnswers(this.ctx, items, this.#maxChars(), this.#botContext())).then((written) => {
       if (!written) return;
       for (const id of bots) this.ctx.later(this.#rand(300, 5000), () => submit(id, written[id]));
     });

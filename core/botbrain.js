@@ -37,18 +37,29 @@ function flavour(ctx) {
 const TIMEOUT_MS = 25000;
 
 // items: [{ key, prompt, name }] -> { [key]: answer text }
-export async function botAnswers(ctx, items, maxChars = 80) {
+// context (optional): what a regular in this group would know, so bots blend in:
+//   { tonight: ['"answer" (to "prompt", 3 votes, won)', ...], lore: ['running joke', ...], players: ['Ben', ...] }
+export async function botAnswers(ctx, items, maxChars = 80, context = {}) {
   if (!items.length || !ctx.llm?.available()) return {};
   const limit = Math.min(maxChars, 90);
+  const tonight = (context.tonight || []).slice(0, 12);
+  const lore = (context.lore || []).slice(0, 8);
+  const insider = tonight.length || lore.length;
   const out = await ctx.llm.json({
     system: [
       'You write answers for bot players in a party comedy game: each prompt gets a short, funny answer that a quick-witted human might type.',
       `Answers are under ${limit} characters, no quotation marks, no emoji, no hashtags. Write in the given player's comic style.`,
       'Surprise beats obvious. Specific beats generic. Never explain the joke.',
+      insider ? 'BLEND IN: these bots are playing alongside a group of friends and should sound like long-time members of it. Where it fits naturally, reuse the group\'s in-jokes, running gags, catchphrases and the kind of answers that won votes tonight: call back to them, twist them, apply them to the new prompt. Maybe a third of answers should carry an in-joke; never copy an earlier answer word for word, and never force one where it doesn\'t fit.' : '',
       flavour(ctx),
       'JSON shape: {"answers":{"<key>":"answer", ...}}',
-    ].join('\n'),
-    user: JSON.stringify(items.map((i) => ({ key: i.key, prompt: i.prompt, player: i.name, style: botStyle(i.name) }))),
+    ].filter(Boolean).join('\n'),
+    user: [
+      tonight.length ? `What's landed tonight (the room's taste):\n${tonight.map((t) => `- ${t}`).join('\n')}` : '',
+      lore.length ? `The group's running jokes from past nights:\n${lore.map((t) => `- ${t}`).join('\n')}` : '',
+      context.players?.length ? `The humans playing: ${context.players.join(', ')}` : '',
+      `Write these:\n${JSON.stringify(items.map((i) => ({ key: i.key, prompt: i.prompt, player: i.name, style: botStyle(i.name) })))}`,
+    ].filter(Boolean).join('\n\n'),
     maxTokens: 300 + items.length * 60,
     timeoutMs: TIMEOUT_MS,
   });
